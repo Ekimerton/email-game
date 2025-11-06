@@ -1,0 +1,183 @@
+<!doctype html>
+<html ⚡4email data-css-strict>
+
+<head>
+    <meta charset="utf-8">
+    <script async src="https://cdn.ampproject.org/v0.js"></script>
+    <script async custom-element="amp-form" src="https://cdn.ampproject.org/v0/amp-form-0.1.js"></script>
+    <script async custom-element="amp-bind" src="https://cdn.ampproject.org/v0/amp-bind-0.1.js"></script>
+
+    <style amp4email-boilerplate>
+        body {
+            visibility: hidden
+        }
+    </style>
+    <style amp-custom>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 8px;
+        }
+
+        .email-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .state-box {
+            margin: 16px 0;
+            padding: 16px;
+            border: 1px solid #ccc;
+            display: block;
+            text-align: left;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        .state-box p {
+            margin: 5px 0;
+        }
+
+        input[type="text"] {
+            position: relative;
+            padding: 12px 14px;
+            border: 0px solid #ccc;
+            border-radius: 4px;
+            background: transparent;
+            width: 100%;
+            box-sizing: border-box;
+            text-transform: uppercase;
+            letter-spacing: 24px;
+            z-index: 100;
+            font-family: monospace;
+        }
+
+        .input-box {
+            border: 1px #000 solid;
+            height: 24px;
+            width: 24px;
+            position: absolute;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <amp-state id="gameState" src="http://localhost:8787/api/state" credentials="include">
+        <script type="application/json">
+        {
+            "guessCount": 0,
+            "currentGuess": "",
+            "currentInput": "",
+            "hasWon": false,
+            "lastMessage": "",
+            "isSubmitting": false
+        }
+        </script>
+    </amp-state>
+
+    <div class="email-container">
+        <h1>🎮 Word Guess Game</h1>
+        <p>Guess the 7-letter word!</p>
+
+        <!-- Success Message (shown when correct) -->
+        <div class="state-box" style="background-color: #d4edda; border-color: #c3e6cb;" [hidden]="!gameState.hasWon"
+            hidden>
+            <h2 style="color: #155724; margin-top: 0;">🎉 Congratulations!</h2>
+            <p style="color: #155724;">You got it in <strong [text]="gameState.guessCount">0</strong> guess(es)!</p>
+            <p style="color: #155724;" [text]="gameState.lastMessage">The word was correct!</p>
+        </div>
+
+        <!-- Game Stats (hidden when won) -->
+        <div class="state-box" [hidden]="gameState.hasWon">
+            <p>Number of Guesses: <strong [text]="gameState.guessCount">0</strong></p>
+            <p>Last Guess: <strong [text]="gameState.currentGuess ? gameState.currentGuess : 'None yet.'">None
+                    yet.</strong></p>
+            <p [hidden]="!gameState.lastMessage || gameState.hasWon" [text]="gameState.lastMessage"
+                style="color: #d9534f; font-weight: bold;">
+            </p>
+        </div>
+
+        <!-- Input Form (hidden when won) -->
+        <form id="guess-form" method="POST" action-xhr="http://localhost:8787/api/guess" [hidden]="gameState.hasWon"
+            credentials="include" on="submit-success:AMP.setState({
+                    gameState: {
+                      guessCount: event.response.guessCount,
+                      currentGuess: event.response.guess,
+                      hasWon: event.response.correct,
+                      lastMessage: event.response.message,
+                      currentInput: event.response.currentInput,
+                      isSubmitting: false
+                    }
+                  });
+                  submit-error:AMP.setState({
+                    gameState: {
+                      lastMessage: 'Error submitting guess. Please try again.',
+                      isSubmitting: false
+                    }
+                  });
+                  submit:AMP.setState({
+                    gameState: {
+                      isSubmitting: true
+                    }
+                  })">
+            <div style="position: relative">
+                <input type="text" placeholder="" name="user-guess" id="guess-input" required maxlength="7"
+                    [value]="gameState.currentInput"
+                    on="input-debounced:AMP.setState({gameState: {currentInput: event.value.toUpperCase()}})">
+                <div class="input-box" style="top:6px; left: 6px;"></div>
+                <div class="input-box" style="top:6px; left: 36px;"></div>
+                <div class="input-box" style="top:6px; left: 70px;"></div>
+                <div class="input-box" style="top:6px; left: 102px;"></div>
+                <div class="input-box" style="top:6px; left: 134px;"></div>
+                <div class="input-box" style="top:6px; left: 166px;"></div>
+                <div class="input-box" style="top:6px; left: 198px;"></div>
+            </div>
+
+            <button type="submit"
+                [disabled]="!gameState.currentInput || gameState.currentInput.length < 7 || gameState.isSubmitting">
+                <span [hidden]="gameState.isSubmitting">Submit Guess</span>
+                <span [hidden]="!gameState.isSubmitting" hidden>Submitting...</span>
+            </button>
+        </form>
+
+        <!-- Play Again Button (shown when won) -->
+        <button type="button" [hidden]="!gameState.hasWon" hidden on="tap:AMP.setState({
+                    gameState: {
+                      guessCount: 0,
+                      currentGuess: '',
+                      currentInput: '',
+                      hasWon: false,
+                      lastMessage: '',
+                      isSubmitting: false
+                    }
+                })" style="background-color: #28a745;">
+            Play Again
+        </button>
+
+        <p style="margin-top: 5px; font-size: 12px; color: #555;">
+            *Powered by server-side validation
+        </p>
+    </div>
+</body>
+
+</html>
