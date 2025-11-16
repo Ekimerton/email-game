@@ -73,7 +73,7 @@ app.use('/api/*', async (c, next) => {
   if (ampSourceOrigin) {
     c.header('AMP-Access-Control-Allow-Source-Origin', ampSourceOrigin)
     // Verify AMP-Same-Origin for POST requests from AMP viewers, but skip for local dev
-    if (c.req.method === 'POST' && c.req.header('AMP-Same-Origin') !== 'true' && !isDevelopment) {
+    if (c.req.method === 'POST' && c.req.header('amp-same-origin') !== 'true' && !isDevelopment) {
       return c.json({ success: false, error: 'Invalid AMP-Same-Origin header' }, 403)
     }
   }

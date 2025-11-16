@@ -15,16 +15,134 @@
     <style amp-custom>
         body {
             font-family: Arial, sans-serif;
-            padding: 8px;
         }
 
         .email-container {
+            margin: 0 auto;
+        }
+
+        .game-container {
+            background-color: #7dd3fc;
+            padding: 8px;
+        }
+
+        .header-container {
+            margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .header-title {
+            font-size: 24px;
+            color: #000;
+            line-height: 1;
+            padding: 0;
+            margin: 0;
+        }
+
+        .header-meta {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .header-date {
+            font-size: 16px;
+            line-height: 1;
+            padding: 0;
+            margin: 0;
+        }
+
+        .header-author {
+            font-size: 8px;
+            line-height: 1;
+            padding: 0;
+            margin: 0;
+        }
+
+        .puzzle-text-box {
+            background-color: #f9f9f9;
+            padding: 8px;
+            border-radius: 4px 4px 0px 0px;
+            border: 1px solid #000;
+            border-bottom: none;
+            max-width: 500px;
+        }
+
+        .puzzle-text {
+            font-size: 16px;
+            color: #000;
+            line-height: 1;
+            padding: 0;
+            margin: 0;
+        }
+
+        .puzzle-box {
+            padding: 8px;
+            background-color: #f9f9f9;
+            border-radius: 0px 0px 4px 4px;
+            border: 1px solid #000;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 8px;
+            max-width: 500px;
+        }
+
+        .puzzle-box-chip {
+            border-radius: 8px;
+            padding: 2px 8px;
+            background-color: #D5EBFF;
+        }
+
+        .guess-count-display {
             text-align: center;
-            max-width: 300px;
-            margin: 0 auto;
+            font-family: monospace;
+            font-size: 12px;
+            color: #000;
+            line-height: 1;
+            padding: 0;
+            margin: 0;
+            margin-bottom: 4px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            gap: 8px;
+        }
+
+        .puzzle-button {
+            background-color: #fef9c3;
+            border: 1px solid #000;
+            border-radius: 32px;
+            padding: 8px 16px;
+            font-size: 16px;
+            color: #000;
+            cursor: pointer;
+        }
+
+        .gradient-divider {
+            background: #7DD3FC;
+            background: linear-gradient(180deg, rgba(125, 211, 252, 1) 0%, rgba(255, 255, 255, 1) 100%);
+            height: 64px;
+            width: 100%;
+        }
+
+        .rankings-container {
+            padding: 8px;
+            margin-top: -64px;
+        }
+
+        .rankings-title {
+            text-align: center;
         }
 
         .state-box {
@@ -57,20 +175,10 @@
 
         .input-box {
             border: 1px #000 solid;
+            background-color: #fff;
             height: 24px;
             width: 24px;
             position: absolute;
-        }
-
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 16px;
-            width: 100%;
         }
 
         form {
@@ -82,7 +190,7 @@
 </head>
 
 <body>
-    <amp-state id="gameState" src="http://localhost:8787/api/state" credentials="include">
+    <amp-state id="gameState">
         <script type="application/json">
         {
             "guessCount": 0,
@@ -96,30 +204,32 @@
     </amp-state>
 
     <div class="email-container">
-        <h1>🎮 Word Guess Game</h1>
-        <p>Guess the 7-letter word!</p>
+        <div class="game-container">
+            <div class="header-container">
+                <h1 class="header-title">RELATLE</h1>
+                <div class="header-meta">
+                    <p class="header-date">16 October, 2025</p>
+                    <p class="header-author"><i>By Ekim Karabey</i></p>
+                </div>
+            </div>
+            <div class="puzzle-text-box">
+                <p class="puzzle-text"><b>SLIMERS:</b> To slime for a long time! That is the ultimate crime!</p>
+            </div>
+            <div class="puzzle-box">
+                <div class="puzzle-box-chip">Slimed</div>
+                <div class="puzzle-box-chip">asd</div>
+                <div class="puzzle-box-chip">Iasdjlsdj</div>
+                <div class="puzzle-box-chip">Masde</div>
+                <div class="puzzle-box-chip">Eqwea</div>
+                <div class="puzzle-box-chip">Raasd</div>
+                <div class="puzzle-box-chip">Ssd</div>
+            </div>
 
-        <!-- Success Message (shown when correct) -->
-        <div class="state-box" style="background-color: #d4edda; border-color: #c3e6cb;" [hidden]="!gameState.hasWon"
-            hidden>
-            <h2 style="color: #155724; margin-top: 0;">🎉 Congratulations!</h2>
-            <p style="color: #155724;">You got it in <strong [text]="gameState.guessCount">0</strong> guess(es)!</p>
-            <p style="color: #155724;" [text]="gameState.lastMessage">The word was correct!</p>
-        </div>
+            <p class="guess-count-display">- 0 guesses, 0 hints -</p>
 
-        <!-- Game Stats (hidden when won) -->
-        <div class="state-box" [hidden]="gameState.hasWon">
-            <p>Number of Guesses: <strong [text]="gameState.guessCount">0</strong></p>
-            <p>Last Guess: <strong [text]="gameState.currentGuess ? gameState.currentGuess : 'None yet.'">None
-                    yet.</strong></p>
-            <p [hidden]="!gameState.lastMessage || gameState.hasWon" [text]="gameState.lastMessage"
-                style="color: #d9534f; font-weight: bold;">
-            </p>
-        </div>
-
-        <!-- Input Form (hidden when won) -->
-        <form id="guess-form" method="POST" action-xhr="http://localhost:8787/api/guess" [hidden]="gameState.hasWon"
-            credentials="include" on="submit-success:AMP.setState({
+            <!-- Input Form (hidden when won) -->
+            <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess"
+                [hidden]="gameState.hasWon" on="submit-success:AMP.setState({
                     gameState: {
                       guessCount: event.response.guessCount,
                       currentGuess: event.response.guess,
@@ -140,43 +250,41 @@
                       isSubmitting: true
                     }
                   })">
-            <div style="position: relative">
-                <input type="text" placeholder="" name="user-guess" id="guess-input" required maxlength="7"
-                    [value]="gameState.currentInput"
-                    on="input-debounced:AMP.setState({gameState: {currentInput: event.value.toUpperCase()}})">
-                <div class="input-box" style="top:6px; left: 6px;"></div>
-                <div class="input-box" style="top:6px; left: 36px;"></div>
-                <div class="input-box" style="top:6px; left: 70px;"></div>
-                <div class="input-box" style="top:6px; left: 102px;"></div>
-                <div class="input-box" style="top:6px; left: 134px;"></div>
-                <div class="input-box" style="top:6px; left: 166px;"></div>
-                <div class="input-box" style="top:6px; left: 198px;"></div>
-            </div>
+                <div style="position: relative">
+                    <input type="text" placeholder="" name="user-guess" id="guess-input" required maxlength="7"
+                        [value]="gameState.currentInput"
+                        on="input-debounced:AMP.setState({gameState: {currentInput: event.value.toUpperCase()}})">
+                    <div class="input-box" style="top:6px; left: 6px;"></div>
+                    <div class="input-box" style="top:6px; left: 38px;"></div>
+                    <div class="input-box" style="top:6px; left: 70px;"></div>
+                    <div class="input-box" style="top:6px; left: 102px;"></div>
+                    <div class="input-box" style="top:6px; left: 134px;"></div>
+                    <div class="input-box" style="top:6px; left: 166px;"></div>
+                    <div class="input-box" style="top:6px; left: 198px;"></div>
+                </div>
 
-            <button type="submit"
-                [disabled]="!gameState.currentInput || gameState.currentInput.length < 7 || gameState.isSubmitting">
-                <span [hidden]="gameState.isSubmitting">Submit Guess</span>
-                <span [hidden]="!gameState.isSubmitting" hidden>Submitting...</span>
-            </button>
-        </form>
+                <div class="button-container">
+                    <button type="button" class="puzzle-button" style="flex: 1">Hint</button>
 
-        <!-- Play Again Button (shown when won) -->
-        <button type="button" [hidden]="!gameState.hasWon" hidden on="tap:AMP.setState({
-                    gameState: {
-                      guessCount: 0,
-                      currentGuess: '',
-                      currentInput: '',
-                      hasWon: false,
-                      lastMessage: '',
-                      isSubmitting: false
-                    }
-                })" style="background-color: #28a745;">
-            Play Again
-        </button>
+                    <button type="submit" class="puzzle-button" style="flex: 3"
+                        [disabled]="!gameState.currentInput || gameState.currentInput.length < 7 || gameState.isSubmitting">
+                        <span [hidden]="gameState.isSubmitting">Submit</span>
+                    </button>
+                </div>
+            </form>
 
-        <p style="margin-top: 5px; font-size: 12px; color: #555;">
-            *Powered by server-side validation
-        </p>
+        </div>
+        <div class="gradient-divider"></div>
+        <div class="rankings-container">
+            <h4 class="rankings-title">Weekly Rankings</h4>
+            <ol>
+                <li>Ekim Karabey - 100 points</li>
+                <li>John Doe - 90 points</li>
+                <li>Jane Smith - 80 points</li>
+                <li>Jim Beam - 70 points</li>
+                <li>Jill Johnson - 60 points</li>
+            </ol>
+        </div>
     </div>
 </body>
 
