@@ -47,6 +47,40 @@ async function getUserEmail(authorizationHeader: string | undefined): Promise<st
 }
 
 // Get game state
+// Enable CORS for AMP emails
+app.use('/api/*', async (c, next) => {
+  const origin = c.req.header('Origin') || 'null'
+  
+  // Helper to set CORS headers
+  const setCorsHeaders = (headers: Headers) => {
+    headers.set('Access-Control-Allow-Origin', origin)
+    headers.set('Vary', 'Origin')
+    headers.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+    headers.set('Access-Control-Allow-Headers', 'Content-Type, AMP-Same-Origin, Authorization')
+    headers.set('Access-Control-Expose-Headers', 'AMP-Access-Control-Allow-Source-Origin')
+    headers.set('Access-Control-Allow-Credentials', 'true')
+
+    const ampSourceOrigin = c.req.query('__amp_source_origin')
+    if (ampSourceOrigin) {
+      headers.set('AMP-Access-Control-Allow-Source-Origin', ampSourceOrigin)
+    }
+  }
+
+  // Respond to preflight requests
+  if (c.req.method === 'OPTIONS') {
+    const response = c.body(null, 204)
+    setCorsHeaders(response.headers)
+    return response
+  }
+
+  await next()
+  
+  // Add CORS headers to the response
+  if (c.res) {
+    setCorsHeaders(c.res.headers)
+  }
+})
+
 app.get('/api/state', async (c) => {
   const userEmail = await getUserEmail(c.req.header('Authorization'));
   const gameId = `1-${userEmail}`; // Game #1 for this user
@@ -56,35 +90,6 @@ app.get('/api/state', async (c) => {
 
   return c.json(gameState);
 });
-
-// Enable CORS for AMP emails
-app.use('/api/*', async (c, next) => {
-  const origin = c.req.header('Origin') || 'null'
-  c.header('Access-Control-Allow-Origin', origin)
-  c.header('Vary', 'Origin')
-  c.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-  c.header('Access-Control-Allow-Headers', 'Content-Type, AMP-Same-Origin')
-  c.header('Access-Control-Expose-Headers', 'AMP-Access-Control-Allow-Source-Origin')
-  c.header('Access-Control-Allow-Credentials', 'true')
-
-  const ampSourceOrigin = c.req.query('__amp_source_origin')
-  const isDevelopment = c.req.header('host')?.startsWith('localhost')
-
-  if (ampSourceOrigin) {
-    c.header('AMP-Access-Control-Allow-Source-Origin', ampSourceOrigin)
-    // Verify AMP-Same-Origin for POST requests from AMP viewers, but skip for local dev
-    if (c.req.method === 'POST' && c.req.header('amp-same-origin') !== 'true' && !isDevelopment) {
-      return c.json({ success: false, error: 'Invalid AMP-Same-Origin header' }, 403)
-    }
-  }
-
-  // Respond to preflight requests
-  if (c.req.method === 'OPTIONS') {
-    return c.body(null, 204)
-  }
-
-  await next()
-})
 
 // Game configuration
 const TARGET_WORD = 'TESTING'
