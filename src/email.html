@@ -225,7 +225,8 @@
                 <div class="puzzle-box-chip">Ssd</div>
             </div>
 
-            <p class="guess-count-display">- 0 guesses, 0 hints -</p>
+            <p class="guess-count-display" [text]="'- ' + gameState.guessCount + ' guesses, 0 hints -'">- 0 guesses, 0
+                hints -</p>
 
             <!-- Input Form (hidden when won) -->
             <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess"

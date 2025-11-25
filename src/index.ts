@@ -50,7 +50,7 @@ async function getUserEmail(authorizationHeader: string | undefined): Promise<st
 // Enable CORS for AMP emails
 app.use('/api/*', async (c, next) => {
   const origin = c.req.header('Origin') || 'null'
-  
+
   // Helper to set CORS headers
   const setCorsHeaders = (headers: Headers) => {
     headers.set('Access-Control-Allow-Origin', origin)
@@ -74,7 +74,7 @@ app.use('/api/*', async (c, next) => {
   }
 
   await next()
-  
+
   // Add CORS headers to the response
   if (c.res) {
     setCorsHeaders(c.res.headers)
