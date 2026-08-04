@@ -511,7 +511,7 @@
                     <!-- 5. Guess Input Form & Action Buttons -->
                     <div class="form-container" [hidden]="gameState.hasWon">
                         <form id="guess-form" method="POST" action-xhr="https://relatle.dev/api/guess"
-                            on="submit-success:AMP.setState({ gameState: event.response });
+                            on="submit-success:AMP.setState({ gameState: event.response }),leaderboardList.refresh;
                                 submit-error:AMP.setState({ gameState: { lastMessage: event.response.lastMessage || '⚠️ Could not process guess. Please try again.', isSubmitting: false } });
                                 submit:AMP.setState({ gameState: { isSubmitting: true } })">
                             
@@ -566,7 +566,7 @@
                 
                 <!-- AMP List for Dynamic Domain Leaderboard (Blurred until won) -->
                 <div class="leaderboard-blur-content" [class]="gameState.hasWon ? '' : 'leaderboard-blur-content'">
-                    <amp-list width="auto" height="150" layout="fixed-height" src="https://relatle.dev/api/leaderboard">
+                    <amp-list id="leaderboardList" width="auto" height="150" layout="fixed-height" src="https://relatle.dev/api/leaderboard">
                         <template type="amp-mustache">
                             <div class="leaderboard-item">
                                 <span class="rank-number">#{{rank}}</span>
