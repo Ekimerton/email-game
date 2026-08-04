@@ -248,30 +248,30 @@ export const EMAIL_HTML = `<!doctype html>
             background: linear-gradient(135deg, #065f46, #047857);
             border: 1px solid #10b981;
             border-radius: 10px;
-            padding: 12px;
+            padding: 10px 12px;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .win-title {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 900;
             color: #ffffff;
             margin-bottom: 2px;
         }
 
         .win-score {
-            font-size: 14px;
+            font-size: 13px;
             color: #a7f3d0;
             font-weight: 700;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .share-box {
             background: #064e3b;
             border: 1px dashed #34d399;
             border-radius: 6px;
-            padding: 8px;
+            padding: 6px 8px;
             font-family: monospace;
             font-size: 11px;
             color: #ecfdf5;
@@ -326,6 +326,7 @@ export const EMAIL_HTML = `<!doctype html>
             border-radius: 8px;
             padding: 10px;
             position: relative;
+            margin-bottom: 10px;
         }
 
         .leaderboard-title {
@@ -455,12 +456,9 @@ export const EMAIL_HTML = `<!doctype html>
 
         <div class="game-body">
             <!-- 1-4. Puzzle Progress & Interactive Form Section (Loads via amp-list upon open) -->
-            <amp-list width="auto" height="380" layout="fixed-height" single-item src="https://relatle.dev/api/state">
+            <amp-list width="auto" height="530" layout="fixed-height" single-item src="https://relatle.dev/api/state">
                 <template type="amp-mustache">
-                    <!-- 1. Feedback Status Banner at Top -->
-                    <div class="message-banner" [text]="gameState.lastMessage">{{lastMessage}}</div>
-
-                    <!-- 2. Revealed & Locked Definitions Cards at Top -->
+                    <!-- 1. Revealed & Locked Definitions Cards at Top -->
                     <div class="definitions-section">
                         <div class="section-label">
                             <span>Revealed Definitions</span>
@@ -490,7 +488,7 @@ export const EMAIL_HTML = `<!doctype html>
                         </div>
                     </div>
 
-                    <!-- 3. Word Letter Mask Tiles & Counter -->
+                    <!-- 2. Word Letter Mask Tiles & Counter -->
                     <div class="synonyms-section">
                         <div class="section-label">
                             <span>Letter Hints & Word Length</span>
@@ -506,6 +504,9 @@ export const EMAIL_HTML = `<!doctype html>
                             <div class="mask-tile" [text]="gameState.letterMask[6] || '_'" hidden [hidden]="gameState.wordLength < 7">{{mask6}}</div>
                         </div>
                     </div>
+
+                    <!-- 3. Feedback Status Banner above Input -->
+                    <div class="message-banner" [text]="gameState.lastMessage">{{lastMessage}}</div>
 
                     <!-- 4. Guess Input Form & Action Buttons -->
                     <div class="form-container" [hidden]="gameState.hasWon">
@@ -552,37 +553,6 @@ export const EMAIL_HTML = `<!doctype html>
                 </template>
             </amp-list>
 
-            <!-- Compact Subscribe Banner Box (Loads via amp-list upon open) -->
-            <amp-list width="auto" height="110" layout="fixed-height" single-item src="https://relatle.dev/api/sub-status">
-                <template type="amp-mustache">
-                    {{^isSubscribed}}
-                    <div class="subscribe-banner">
-                        <div class="subscribe-header">
-                            <span class="subscribe-icon">📬</span>
-                            <div>
-                                <div class="subscribe-title">Get Relatle Daily at 9:00 AM PST</div>
-                                <div class="subscribe-desc">Never miss today's puzzle! Join your organization's leaderboard.</div>
-                            </div>
-                        </div>
-                        <form method="POST" action-xhr="https://relatle.dev/api/subscribe" style="margin-top: 6px;"
-                            on="submit-success:AMP.setState({ gameState: { isSubscribed: true, lastMessage: event.response.message } });
-                                submit-error:AMP.setState({ gameState: { lastMessage: event.response.message || '⚠️ Subscription failed.' } })">
-                            <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
-                            <button type="submit" class="btn btn-subscribe">
-                                ✨ Subscribe Me Daily
-                            </button>
-                        </form>
-                    </div>
-                    {{/isSubscribed}}
-                    {{#isSubscribed}}
-                    <div style="text-align: center; padding: 6px; font-size: 11px; color: #10b981; font-weight: 600;">
-                        ✅ You are subscribed to Relatle Daily at 9:00 AM PST
-                    </div>
-                    {{/isSubscribed}}
-                </template>
-                <div placeholder style="text-align: center; color: #64748b; padding: 8px;">Loading subscription status...</div>
-            </amp-list>
-
             <!-- Organization Leaderboard -->
             <div class="leaderboard-section">
                 <div class="leaderboard-title" [text]="'🏆 ' + gameState.domain + ' Leaderboard'">
@@ -609,6 +579,32 @@ export const EMAIL_HTML = `<!doctype html>
                     </amp-list>
                 </div>
             </div>
+
+            <!-- Compact Subscribe Banner Box (Loads via amp-list upon open, hides when subscribed) -->
+            <amp-list width="auto" height="125" layout="fixed-height" single-item src="https://relatle.dev/api/sub-status" [hidden]="gameState.isSubscribed">
+                <template type="amp-mustache">
+                    {{^isSubscribed}}
+                    <div class="subscribe-banner" [hidden]="gameState.isSubscribed">
+                        <div class="subscribe-header">
+                            <span class="subscribe-icon">📬</span>
+                            <div>
+                                <div class="subscribe-title">Get Relatle Daily at 9:00 AM PST</div>
+                                <div class="subscribe-desc">Never miss today's puzzle! Join your organization's leaderboard.</div>
+                            </div>
+                        </div>
+                        <form method="POST" action-xhr="https://relatle.dev/api/subscribe" style="margin-top: 6px;"
+                            on="submit-success:AMP.setState({ gameState: { isSubscribed: true, lastMessage: event.response.message } });
+                                submit-error:AMP.setState({ gameState: { lastMessage: event.response.message || '⚠️ Subscription failed.' } })">
+                            <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
+                            <button type="submit" class="btn btn-subscribe">
+                                ✨ Subscribe Me Daily
+                            </button>
+                        </form>
+                    </div>
+                    {{/isSubscribed}}
+                </template>
+                <div placeholder style="text-align: center; color: #64748b; padding: 8px;">Loading subscription status...</div>
+            </amp-list>
         </div>
 
         <div class="footer">
