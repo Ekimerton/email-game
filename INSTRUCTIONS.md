@@ -1,136 +1,91 @@
-# Email Word Guessing Game
+# Relatle - Daily Synonym Word Game (AMP for Email)
 
-An interactive word-guessing game built with AMP for Email and Hono.
+An interactive daily word-guessing game built with **AMP for Email** and **Hono** running on Cloudflare Workers.
 
 ## 🎮 How It Works
 
-- Users guess a 7-letter word
-- The game validates guesses via API (server-side)
-- Tracks the number of attempts
-- Shows success message when correct
-- Play again to reset
+1. **Daily Target Word**: Everyone gets the same daily word puzzle based on the date.
+2. **Synonym Progression**: Start with 1 revealed synonym. Every incorrect guess reveals the next synonym clue!
+3. **Letter Hints & Masks**: See letter position masks (`V _ _ R _ N _`) and request letter hints (-75 pts).
+4. **Org Leaderboard**: Scores are recorded for each user's email domain (e.g. `@acme.com`). Compete with colleagues in your organization!
+5. **Score Sharing**: On winning, get a pre-formatted score card to copy and share.
+
+---
 
 ## 🚀 Getting Started
 
-### 1. Start the Development Server
+### 1. Start Dev Server
 
 ```bash
 npm run dev
 ```
 
-This will start the Hono server on `http://localhost:8787`
+This starts the local Hono dev server at `http://localhost:8787` with local KV simulation.
 
-### 2. Access the Game
+### 2. Access the Game & Test Domain Leaderboards
 
-Open your browser and go to:
-```
-http://localhost:8787
-```
+Open your browser to:
+- User 1 (Acme Corp): `http://localhost:8787?email=alice@acme.com`
+- User 2 (Acme Corp): `http://localhost:8787?email=bob@acme.com`
+- User 3 (Tech Corp): `http://localhost:8787?email=charlie@techcorp.io`
 
-The server will serve the email.html file with all the game functionality!
+---
 
-### 3. Play the Game
+## 🧪 Testing the API via cURL
 
-- Type a 7-letter word guess
-- Click "Submit Guess"
-- The API validates your guess server-side
-- Keep trying until you get it right!
-
-**Current word:** `TESTING`
-
-## 🧪 Testing the API
-
-Run the test script to verify the API endpoint:
-
+### 1. Fetch Today's Game State
 ```bash
-./test-api.sh
+curl "http://localhost:8787/api/state?email=alice@acme.com"
 ```
 
-Or manually test with curl:
-
+### 2. Submit an Incorrect Guess (Reveals Next Synonym)
 ```bash
-# Test incorrect guess
-curl -X POST http://localhost:8787/api/guess \
-  -d "user-guess=WRONGGG" \
-  -H "Content-Type: application/x-www-form-urlencoded"
-
-# Test correct guess
-curl -X POST http://localhost:8787/api/guess \
-  -d "user-guess=TESTING" \
+curl -X POST "http://localhost:8787/api/guess?email=alice@acme.com" \
+  -d "user-guess=INVALID" \
   -H "Content-Type: application/x-www-form-urlencoded"
 ```
+
+### 3. Request a Letter Hint (-75 pts penalty)
+```bash
+curl -X POST "http://localhost:8787/api/hint?email=alice@acme.com"
+```
+
+### 4. Submit Correct Guess (Today's Word: `VIBRANT`)
+```bash
+curl -X POST "http://localhost:8787/api/guess?email=alice@acme.com" \
+  -d "user-guess=VIBRANT" \
+  -H "Content-Type: application/x-www-form-urlencoded"
+```
+
+### 5. Fetch Domain Leaderboard
+```bash
+curl "http://localhost:8787/api/leaderboard?domain=acme.com"
+```
+
+---
 
 ## 📁 Project Structure
 
-- `src/index.ts` - Hono API server with guess validation
-- `src/email.html` - AMP email with game interface
-- `wrangler.jsonc` - Cloudflare Workers configuration
-- `test-api.sh` - API testing script
+- `src/index.ts`: Hono backend API, game state logic, CORS & KV storage
+- `src/puzzles.ts`: Daily puzzle dataset & date-seeded lookup engine
+- `src/email.html`: Interactive AMP for Email frontend
+- `src/emailHtml.ts`: Exported AMP HTML string module for Worker rendering
+- `wrangler.jsonc`: Cloudflare Workers & KV namespace configuration
 
-## 🔧 Key Features
+---
 
-### Server-Side (Hono API)
-- ✅ POST `/api/guess` - Validates guess against target word
-- ✅ CORS configured for AMP emails
-- ✅ Serves the game at root URL for testing
+## 🎯 Daily Puzzles & Scoring System
 
-### Client-Side (AMP Email)
-- ✅ Interactive input with live uppercase conversion
-- ✅ Submit button with loading state
-- ✅ Real-time feedback from server
-- ✅ Win detection and celebration
-- ✅ Play again functionality
-- ✅ Guess counter
+- **Base Score**: 1,000 Points
+- **Guess Penalty**: -100 Points per additional guess
+- **Letter Hint Penalty**: -75 Points per letter revealed
+- **Minimum Score**: 100 Points upon solving
 
-## 🎯 Changing the Target Word
-
-Edit `src/index.ts`:
-
-```typescript
-const TARGET_WORD = 'TESTING' // Change this to any word
-```
-
-Don't forget to update the `maxlength` in `email.html` if you change the word length!
+---
 
 ## 🚢 Deployment
 
 Deploy to Cloudflare Workers:
-
 ```bash
 npm run deploy
 ```
-
-Then update the `action-xhr` URL in `email.html` to point to your deployed worker URL.
-
-## 💡 Why Use API Instead of Client-Side?
-
-**With API (Current Implementation):**
-- ✅ Answer is hidden from email source code
-- ✅ Server validates guesses
-- ✅ Can add complex logic (hints, scoring, leaderboards)
-- ✅ Can track analytics
-- ✅ More secure
-
-**Without API (Pure Client-Side):**
-- ❌ Answer visible in HTML source
-- ❌ Limited to simple comparisons
-- ❌ No persistence
-- ✅ Works offline
-- ✅ No server needed
-
-## 📧 Testing in Real Email Clients
-
-**Supported Email Clients:**
-- Gmail (Web, Android, iOS)
-- Yahoo Mail
-- Mail.ru
-- FairEmail
-
-**Note:** Most email clients have strict requirements for AMP emails:
-1. Must be sent from verified sender
-2. Requires SPF/DKIM/DMARC setup
-3. Recipient must have enabled dynamic emails
-4. Needs special MIME structure
-
-For local testing, use the browser at `http://localhost:8787`!
-

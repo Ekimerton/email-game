@@ -1,4 +1,4 @@
-<!doctype html>
+export const EMAIL_HTML = `<!doctype html>
 <html ⚡4email data-css-strict>
 
 <head>
@@ -607,4 +607,4 @@
     </div>
 </body>
 
-</html>
+</html>`

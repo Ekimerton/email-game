@@ -5,15 +5,20 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "create-kv": "wrangler kv namespace create GAME_STATE_KV"
+    "create-kv": "wrangler kv namespace create GAME_STATE_KV",
+    "test-send": "tsx scripts/sendTestEmail.ts"
   },
   "dependencies": {
+    "dotenv": "^16.5.0",
     "google-auth-library": "^9.15.1",
-    "hono": "^4.10.4"
+    "hono": "^4.10.4",
+    "nodemailer": "^6.10.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240725.0",
     "@types/node": "^24.9.2",
-    "wrangler": "^4.4.0",
-    "@cloudflare/workers-types": "^4.20240725.0"
+    "@types/nodemailer": "^6.4.17",
+    "tsx": "^4.19.3",
+    "wrangler": "^4.4.0"
   }
 }
