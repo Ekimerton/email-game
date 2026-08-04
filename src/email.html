@@ -454,123 +454,134 @@
         </div>
 
         <div class="game-body">
-            <!-- 1. Feedback Status Banner at Top -->
-            <div class="message-banner" [text]="gameState.lastMessage">
-                Guess the word!
-            </div>
+            <!-- 1-4. Puzzle Progress & Interactive Form Section (Loads via amp-list upon open) -->
+            <amp-list width="auto" height="380" layout="fixed-height" single-item src="https://relatle.dev/api/state">
+                <template type="amp-mustache">
+                    <!-- 1. Feedback Status Banner at Top -->
+                    <div class="message-banner" [text]="gameState.lastMessage">{{lastMessage}}</div>
 
-            <!-- 2. Revealed & Locked Definitions Cards at Top -->
-            <div class="definitions-section">
-                <div class="section-label">
-                    <span>Revealed Definitions</span>
-                    <span [text]="gameState.revealedCount + ' of ' + gameState.totalDefinitions">1 of 5</span>
-                </div>
-                <div class="definitions-cards">
-                    <div class="definition-card" [hidden]="!gameState.allDefinitions[0]">
-                        <span class="def-number">1.</span>
-                        <span [class]="gameState.revealedCount > 0 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[0] || ''"></span>
-                    </div>
-                    <div class="definition-card" [hidden]="!gameState.allDefinitions[1]">
-                        <span class="def-number">2.</span>
-                        <span class="definition-text-blurred" [class]="gameState.revealedCount > 1 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[1] || ''"></span>
-                    </div>
-                    <div class="definition-card" [hidden]="!gameState.allDefinitions[2]">
-                        <span class="def-number">3.</span>
-                        <span class="definition-text-blurred" [class]="gameState.revealedCount > 2 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[2] || ''"></span>
-                    </div>
-                    <div class="definition-card" [hidden]="!gameState.allDefinitions[3]">
-                        <span class="def-number">4.</span>
-                        <span class="definition-text-blurred" [class]="gameState.revealedCount > 3 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[3] || ''"></span>
-                    </div>
-                    <div class="definition-card" [hidden]="!gameState.allDefinitions[4]">
-                        <span class="def-number">5.</span>
-                        <span class="definition-text-blurred" [class]="gameState.revealedCount > 4 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[4] || ''"></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. Word Letter Mask Tiles & Counter -->
-            <div class="synonyms-section">
-                <div class="section-label">
-                    <span>Letter Hints & Word Length</span>
-                    <span>Guesses: <span class="stats-val" [text]="gameState.guessCount">0</span></span>
-                </div>
-                <div class="mask-grid">
-                    <div class="mask-tile" [text]="gameState.letterMask[0] || '_'">_</div>
-                    <div class="mask-tile" [text]="gameState.letterMask[1] || '_'">_</div>
-                    <div class="mask-tile" [text]="gameState.letterMask[2] || '_'">_</div>
-                    <div class="mask-tile" [text]="gameState.letterMask[3] || '_'">_</div>
-                    <div class="mask-tile" [text]="gameState.letterMask[4] || '_'">_</div>
-                    <div class="mask-tile" [text]="gameState.letterMask[5] || '_'" hidden [hidden]="gameState.wordLength < 6">_</div>
-                    <div class="mask-tile" [text]="gameState.letterMask[6] || '_'" hidden [hidden]="gameState.wordLength < 7">_</div>
-                </div>
-            </div>
-
-            <!-- 4. Guess Input Form & Action Buttons -->
-            <div class="form-container" [hidden]="gameState.hasWon">
-                <form id="guess-form" method="POST" action-xhr="https://relatle.dev/api/guess"
-                    on="submit-success:AMP.setState({ gameState: event.response });
-                        submit-error:AMP.setState({ gameState: { lastMessage: event.response.lastMessage || '⚠️ Could not process guess. Please try again.', isSubmitting: false } });
-                        submit:AMP.setState({ gameState: { isSubmitting: true } })">
-                    
-                    <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
-
-                    <div class="input-group">
-                        <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD"
-                            required autocomplete="off" [value]="gameState.currentInput"
-                            on="input-debounced:AMP.setState({ gameState: { currentInput: event.value.toUpperCase() } })">
-
-                        <div class="action-buttons">
-                            <button type="submit" class="btn btn-primary" [disabled]="gameState.isSubmitting">
-                                <span [hidden]="gameState.isSubmitting">Submit Guess</span>
-                                <span hidden [hidden]="!gameState.isSubmitting">Submitting...</span>
-                            </button>
-                            <button type="button" class="btn btn-hint" [disabled]="gameState.hasWon"
-                                on="tap:hint-form.submit">
-                                💡 Hint (-75pt)
-                            </button>
+                    <!-- 2. Revealed & Locked Definitions Cards at Top -->
+                    <div class="definitions-section">
+                        <div class="section-label">
+                            <span>Revealed Definitions</span>
+                            <span [text]="gameState.revealedCount + ' of ' + gameState.totalDefinitions">{{revealedCount}} of {{totalDefinitions}}</span>
+                        </div>
+                        <div class="definitions-cards">
+                            <div class="definition-card" [hidden]="!gameState.allDefinitions[0]">
+                                <span class="def-number">1.</span>
+                                <span [class]="gameState.revealedCount > 0 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[0] || ''">{{def1}}</span>
+                            </div>
+                            <div class="definition-card" [hidden]="!gameState.allDefinitions[1]">
+                                <span class="def-number">2.</span>
+                                <span class="definition-text-blurred" [class]="gameState.revealedCount > 1 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[1] || ''">{{def2}}</span>
+                            </div>
+                            <div class="definition-card" [hidden]="!gameState.allDefinitions[2]">
+                                <span class="def-number">3.</span>
+                                <span class="definition-text-blurred" [class]="gameState.revealedCount > 2 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[2] || ''">{{def3}}</span>
+                            </div>
+                            <div class="definition-card" [hidden]="!gameState.allDefinitions[3]">
+                                <span class="def-number">4.</span>
+                                <span class="definition-text-blurred" [class]="gameState.revealedCount > 3 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[3] || ''">{{def4}}</span>
+                            </div>
+                            <div class="definition-card" [hidden]="!gameState.allDefinitions[4]">
+                                <span class="def-number">5.</span>
+                                <span class="definition-text-blurred" [class]="gameState.revealedCount > 4 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[4] || ''">{{def5}}</span>
+                            </div>
                         </div>
                     </div>
-                </form>
 
-                <!-- Hidden Form for Letter Hint Button -->
-                <form id="hint-form" method="POST" action-xhr="https://relatle.dev/api/hint" hidden
-                    on="submit-success:AMP.setState({ gameState: event.response });
-                        submit-error:AMP.setState({ gameState: { lastMessage: event.response.lastMessage || '⚠️ Could not process hint request. Please try again.' } })">
-                    <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
-                </form>
-            </div>
-
-            <!-- Win Victory & Share Section -->
-            <div class="win-card" hidden [hidden]="!gameState.hasWon">
-                <div class="win-title">🏆 YOU WON!</div>
-                <div class="win-score" [text]="'Final Score: ' + gameState.score + ' Points!'">Final Score: 1000 Points!</div>
-                <p style="font-size: 12px; color: #d1fae5; margin-bottom: 6px;">Share your score with your organization:</p>
-                <div class="share-box" [text]="gameState.shareText">
-                    RELATLE #1
-                    🎯 Solved in 1 guess!
-                    ⭐ Score: 1000 pts | Org Rank: #1
-                </div>
-            </div>
-
-            <!-- Compact Subscribe Banner Box -->
-            <div class="subscribe-banner" [hidden]="gameState.isSubscribed">
-                <div class="subscribe-header">
-                    <span class="subscribe-icon">📬</span>
-                    <div>
-                        <div class="subscribe-title">Get Relatle Daily at 9:00 AM PST</div>
-                        <div class="subscribe-desc">Never miss today's puzzle! Join your organization's leaderboard.</div>
+                    <!-- 3. Word Letter Mask Tiles & Counter -->
+                    <div class="synonyms-section">
+                        <div class="section-label">
+                            <span>Letter Hints & Word Length</span>
+                            <span>Guesses: <span class="stats-val" [text]="gameState.guessCount">{{guessCount}}</span></span>
+                        </div>
+                        <div class="mask-grid">
+                            <div class="mask-tile" [text]="gameState.letterMask[0] || '_'">{{mask0}}</div>
+                            <div class="mask-tile" [text]="gameState.letterMask[1] || '_'">{{mask1}}</div>
+                            <div class="mask-tile" [text]="gameState.letterMask[2] || '_'">{{mask2}}</div>
+                            <div class="mask-tile" [text]="gameState.letterMask[3] || '_'">{{mask3}}</div>
+                            <div class="mask-tile" [text]="gameState.letterMask[4] || '_'">{{mask4}}</div>
+                            <div class="mask-tile" [text]="gameState.letterMask[5] || '_'" hidden [hidden]="gameState.wordLength < 6">{{mask5}}</div>
+                            <div class="mask-tile" [text]="gameState.letterMask[6] || '_'" hidden [hidden]="gameState.wordLength < 7">{{mask6}}</div>
+                        </div>
                     </div>
-                </div>
-                <form method="POST" action-xhr="https://relatle.dev/api/subscribe" style="margin-top: 6px;"
-                    on="submit-success:AMP.setState({ gameState: { isSubscribed: true, lastMessage: event.response.message } });
-                        submit-error:AMP.setState({ gameState: { lastMessage: event.response.message || '⚠️ Subscription failed.' } })">
-                    <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
-                    <button type="submit" class="btn btn-subscribe">
-                        ✨ Subscribe Me Daily
-                    </button>
-                </form>
-            </div>
+
+                    <!-- 4. Guess Input Form & Action Buttons -->
+                    <div class="form-container" [hidden]="gameState.hasWon">
+                        <form id="guess-form" method="POST" action-xhr="https://relatle.dev/api/guess"
+                            on="submit-success:AMP.setState({ gameState: event.response });
+                                submit-error:AMP.setState({ gameState: { lastMessage: event.response.lastMessage || '⚠️ Could not process guess. Please try again.', isSubmitting: false } });
+                                submit:AMP.setState({ gameState: { isSubmitting: true } })">
+                            
+                            <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
+
+                            <div class="input-group">
+                                <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD"
+                                    required autocomplete="off" [value]="gameState.currentInput"
+                                    on="input-debounced:AMP.setState({ gameState: { currentInput: event.value.toUpperCase() } })">
+
+                                <div class="action-buttons">
+                                    <button type="submit" class="btn btn-primary" [disabled]="gameState.isSubmitting">
+                                        <span [hidden]="gameState.isSubmitting">Submit Guess</span>
+                                        <span hidden [hidden]="!gameState.isSubmitting">Submitting...</span>
+                                    </button>
+                                    <button type="button" class="btn btn-hint" [disabled]="gameState.hasWon"
+                                        on="tap:hint-form.submit">
+                                        💡 Hint (-75pt)
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Hidden Form for Letter Hint Button -->
+                        <form id="hint-form" method="POST" action-xhr="https://relatle.dev/api/hint" hidden
+                            on="submit-success:AMP.setState({ gameState: event.response });
+                                submit-error:AMP.setState({ gameState: { lastMessage: event.response.message || '⚠️ Could not process hint request. Please try again.' } })">
+                            <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
+                        </form>
+                    </div>
+
+                    <!-- Win Victory & Share Section -->
+                    <div class="win-card" hidden [hidden]="!gameState.hasWon">
+                        <div class="win-title">🏆 YOU WON!</div>
+                        <div class="win-score" [text]="'Final Score: ' + gameState.score + ' Points!'">Final Score: {{score}} Points!</div>
+                        <p style="font-size: 12px; color: #d1fae5; margin-bottom: 6px;">Share your score with your organization:</p>
+                        <div class="share-box" [text]="gameState.shareText">{{shareText}}</div>
+                    </div>
+                </template>
+            </amp-list>
+
+            <!-- Compact Subscribe Banner Box (Loads via amp-list upon open) -->
+            <amp-list width="auto" height="110" layout="fixed-height" single-item src="https://relatle.dev/api/sub-status">
+                <template type="amp-mustache">
+                    {{^isSubscribed}}
+                    <div class="subscribe-banner">
+                        <div class="subscribe-header">
+                            <span class="subscribe-icon">📬</span>
+                            <div>
+                                <div class="subscribe-title">Get Relatle Daily at 9:00 AM PST</div>
+                                <div class="subscribe-desc">Never miss today's puzzle! Join your organization's leaderboard.</div>
+                            </div>
+                        </div>
+                        <form method="POST" action-xhr="https://relatle.dev/api/subscribe" style="margin-top: 6px;"
+                            on="submit-success:AMP.setState({ gameState: { isSubscribed: true, lastMessage: event.response.message } });
+                                submit-error:AMP.setState({ gameState: { lastMessage: event.response.message || '⚠️ Subscription failed.' } })">
+                            <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
+                            <button type="submit" class="btn btn-subscribe">
+                                ✨ Subscribe Me Daily
+                            </button>
+                        </form>
+                    </div>
+                    {{/isSubscribed}}
+                    {{#isSubscribed}}
+                    <div style="text-align: center; padding: 6px; font-size: 11px; color: #10b981; font-weight: 600;">
+                        ✅ You are subscribed to Relatle Daily at 9:00 AM PST
+                    </div>
+                    {{/isSubscribed}}
+                </template>
+                <div placeholder style="text-align: center; color: #64748b; padding: 8px;">Loading subscription status...</div>
+            </amp-list>
 
             <!-- Organization Leaderboard -->
             <div class="leaderboard-section">

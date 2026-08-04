@@ -391,10 +391,9 @@ app.get('/', async (c) => {
   const { state, puzzle } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam)
 
   const reqUrl = new URL(c.req.url)
-  // Ensure origin ALWAYS uses HTTPS protocol for AMP HTML compliance
-  let currentOrigin = reqUrl.origin.replace(/^http:/, 'https:')
-  if (currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')) {
-    currentOrigin = 'https://email-game.teamify.workers.dev'
+  let currentOrigin = reqUrl.origin
+  if (!currentOrigin.includes('localhost') && !currentOrigin.includes('127.0.0.1')) {
+    currentOrigin = currentOrigin.replace(/^http:/, 'https:')
   }
 
   let html = EMAIL_HTML
@@ -412,11 +411,20 @@ app.get('/', async (c) => {
     .replaceAll(`${currentOrigin}/api/subscribe`, `${currentOrigin}/api/subscribe?email=${encodedEmail}`)
     .replaceAll(`${currentOrigin}/account?token=default-dev-token`, `${currentOrigin}/account?token=${state.userToken}`)
 
-  // Explicitly replace amp-list leaderboard endpoint URL with target domain & email
-  html = html.replace(
-    `src="${currentOrigin}/api/leaderboard"`,
-    `src="${currentOrigin}/api/leaderboard?domain=${encodedDomain}&email=${encodedEmail}"`
-  )
+  // Explicitly replace amp-list endpoint URLs with target domain & email
+  html = html
+    .replace(
+      `src="${currentOrigin}/api/leaderboard"`,
+      `src="${currentOrigin}/api/leaderboard?domain=${encodedDomain}&email=${encodedEmail}"`
+    )
+    .replace(
+      `src="${currentOrigin}/api/state"`,
+      `src="${currentOrigin}/api/state?email=${encodedEmail}"`
+    )
+    .replace(
+      `src="${currentOrigin}/api/sub-status"`,
+      `src="${currentOrigin}/api/sub-status?email=${encodedEmail}"`
+    )
 
   // Inject current user state JSON into <amp-state>
   const jsonStateStr = JSON.stringify(state, null, 2)
@@ -955,13 +963,44 @@ app.get('/api/subscribers', async (c) => {
   }
 })
 
+// Get subscription status
+app.get('/api/sub-status', async (c) => {
+  try {
+    const userEmail = await getUserEmail(c)
+    const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
+    const isSubscribed = subscribers.some(s => s.email === userEmail && s.status === 'active')
+    const payload = { isSubscribed, userEmail }
+    return c.json({ items: [payload], ...payload })
+  } catch (error: any) {
+    const fallback = { isSubscribed: false, userEmail: 'player@company.com' }
+    return c.json({ items: [fallback], ...fallback })
+  }
+})
+
 // Get game state
 app.get('/api/state', async (c) => {
   try {
     const userEmail = await getUserEmail(c)
     const dateParam = c.req.query('date')
     const { state } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam)
-    return c.json(state)
+
+    const statePayload = {
+      ...state,
+      def1: state.allDefinitions[0] || '',
+      def2: state.allDefinitions[1] || '',
+      def3: state.allDefinitions[2] || '',
+      def4: state.allDefinitions[3] || '',
+      def5: state.allDefinitions[4] || '',
+      mask0: state.letterMask[0] || '_',
+      mask1: state.letterMask[1] || '_',
+      mask2: state.letterMask[2] || '_',
+      mask3: state.letterMask[3] || '_',
+      mask4: state.letterMask[4] || '_',
+      mask5: state.letterMask[5] || '_',
+      mask6: state.letterMask[6] || '_',
+    }
+
+    return c.json({ items: [statePayload], ...statePayload })
   } catch (error: any) {
     console.error('Error fetching game state:', error)
     return c.json({ error: 'Failed to fetch game state' }, 500)
