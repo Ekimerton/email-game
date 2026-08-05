@@ -415,8 +415,17 @@
         </div>
 
         <div class="game-body">
+            <!-- Dynamic State Store for interactive binding & hiding form on win -->
+            <amp-state id="gameState">
+                <script type="application/json">
+                    {
+                        "hasWon": false
+                    }
+                </script>
+            </amp-state>
+
             <!-- Dynamic State Section - fetched fresh on every email open -->
-            <amp-list id="stateList" width="auto" height="560" layout="fixed-height" single-item
+            <amp-list id="stateList" width="auto" height="380" layout="fixed-height"
                 src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER">
                 <template type="amp-mustache">
                     <div class="definitions-section">
@@ -456,38 +465,6 @@
                         <div class="share-box">{{shareText}}</div>
                     </div>
                     {{/hasWon}}
-
-                    {{^hasWon}}
-                    <div class="form-container">
-                        <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER"
-                            on="submit-success:stateList.refresh,leaderboardList.refresh;
-                                submit-error:stateList.refresh">
-                            
-                            <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
-
-                            <div class="input-group">
-                                <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD"
-                                    required autocomplete="off">
-
-                                <div class="action-buttons">
-                                    <button type="submit" class="btn btn-primary">
-                                        Submit Guess
-                                    </button>
-                                    <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
-                                        💡 Hint (-75pt)
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-
-                        <!-- Hidden Form for Letter Hint Button -->
-                        <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER" hidden
-                            on="submit-success:stateList.refresh;
-                                submit-error:stateList.refresh">
-                            <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
-                        </form>
-                    </div>
-                    {{/hasWon}}
                 </template>
                 <div placeholder>
                     <div class="definitions-section">
@@ -509,31 +486,39 @@
                         </div>
                     </div>
                     <div class="message-banner">Guess the word!</div>
-
-                    <div class="form-container">
-                        <form id="guess-form-placeholder" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER"
-                            on="submit-success:stateList.refresh,leaderboardList.refresh;
-                                submit-error:stateList.refresh">
-                            
-                            <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
-
-                            <div class="input-group">
-                                <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD"
-                                    required autocomplete="off">
-
-                                <div class="action-buttons">
-                                    <button type="submit" class="btn btn-primary">
-                                        Submit Guess
-                                    </button>
-                                    <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
-                                        💡 Hint (-75pt)
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
                 </div>
             </amp-list>
+
+            <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
+            <div class="form-container" [hidden]="gameState.hasWon">
+                <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER"
+                    on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh,leaderboardList.refresh;
+                        submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
+                    
+                    <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
+
+                    <div class="input-group">
+                        <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD"
+                            required autocomplete="off">
+
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-primary">
+                                Submit Guess
+                            </button>
+                            <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
+                                💡 Hint (-75pt)
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Hidden Form for Letter Hint Button -->
+                <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER" hidden
+                    on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
+                        submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
+                    <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
+                </form>
+            </div>
 
             <!-- Organization Leaderboard -->
             <div class="leaderboard-section">
@@ -541,7 +526,7 @@
                     🏆 Organization Leaderboard
                 </div>
                 
-                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" single-item src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER">
+                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER">
                     <template type="amp-mustache">
                         {{^hasWon}}
                         <div class="leaderboard-lock-banner">

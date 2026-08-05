@@ -588,52 +588,42 @@ app.use('/api/*', async (c, next) => {
     } catch (_) {}
   }
 
-  const reqUrl = new URL(c.req.url)
+  let allowedOrigin = (originHeader && originHeader !== 'null') ? originHeader : (refererOrigin || 'https://mail.google.com')
 
-  const setCorsHeaders = (headers: Headers) => {
-    let allowedOrigin = (originHeader && originHeader !== 'null') ? originHeader : (refererOrigin || 'https://mail.google.com')
-
-    // Determine target source origin for AMP specification (MUST match __amp_source_origin exactly if provided)
-    let sourceOrigin = ampSourceOrigin || ''
-    if (!sourceOrigin) {
-      if (originHeader && originHeader.includes('mail.google.com')) {
-        sourceOrigin = 'gmail.com'
-      } else if (originHeader && (originHeader.includes('amp.dev') || originHeader.includes('gmail.dev'))) {
-        sourceOrigin = 'amp.dev'
-      } else if (originHeader) {
-        try {
-          sourceOrigin = new URL(originHeader).hostname
-        } catch (_) {
-          sourceOrigin = 'gmail.com'
-        }
-      } else {
+  // Determine target source origin for AMP specification (MUST match __amp_source_origin exactly if provided)
+  let sourceOrigin = ampSourceOrigin || ''
+  if (!sourceOrigin) {
+    if (originHeader && originHeader.includes('mail.google.com')) {
+      sourceOrigin = 'gmail.com'
+    } else if (originHeader && (originHeader.includes('amp.dev') || originHeader.includes('gmail.dev'))) {
+      sourceOrigin = 'amp.dev'
+    } else if (originHeader) {
+      try {
+        sourceOrigin = new URL(originHeader).hostname
+      } catch (_) {
         sourceOrigin = 'gmail.com'
       }
+    } else {
+      sourceOrigin = 'gmail.com'
     }
-
-    headers.set('Access-Control-Allow-Origin', allowedOrigin)
-    headers.set('Vary', 'Origin')
-    headers.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
-    headers.set('Access-Control-Allow-Headers', 'Content-Type, AMP-Same-Origin, Authorization, x-user-email')
-    headers.set('Access-Control-Expose-Headers', 'AMP-Access-Control-Allow-Source-Origin')
-    headers.set('Access-Control-Allow-Credentials', 'true')
-    headers.set('AMP-Access-Control-Allow-Source-Origin', sourceOrigin)
-    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-    headers.set('Pragma', 'no-cache')
-    headers.set('Expires', '0')
   }
 
+  c.header('Access-Control-Allow-Origin', allowedOrigin)
+  c.header('Vary', 'Origin')
+  c.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+  c.header('Access-Control-Allow-Headers', 'Content-Type, AMP-Same-Origin, Authorization, x-user-email')
+  c.header('Access-Control-Expose-Headers', 'AMP-Access-Control-Allow-Source-Origin')
+  c.header('Access-Control-Allow-Credentials', 'true')
+  c.header('AMP-Access-Control-Allow-Source-Origin', sourceOrigin)
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+  c.header('Pragma', 'no-cache')
+  c.header('Expires', '0')
+
   if (c.req.method === 'OPTIONS') {
-    const response = c.body(null, 204)
-    setCorsHeaders(response.headers)
-    return response
+    return c.body(null, 204)
   }
 
   await next()
-
-  if (c.res) {
-    setCorsHeaders(c.res.headers)
-  }
 })
 
 // Serve AMP HTML preview page at root, with user state pre-embedded
@@ -1218,7 +1208,7 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
     shareText: state.shareText,
   }
 
-  return { items: [statePayload], ...statePayload }
+  return { items: [statePayload] }
 }
 
 // Get game state
@@ -1396,8 +1386,7 @@ app.get('/api/leaderboard', async (c) => {
     }
 
     return c.json({
-      items: [payload],
-      ...payload
+      items: [payload]
     })
   } catch (error: any) {
     return c.json({ items: [] })
