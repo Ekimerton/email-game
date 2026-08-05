@@ -110,7 +110,6 @@ export const EMAIL_HTML = `<!doctype html>
         .definition-card {
             background: #0f172a;
             border: 1px solid #334155;
-            border-left: 3px solid #6366f1;
             border-radius: 6px;
             padding: 6px 10px;
             font-size: 12px;
