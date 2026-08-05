@@ -1,5 +1,5 @@
 export const EMAIL_HTML = `<!doctype html>
-<html ⚡4email>
+<html ⚡4email data-css-strict>
 
 <head>
     <meta charset="utf-8">
@@ -129,11 +129,9 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .definition-text-blurred {
-            color: #334155;
-            background: #334155;
-            border-radius: 4px;
-            display: inline-block;
-            opacity: 0.8;
+            color: #64748b;
+            letter-spacing: 1px;
+            opacity: 0.7;
         }
 
         /* Status & Mask Tiles */
@@ -339,6 +337,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         .leaderboard-blur-content {
             opacity: 0.15;
+            filter: blur(4px);
         }
 
         .leaderboard-lock-banner {

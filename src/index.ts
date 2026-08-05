@@ -66,6 +66,7 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>()
 const client = new OAuth2Client()
+const REDACTED_DEF_TEXT = '████████████████████████████████'
 
 // Persistent memory store for development fallback
 const MEMORY_STORE = new Map<string, any>()
@@ -750,8 +751,9 @@ app.get('/', async (c) => {
 
   // Pre-render definition cards text & blur in placeholder
   for (let i = 0; i < 5; i++) {
-    const def = puzzle.definitions[i] || ''
     const isRevealed = i < state.revealedCount
+    const rawDef = puzzle.definitions[i] || ''
+    const def = isRevealed ? rawDef : getRedactedText(rawDef)
     html = html.replace(`__DEF_${i}__`, def)
     html = html.replace(`__DEF_${i}_BLUR__`, isRevealed ? '' : 'definition-text-blurred')
   }
@@ -1258,6 +1260,11 @@ app.get('/api/sub-status', async (c) => {
   }
 })
 
+function getRedactedText(text: string): string {
+  if (!text) return '••••••••••••••••••••'
+  return text.replace(/[^\s]/g, '•')
+}
+
 // Helper to build standardized state payload for AMP list and AMP.setState
 function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
   const ts = Date.now()
@@ -1269,11 +1276,11 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
     userEmail: state.userEmail,
     stateUrl: `https://email-game.teamify.workers.dev/api/state?email=${encodedEmail}&t=${ts}`,
     leaderboardUrl: `https://email-game.teamify.workers.dev/api/leaderboard?domain=${encodedDomain}&email=${encodedEmail}&t=${ts}`,
-    def1_text: puzzle.definitions[0] || '',
-    def2_text: puzzle.definitions[1] || '',
-    def3_text: puzzle.definitions[2] || '',
-    def4_text: puzzle.definitions[3] || '',
-    def5_text: puzzle.definitions[4] || '',
+    def1_text: state.revealedCount >= 1 ? (puzzle.definitions[0] || '') : getRedactedText(puzzle.definitions[0] || ''),
+    def2_text: state.revealedCount >= 2 ? (puzzle.definitions[1] || '') : getRedactedText(puzzle.definitions[1] || ''),
+    def3_text: state.revealedCount >= 3 ? (puzzle.definitions[2] || '') : getRedactedText(puzzle.definitions[2] || ''),
+    def4_text: state.revealedCount >= 4 ? (puzzle.definitions[3] || '') : getRedactedText(puzzle.definitions[3] || ''),
+    def5_text: state.revealedCount >= 5 ? (puzzle.definitions[4] || '') : getRedactedText(puzzle.definitions[4] || ''),
     blur1: state.revealedCount >= 1 ? '' : 'definition-text-blurred',
     blur2: state.revealedCount >= 2 ? '' : 'definition-text-blurred',
     blur3: state.revealedCount >= 3 ? '' : 'definition-text-blurred',
