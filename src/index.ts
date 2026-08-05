@@ -68,15 +68,20 @@ const app = new Hono<{ Bindings: Bindings }>()
 const client = new OAuth2Client()
 const REDACTED_DEF_TEXT = '████████████████████████████████'
 
-// Persistent memory store for development fallback
+// Persistent memory store for development fallback & 429 rate limit protection
 const MEMORY_STORE = new Map<string, any>()
 
 async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
   if (kv) {
     try {
       const val = await kv.get(key, { type: 'json' })
-      if (val !== null) return val
-    } catch (_) {}
+      if (val !== null) {
+        MEMORY_STORE.set(key, val)
+        return val
+      }
+    } catch (err) {
+      console.warn(`[KV 429 Rate Limit Warning] Failed reading ${key} from KV, falling back to memory:`, err)
+    }
   }
   return MEMORY_STORE.get(key) || null
 }
@@ -86,7 +91,9 @@ async function kvPut(kv: KVNamespace | undefined, key: string, value: any): Prom
   if (kv) {
     try {
       await kv.put(key, JSON.stringify(value))
-    } catch (_) {}
+    } catch (err) {
+      console.warn(`[KV 429 Rate Limit Warning] Failed writing ${key} to KV:`, err)
+    }
   }
 }
 
@@ -105,6 +112,13 @@ function formatDisplayEmail(email: string): string {
 // User identification helper (supports AMP Google Auth ID Token OR dev query/body/header)
 async function getUserEmail(c: any, parsedBody?: Record<string, any>): Promise<string> {
   let emailParam = c.req.query('email') || c.req.header('x-user-email') || parsedBody?.['email']
+
+  if (!emailParam) {
+    const ampSourceOrigin = c.req.query('__amp_source_origin')
+    if (ampSourceOrigin && ampSourceOrigin.includes('@') && !ampSourceOrigin.includes('amp@gmail.dev')) {
+      emailParam = ampSourceOrigin
+    }
+  }
 
   if (!emailParam) {
     try {
@@ -133,7 +147,7 @@ async function getUserEmail(c: any, parsedBody?: Record<string, any>): Promise<s
     }
   }
 
-  return 'player@company.com'
+  return 'test@nvidia.engineering'
 }
 
 // User UUID token security helper
@@ -613,23 +627,14 @@ app.use('/api/*', async (c, next) => {
   const reqUrl = new URL(c.req.url)
 
   const setCorsHeaders = (headers: Headers) => {
-    let allowedOrigin = (originHeader && originHeader !== 'null') ? originHeader : refererOrigin
+    let allowedOrigin = (originHeader && originHeader !== 'null') ? originHeader : (refererOrigin || 'https://mail.google.com')
 
-    if (!allowedOrigin) {
-      if (ampSourceOrigin) {
-        const sourceDomain = ampSourceOrigin.includes('@') ? ampSourceOrigin.split('@')[1] : ampSourceOrigin
-        allowedOrigin = `https://${sourceDomain}`
-      } else {
-        allowedOrigin = reqUrl.origin
-      }
-    }
-
-    // Determine target source origin for AMP specification
-    let sourceOrigin = ampSourceOrigin
+    // Determine target source origin for AMP specification (MUST match __amp_source_origin exactly if provided)
+    let sourceOrigin = ampSourceOrigin || ''
     if (!sourceOrigin) {
       if (originHeader && originHeader.includes('mail.google.com')) {
         sourceOrigin = 'gmail.com'
-      } else if (originHeader && originHeader.includes('amp.dev')) {
+      } else if (originHeader && (originHeader.includes('amp.dev') || originHeader.includes('gmail.dev'))) {
         sourceOrigin = 'amp.dev'
       } else if (originHeader) {
         try {

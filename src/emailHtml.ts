@@ -452,7 +452,7 @@ export const EMAIL_HTML = `<!doctype html>
         <div class="game-body">
             <!-- Dynamic State Section - fetched fresh on every email open -->
             <amp-list id="stateList" width="auto" height="560" layout="fixed-height" single-item
-                src="https://email-game.teamify.workers.dev/api/state">
+                src="https://email-game.teamify.workers.dev/api/state?email=test%40nvidia.engineering">
                 <template type="amp-mustache">
                     <div class="definitions-section">
                         <div class="section-label">
@@ -591,7 +591,7 @@ export const EMAIL_HTML = `<!doctype html>
                     🏆 Organization Leaderboard
                 </div>
                 
-                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" single-item src="https://email-game.teamify.workers.dev/api/leaderboard">
+                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" single-item src="https://email-game.teamify.workers.dev/api/leaderboard?domain=nvidia.engineering&email=test%40nvidia.engineering">
                     <template type="amp-mustache">
                         {{^hasWon}}
                         <div class="leaderboard-lock-banner">
