@@ -404,55 +404,20 @@ export const EMAIL_HTML = `<!doctype html>
 </head>
 
 <body>
-    <amp-state id="gameState">
-        <script type="application/json">
-        {
-            "puzzleId": "3",
-            "date": "2026-08-03",
-            "wordLength": 5,
-            "allDefinitions": [
-                "The natural agent that stimulates sight and makes things visible.",
-                "Having a considerable or sufficient amount of natural brightness.",
-                "Of little weight; not heavy.",
-                "To ignite or cause something to begin burning.",
-                "Gentle or delicate in motion or touch."
-            ],
-            "revealedDefinitions": ["The natural agent that stimulates sight and makes things visible."],
-            "letterMask": ["_", "_", "_", "_", "_"],
-            "guessesHistory": [],
-            "guessCount": 0,
-            "hintsUsed": 0,
-            "score": 0,
-            "hasWon": false,
-            "lastMessage": "Guess the 5-letter word!",
-            "currentInput": "",
-            "isSubmitting": false,
-            "userEmail": "player@company.com",
-            "domain": "company.com",
-            "leaderboard": [],
-            "shareText": "",
-            "revealedCount": 1,
-            "totalDefinitions": 5,
-            "isSubscribed": false,
-            "userToken": "default-dev-token"
-        }
-        </script>
-    </amp-state>
-
     <div class="email-container">
         <!-- Compact 1-Line Header -->
         <div class="game-header-compact">
             <h1 class="header-title-compact">RELATLE</h1>
             <div class="header-meta-compact">
-                <span [text]="gameState.date">2026-08-03</span>
-                <span class="domain-badge-compact" [text]="'🏢 ' + gameState.domain">🏢 company.com</span>
+                <span>2026-08-05</span>
+                <span class="domain-badge-compact">🏢 company.com</span>
             </div>
         </div>
 
         <div class="game-body">
             <!-- Dynamic State Section - fetched fresh on every email open -->
             <amp-list id="stateList" width="auto" height="560" layout="fixed-height" single-item
-                src="https://email-game.teamify.workers.dev/api/state?email=test%40nvidia.engineering">
+                src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER">
                 <template type="amp-mustache">
                     <div class="definitions-section">
                         <div class="section-label">
@@ -460,26 +425,12 @@ export const EMAIL_HTML = `<!doctype html>
                             <span>{{revealedCount}} of {{totalDefinitions}}</span>
                         </div>
                         <div class="definitions-cards">
+                            {{#definitions}}
                             <div class="definition-card">
-                                <span class="def-number">1.</span>
-                                <span class="{{blur1}}">{{def1_text}}</span>
+                                <span class="def-number">{{num}}.</span>
+                                <span>{{text}}</span>
                             </div>
-                            <div class="definition-card">
-                                <span class="def-number">2.</span>
-                                <span class="{{blur2}}">{{def2_text}}</span>
-                            </div>
-                            <div class="definition-card">
-                                <span class="def-number">3.</span>
-                                <span class="{{blur3}}">{{def3_text}}</span>
-                            </div>
-                            <div class="definition-card">
-                                <span class="def-number">4.</span>
-                                <span class="{{blur4}}">{{def4_text}}</span>
-                            </div>
-                            <div class="definition-card">
-                                <span class="def-number">5.</span>
-                                <span class="{{blur5}}">{{def5_text}}</span>
-                            </div>
+                            {{/definitions}}
                         </div>
                     </div>
 
@@ -489,13 +440,9 @@ export const EMAIL_HTML = `<!doctype html>
                             <span>Guesses: <span class="stats-val">{{guessCount}}</span></span>
                         </div>
                         <div class="mask-grid">
-                            <div class="mask-tile">{{mask0}}</div>
-                            <div class="mask-tile">{{mask1}}</div>
-                            <div class="mask-tile">{{mask2}}</div>
-                            <div class="mask-tile">{{mask3}}</div>
-                            <div class="mask-tile">{{mask4}}</div>
-                            {{#mask5}}<div class="mask-tile">{{mask5}}</div>{{/mask5}}
-                            {{#mask6}}<div class="mask-tile">{{mask6}}</div>{{/mask6}}
+                            {{#letterMask}}
+                            <div class="mask-tile">{{.}}</div>
+                            {{/letterMask}}
                         </div>
                     </div>
 
@@ -512,12 +459,11 @@ export const EMAIL_HTML = `<!doctype html>
 
                     {{^hasWon}}
                     <div class="form-container">
-                        <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email={{userEmail}}"
-                            on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh,leaderboardList.refresh;
-                                submit-error:AMP.setState({ gameState: { lastMessage: event.response.lastMessage || '⚠️ Could not process guess. Please try again.', isSubmitting: false } });
-                                submit:AMP.setState({ gameState: { isSubmitting: true } })">
+                        <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER"
+                            on="submit-success:stateList.refresh,leaderboardList.refresh;
+                                submit-error:stateList.refresh">
                             
-                            <input type="hidden" name="email" value="{{userEmail}}">
+                            <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
 
                             <div class="input-group">
                                 <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD"
@@ -535,10 +481,10 @@ export const EMAIL_HTML = `<!doctype html>
                         </form>
 
                         <!-- Hidden Form for Letter Hint Button -->
-                        <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email={{userEmail}}" hidden
-                            on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
-                                submit-error:AMP.setState({ gameState: { lastMessage: event.response.message || '⚠️ Could not process hint request. Please try again.' } })">
-                            <input type="hidden" name="email" value="{{userEmail}}">
+                        <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER" hidden
+                            on="submit-success:stateList.refresh;
+                                submit-error:stateList.refresh">
+                            <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
                         </form>
                     </div>
                     {{/hasWon}}
@@ -550,26 +496,7 @@ export const EMAIL_HTML = `<!doctype html>
                             <span>1 of 5</span>
                         </div>
                         <div class="definitions-cards">
-                            <div class="definition-card">
-                                <span class="def-number">1.</span>
-                                <span class="__DEF_0_BLUR__">__DEF_0__</span>
-                            </div>
-                            <div class="definition-card">
-                                <span class="def-number">2.</span>
-                                <span class="__DEF_1_BLUR__">__DEF_1__</span>
-                            </div>
-                            <div class="definition-card">
-                                <span class="def-number">3.</span>
-                                <span class="__DEF_2_BLUR__">__DEF_2__</span>
-                            </div>
-                            <div class="definition-card">
-                                <span class="def-number">4.</span>
-                                <span class="__DEF_3_BLUR__">__DEF_3__</span>
-                            </div>
-                            <div class="definition-card">
-                                <span class="def-number">5.</span>
-                                <span class="__DEF_4_BLUR__">__DEF_4__</span>
-                            </div>
+                            __PLACEHOLDER_DEFS__
                         </div>
                     </div>
                     <div class="synonyms-section">
@@ -587,11 +514,11 @@ export const EMAIL_HTML = `<!doctype html>
 
             <!-- Organization Leaderboard -->
             <div class="leaderboard-section">
-                <div class="leaderboard-title" [text]="'🏆 ' + gameState.domain + ' Leaderboard'">
+                <div class="leaderboard-title">
                     🏆 Organization Leaderboard
                 </div>
                 
-                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" single-item src="https://email-game.teamify.workers.dev/api/leaderboard?domain=nvidia.engineering&email=test%40nvidia.engineering">
+                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" single-item src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER">
                     <template type="amp-mustache">
                         {{^hasWon}}
                         <div class="leaderboard-lock-banner">

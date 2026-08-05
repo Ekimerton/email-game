@@ -38,9 +38,6 @@ export interface UserSettings {
 export interface GameState {
   puzzleId: string
   date: string
-  wordLength: number
-  allDefinitions: string[]
-  revealedDefinitions: string[]
   letterMask: string[]
   guessesHistory: GuessResult[]
   guessCount: number
@@ -48,16 +45,8 @@ export interface GameState {
   score: number
   hasWon: boolean
   lastMessage: string
-  currentInput: string
-  isSubmitting: boolean
-  userEmail: string
-  domain: string
-  leaderboard: LeaderboardEntry[]
   shareText: string
   revealedCount: number
-  totalDefinitions: number
-  isSubscribed: boolean
-  userToken: string
 }
 
 type Bindings = {
@@ -147,7 +136,7 @@ async function getUserEmail(c: any, parsedBody?: Record<string, any>): Promise<s
     }
   }
 
-  return 'test@nvidia.engineering'
+  return 'player@company.com'
 }
 
 // User UUID token security helper
@@ -565,30 +554,13 @@ async function getOrCreateGameState(
   const stateKey = `game:${puzzle.date}:${userEmail}`
 
   const stored = await kvGet(kv, stateKey)
-  const leaderboard = await getDomainLeaderboard(kv, domain, puzzle.date)
-  const isSubscribed = await ensureSubscribedOnOpen(kv, userEmail)
-  const userProfile = await recordUserActivity(kv, userEmail, puzzle.date)
-  const userToken = userProfile.token
-
   if (stored) {
-    stored.userEmail = userEmail
-    stored.domain = domain
-    stored.allDefinitions = puzzle.definitions
-    stored.wordLength = puzzle.word.length
-    stored.leaderboard = leaderboard
-    stored.isSubscribed = isSubscribed
-    stored.userToken = userToken
     return { state: stored, puzzle, stateKey }
   }
-
-  const initialDefinition = puzzle.definitions.length > 0 ? [puzzle.definitions[0]] : []
 
   const initialState: GameState = {
     puzzleId: puzzle.id,
     date: puzzle.date,
-    wordLength: puzzle.word.length,
-    allDefinitions: puzzle.definitions,
-    revealedDefinitions: initialDefinition,
     letterMask: createInitialMask(puzzle.word),
     guessesHistory: [],
     guessCount: 0,
@@ -596,16 +568,8 @@ async function getOrCreateGameState(
     score: 0,
     hasWon: false,
     lastMessage: `Guess the ${puzzle.word.length}-letter word! Definition #1 revealed.`,
-    currentInput: '',
-    isSubmitting: false,
-    userEmail,
-    domain,
-    leaderboard,
     shareText: '',
-    revealedCount: initialDefinition.length,
-    totalDefinitions: puzzle.definitions.length,
-    isSubscribed,
-    userToken,
+    revealedCount: 1,
   }
 
   return { state: initialState, puzzle, stateKey }
@@ -677,6 +641,8 @@ app.get('/', async (c) => {
   const userEmail = await getUserEmail(c)
   const dateParam = c.req.query('date')
   const { state, puzzle } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam)
+  const domain = extractDomain(userEmail)
+  const userToken = await getOrCreateUserToken(c.env?.GAME_STATE_KV, userEmail)
 
   const reqUrl = new URL(c.req.url)
   const devMode = c.req.query('dev') === 'true'
@@ -686,85 +652,45 @@ app.get('/', async (c) => {
     ? reqUrl.origin
     : prodOrigin
 
+  const encodedEmail = encodeURIComponent(userEmail)
+  const encodedDomain = encodeURIComponent(domain)
+
   let html = EMAIL_HTML
     .replaceAll('https://relatle.dev', currentOrigin)
     .replaceAll('https://email-game.teamify.workers.dev', currentOrigin)
+    .replaceAll('USER_EMAIL_PLACEHOLDER', encodedEmail)
+    .replaceAll('USER_DOMAIN_PLACEHOLDER', encodedDomain)
+    .replaceAll('default-dev-token', userToken)
 
   if (currentOrigin.startsWith('https:')) {
     html = html.replaceAll('http://', 'https://')
   }
 
-  const encodedEmail = encodeURIComponent(userEmail)
-  const encodedDomain = encodeURIComponent(state.domain)
-
-  // Append user email query param to form actions & amp-list endpoints
-  html = html
-    .replaceAll(`${currentOrigin}/api/guess?email={{userEmail}}`, `${currentOrigin}/api/guess?email=${encodedEmail}`)
-    .replaceAll(`${currentOrigin}/api/hint?email={{userEmail}}`, `${currentOrigin}/api/hint?email=${encodedEmail}`)
-    .replaceAll(`${currentOrigin}/api/guess`, `${currentOrigin}/api/guess?email=${encodedEmail}`)
-    .replaceAll(`${currentOrigin}/api/hint`, `${currentOrigin}/api/hint?email=${encodedEmail}`)
-    .replaceAll(`${currentOrigin}/api/subscribe`, `${currentOrigin}/api/subscribe?email=${encodedEmail}`)
-    .replaceAll(`${currentOrigin}/account?token=default-dev-token`, `${currentOrigin}/account?token=${state.userToken}`)
-
-  // Explicitly replace amp-list endpoint URLs with target domain & email
-  html = html
-    .replace(
-      `src="${currentOrigin}/api/leaderboard"`,
-      `src="${currentOrigin}/api/leaderboard?domain=${encodedDomain}&email=${encodedEmail}"`
-    )
-    .replace(
-      `src="${currentOrigin}/api/state"`,
-      `src="${currentOrigin}/api/state?email=${encodedEmail}"`
-    )
-
-  // Inject current user state JSON into <amp-state>
-  const jsonStateStr = JSON.stringify(state, null, 2)
-  html = html.replace(
-    /<script type="application\/json">\s*\{[\s\S]*?\}\s*<\/script>/,
-    `<script type="application/json">\n${jsonStateStr}\n</script>`
-  )
-
   // Pre-render Header Meta (Date and Domain)
-  html = html.replace('Date: 2026-08-03', `Date: ${state.date}`)
-  html = html.replace('2026-08-03', state.date)
-  html = html.replace('🏢 company.com', `🏢 ${state.domain}`)
-  html = html.replace('player@company.com', userEmail)
-
-  // Pre-render Subscribe Banner Visibility
-  if (state.isSubscribed) {
-    html = html.replace('<div class="subscribe-banner" [hidden]="gameState.isSubscribed">', '<div class="subscribe-banner" hidden [hidden]="gameState.isSubscribed">')
-  }
+  html = html.replace('2026-08-05', puzzle.date)
+  html = html.replace('🏢 company.com', `🏢 ${domain}`)
 
   // Pre-render Definition Counts
-  html = html.replace('1 of 5', `${state.revealedCount} of ${state.totalDefinitions}`)
+  html = html.replace('1 of 5', `${state.revealedCount} of ${puzzle.definitions.length}`)
 
-  // Pre-render Message Banner & Stats Bar in placeholder
+  // Pre-render Message Banner
   html = html.replace('Guess the word!', state.lastMessage)
-  html = html.replace('<span>Guesses: <span class="stats-val">0</span></span>', `<span>Guesses: <span class="stats-val">${state.guessCount}</span></span>`)
-  html = html.replace('<span>Hints Used: <span class="stats-val" [text]="gameState.hintsUsed">0</span></span>', `<span>Hints Used: <span class="stats-val" [text]="gameState.hintsUsed">${state.hintsUsed}</span></span>`)
-  
-  const currentMaxPts = state.hasWon ? state.score : Math.max(100, 1000 - Math.max(0, (state.guessCount - 1) * 100) - (state.hintsUsed * 75))
-  html = html.replace('>1000</span></span>', `>${currentMaxPts}</span></span>`)
 
   // Pre-render Leaderboard Section Title
-  html = html.replace('🏆 Organization Leaderboard', `🏆 ${state.domain} Leaderboard`)
-
-  // Pre-render win state: hide form container if user has already won
-  if (state.hasWon) {
-    html = html.replace('<div class="form-container"', '<div class="form-container" hidden')
-  }
+  html = html.replace('🏆 Organization Leaderboard', `🏆 ${domain} Leaderboard`)
 
   // Pre-render definition cards text & blur in placeholder
-  for (let i = 0; i < 5; i++) {
+  const placeholderDefsHtml = puzzle.definitions.map((def, i) => {
     const isRevealed = i < state.revealedCount
-    const rawDef = puzzle.definitions[i] || ''
-    const def = isRevealed ? rawDef : getRedactedText(rawDef)
-    html = html.replace(`__DEF_${i}__`, def)
-    html = html.replace(`__DEF_${i}_BLUR__`, isRevealed ? '' : 'definition-text-blurred')
-  }
+    const text = isRevealed ? def : getRedactedText(def)
+    const blurClass = isRevealed ? '' : 'definition-text-blurred'
+    return `<div class="definition-card"><span class="def-number">${i + 1}.</span> <span class="${blurClass}">${text}</span></div>`
+  }).join('')
+
+  html = html.replace('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
 
   // Pre-render letter mask tiles dynamically for exact word length in placeholder
-  const placeholderMaskHtml = Array.from({ length: state.wordLength }, (_, i) => {
+  const placeholderMaskHtml = Array.from({ length: puzzle.word.length }, (_, i) => {
     const char = (state.letterMask && state.letterMask[i]) || '_'
     return `<div class="mask-tile">${char}</div>`
   }).join('')
@@ -1270,35 +1196,29 @@ function getRedactedText(text: string): string {
   return text.replace(/[^\s]/g, '•')
 }
 
-// Helper to build standardized state payload for AMP list and AMP.setState
+// Helper to build standardized state payload for AMP list
 function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
-  const ts = Date.now()
-  const encodedEmail = encodeURIComponent(state.userEmail)
-  const encodedDomain = encodeURIComponent(state.domain)
+  const definitions = puzzle.definitions.map((def, i) => {
+    const isRevealed = i < state.revealedCount
+    return {
+      num: i + 1,
+      text: isRevealed ? def : getRedactedText(def),
+    }
+  })
 
   const statePayload = {
-    ...state,
-    userEmail: state.userEmail,
-    stateUrl: `https://email-game.teamify.workers.dev/api/state?email=${encodedEmail}&t=${ts}`,
-    leaderboardUrl: `https://email-game.teamify.workers.dev/api/leaderboard?domain=${encodedDomain}&email=${encodedEmail}&t=${ts}`,
-    def1_text: state.revealedCount >= 1 ? (puzzle.definitions[0] || '') : getRedactedText(puzzle.definitions[0] || ''),
-    def2_text: state.revealedCount >= 2 ? (puzzle.definitions[1] || '') : getRedactedText(puzzle.definitions[1] || ''),
-    def3_text: state.revealedCount >= 3 ? (puzzle.definitions[2] || '') : getRedactedText(puzzle.definitions[2] || ''),
-    def4_text: state.revealedCount >= 4 ? (puzzle.definitions[3] || '') : getRedactedText(puzzle.definitions[3] || ''),
-    def5_text: state.revealedCount >= 5 ? (puzzle.definitions[4] || '') : getRedactedText(puzzle.definitions[4] || ''),
-    blur1: state.revealedCount >= 1 ? '' : 'definition-text-blurred',
-    blur2: state.revealedCount >= 2 ? '' : 'definition-text-blurred',
-    blur3: state.revealedCount >= 3 ? '' : 'definition-text-blurred',
-    blur4: state.revealedCount >= 4 ? '' : 'definition-text-blurred',
-    blur5: state.revealedCount >= 5 ? '' : 'definition-text-blurred',
-    mask0: state.letterMask[0] || '_',
-    mask1: state.letterMask[1] || '_',
-    mask2: state.letterMask[2] || '_',
-    mask3: state.letterMask[3] || '_',
-    mask4: state.letterMask[4] || '_',
-    mask5: state.wordLength >= 6 ? (state.letterMask[5] || '_') : '',
-    mask6: state.wordLength >= 7 ? (state.letterMask[6] || '_') : '',
+    revealedCount: state.revealedCount,
+    totalDefinitions: puzzle.definitions.length,
+    definitions,
+    letterMask: state.letterMask,
+    guessCount: state.guessCount,
+    hintsUsed: state.hintsUsed,
+    score: state.score,
+    hasWon: state.hasWon,
+    lastMessage: state.lastMessage,
+    shareText: state.shareText,
   }
+
   return { items: [statePayload], ...statePayload }
 }
 
@@ -1323,6 +1243,7 @@ app.post('/api/guess', async (c) => {
     const userEmail = await getUserEmail(c, body)
     const guess = (body['user-guess'] as string || '').toUpperCase().trim()
     const dateParam = c.req.query('date')
+    const domain = extractDomain(userEmail)
 
     const { state, puzzle, stateKey } = await getOrCreateGameState(
       c.env?.GAME_STATE_KV,
@@ -1336,7 +1257,6 @@ app.post('/api/guess', async (c) => {
 
     if (!guess || guess.length !== puzzle.word.length) {
       state.lastMessage = `⚠️ Please enter a ${puzzle.word.length}-letter word.`
-      state.isSubmitting = false
       return c.json(buildStatePayload(state, puzzle))
     }
 
@@ -1353,8 +1273,6 @@ app.post('/api/guess', async (c) => {
     state.guessCount += 1
     state.guessesHistory.push({ guess, statuses })
     state.letterMask = newMask
-    state.currentInput = ''
-    state.isSubmitting = false
 
     if (isCorrect) {
       state.hasWon = true
@@ -1375,24 +1293,21 @@ app.post('/api/guess', async (c) => {
 
       const updatedLeaderboard = await updateDomainLeaderboard(
         c.env?.GAME_STATE_KV,
-        state.domain,
+        domain,
         puzzle.date,
         leaderboardEntry
       )
-      state.leaderboard = updatedLeaderboard
 
       const rank = updatedLeaderboard.findIndex((e) => e.email === userEmail) + 1
 
       state.shareText = `RELATLE #${puzzle.id} (${puzzle.date})\n🎯 Solved in ${state.guessCount} guess${
         state.guessCount > 1 ? 'es' : ''
-      }!\n⭐ Score: ${state.score} pts | Org Rank: #${rank} (${state.domain})\n\nPlay at: https://relatle.dev`
+      }!\n⭐ Score: ${state.score} pts | Org Rank: #${rank} (${domain})\n\nPlay at: https://relatle.dev`
     } else {
-      if (state.revealedDefinitions.length < puzzle.definitions.length) {
-        const nextDefinition = puzzle.definitions[state.revealedDefinitions.length]
-        state.revealedDefinitions.push(nextDefinition)
+      if (state.revealedCount < puzzle.definitions.length) {
+        state.revealedCount += 1
       }
-      state.revealedCount = state.revealedDefinitions.length
-      state.lastMessage = `❌ "${guess}" is incorrect. Revealed Definition #${state.revealedDefinitions.length}!`
+      state.lastMessage = `❌ "${guess}" is incorrect. Revealed Definition #${state.revealedCount}!`
     }
 
     await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
