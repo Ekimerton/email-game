@@ -509,6 +509,29 @@ export const EMAIL_HTML = `<!doctype html>
                         </div>
                     </div>
                     <div class="message-banner">Guess the word!</div>
+
+                    <div class="form-container">
+                        <form id="guess-form-placeholder" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER"
+                            on="submit-success:stateList.refresh,leaderboardList.refresh;
+                                submit-error:stateList.refresh">
+                            
+                            <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
+
+                            <div class="input-group">
+                                <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD"
+                                    required autocomplete="off">
+
+                                <div class="action-buttons">
+                                    <button type="submit" class="btn btn-primary">
+                                        Submit Guess
+                                    </button>
+                                    <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
+                                        💡 Hint (-75pt)
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </amp-list>
 
@@ -539,7 +562,28 @@ export const EMAIL_HTML = `<!doctype html>
                             {{/players}}
                         </div>
                     </template>
-                    <div placeholder style="text-align: center; color: #64748b; padding: 8px;">Loading leaderboard...</div>
+                    <div placeholder>
+                        <div class="leaderboard-lock-banner">
+                            🔒 Solve today's puzzle to reveal the leaderboard!
+                        </div>
+                        <div class="leaderboard-blur-content">
+                            <div class="leaderboard-item">
+                                <span class="rank-number">#1</span>
+                                <span class="player-email">alex@company.com</span>
+                                <span class="player-score">925 pts</span>
+                            </div>
+                            <div class="leaderboard-item">
+                                <span class="rank-number">#2</span>
+                                <span class="player-email">sarah@company.com</span>
+                                <span class="player-score">850 pts</span>
+                            </div>
+                            <div class="leaderboard-item">
+                                <span class="rank-number">#3</span>
+                                <span class="player-email">david@company.com</span>
+                                <span class="player-score">775 pts</span>
+                            </div>
+                        </div>
+                    </div>
                 </amp-list>
             </div>
         </div>

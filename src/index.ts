@@ -670,29 +670,28 @@ app.get('/', async (c) => {
   html = html.replace('2026-08-05', puzzle.date)
   html = html.replace('🏢 company.com', `🏢 ${domain}`)
 
-  // Pre-render Definition Counts
-  html = html.replace('1 of 5', `${state.revealedCount} of ${puzzle.definitions.length}`)
+  // Pre-render Definition Counts (Always 1 of N for initial state)
+  html = html.replace('1 of 5', `1 of ${puzzle.definitions.length}`)
 
-  // Pre-render Message Banner
-  html = html.replace('Guess the word!', state.lastMessage)
+  // Pre-render Message Banner (Always initial prompt for initial state placeholder)
+  const initialMsg = `Guess the ${puzzle.word.length}-letter word! Definition #1 revealed.`
+  html = html.replace('Guess the word!', initialMsg)
 
   // Pre-render Leaderboard Section Title
   html = html.replace('🏆 Organization Leaderboard', `🏆 ${domain} Leaderboard`)
 
-  // Pre-render definition cards text & blur in placeholder
+  // Pre-render definition cards (Definition #1 revealed, rest dots) for initial state placeholder
   const placeholderDefsHtml = puzzle.definitions.map((def, i) => {
-    const isRevealed = i < state.revealedCount
+    const isRevealed = i === 0
     const text = isRevealed ? def : getRedactedText(def)
-    const blurClass = isRevealed ? '' : 'definition-text-blurred'
-    return `<div class="definition-card"><span class="def-number">${i + 1}.</span> <span class="${blurClass}">${text}</span></div>`
+    return `<div class="definition-card"><span class="def-number">${i + 1}.</span> <span>${text}</span></div>`
   }).join('')
 
   html = html.replace('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
 
-  // Pre-render letter mask tiles dynamically for exact word length in placeholder
-  const placeholderMaskHtml = Array.from({ length: puzzle.word.length }, (_, i) => {
-    const char = (state.letterMask && state.letterMask[i]) || '_'
-    return `<div class="mask-tile">${char}</div>`
+  // Pre-render letter mask tiles (all '_') for initial state placeholder
+  const placeholderMaskHtml = Array.from({ length: puzzle.word.length }, () => {
+    return `<div class="mask-tile">_</div>`
   }).join('')
 
   html = html.replace('__PLACEHOLDER_MASK_TILES__', placeholderMaskHtml)
