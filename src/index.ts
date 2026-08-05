@@ -753,35 +753,16 @@ app.get('/', async (c) => {
     const def = puzzle.definitions[i] || ''
     const isRevealed = i < state.revealedCount
     html = html.replace(`__DEF_${i}__`, def)
-
-    if (isRevealed) {
-      // Un-blur revealed definitions in placeholder
-      html = html.replace(
-        `<span class="definition-text-blurred">${def}</span>`,
-        `<span>${def}</span>`
-      )
-    }
+    html = html.replace(`__DEF_${i}_BLUR__`, isRevealed ? '' : 'definition-text-blurred')
   }
 
-  // Pre-render letter mask tiles in placeholder
-  for (let i = 0; i < 7; i++) {
-    if (i < state.wordLength) {
-      const char = (state.letterMask && state.letterMask[i]) || '_'
-      // Un-hide tiles up to wordLength and fill with current mask value
-      html = html.replace(
-        `<div class="mask-tile" hidden>_</div>`,
-        `<div class="mask-tile">${char}</div>`
-      )
-      // Replace visible placeholder underscores with actual mask chars
-      if (char !== '_') {
-        // Only replace the first occurrence (one tile at a time)
-        html = html.replace(
-          `<div class="mask-tile">_</div>`,
-          `<div class="mask-tile">${char}</div>`
-        )
-      }
-    }
-  }
+  // Pre-render letter mask tiles dynamically for exact word length in placeholder
+  const placeholderMaskHtml = Array.from({ length: state.wordLength }, (_, i) => {
+    const char = (state.letterMask && state.letterMask[i]) || '_'
+    return `<div class="mask-tile">${char}</div>`
+  }).join('')
+
+  html = html.replace('__PLACEHOLDER_MASK_TILES__', placeholderMaskHtml)
 
   return c.html(html)
 })
