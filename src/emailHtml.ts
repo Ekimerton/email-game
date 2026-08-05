@@ -1,5 +1,5 @@
 export const EMAIL_HTML = `<!doctype html>
-<html ⚡4email data-css-strict>
+<html ⚡4email>
 
 <head>
     <meta charset="utf-8">
@@ -9,11 +9,7 @@ export const EMAIL_HTML = `<!doctype html>
     <script async custom-element="amp-list" src="https://cdn.ampproject.org/v0/amp-list-0.1.js"></script>
     <script async custom-template="amp-mustache" src="https://cdn.ampproject.org/v0/amp-mustache-0.2.js"></script>
 
-    <style amp4email-boilerplate>
-        body {
-            visibility: hidden
-        }
-    </style>
+    <style amp4email-boilerplate>body{visibility:hidden}</style>
     <style amp-custom>
         * {
             box-sizing: border-box;
@@ -133,9 +129,11 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .definition-text-blurred {
-            filter: blur(6px);
-            opacity: 0.8;
+            color: #334155;
+            background: #334155;
+            border-radius: 4px;
             display: inline-block;
+            opacity: 0.8;
         }
 
         /* Status & Mask Tiles */
@@ -340,15 +338,15 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .leaderboard-blur-content {
-            filter: blur(6px);
+            opacity: 0.15;
         }
 
         .leaderboard-lock-banner {
             position: absolute;
-            top: 55%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(15, 23, 42, 0.92);
+            top: 40px;
+            left: 10px;
+            right: 10px;
+            background: rgba(15, 23, 42, 0.95);
             border: 1px solid #38bdf8;
             border-radius: 8px;
             padding: 8px 12px;
@@ -357,7 +355,6 @@ export const EMAIL_HTML = `<!doctype html>
             font-weight: 700;
             text-align: center;
             z-index: 10;
-            width: 85%;
         }
 
         .leaderboard-item {
@@ -455,80 +452,84 @@ export const EMAIL_HTML = `<!doctype html>
         </div>
 
         <div class="game-body">
-            <!-- 1-4. Puzzle Progress & Interactive Form Section (Loads via amp-list upon open) -->
-            <amp-list width="auto" height="530" layout="fixed-height" single-item src="https://relatle.dev/api/state">
+            <!-- Dynamic State Section - fetched fresh on every email open -->
+            <amp-list id="stateList" width="auto" height="560" layout="fixed-height" single-item
+                src="https://email-game.teamify.workers.dev/api/state">
                 <template type="amp-mustache">
-                    <!-- 1. Revealed & Locked Definitions Cards at Top -->
                     <div class="definitions-section">
                         <div class="section-label">
                             <span>Revealed Definitions</span>
-                            <span [text]="gameState.revealedCount + ' of ' + gameState.totalDefinitions">{{revealedCount}} of {{totalDefinitions}}</span>
+                            <span>{{revealedCount}} of {{totalDefinitions}}</span>
                         </div>
                         <div class="definitions-cards">
-                            <div class="definition-card" [hidden]="!gameState.allDefinitions[0]">
+                            <div class="definition-card">
                                 <span class="def-number">1.</span>
-                                <span [class]="gameState.revealedCount > 0 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[0] || ''">{{def1}}</span>
+                                <span class="{{blur1}}">{{def1_text}}</span>
                             </div>
-                            <div class="definition-card" [hidden]="!gameState.allDefinitions[1]">
+                            <div class="definition-card">
                                 <span class="def-number">2.</span>
-                                <span class="definition-text-blurred" [class]="gameState.revealedCount > 1 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[1] || ''">{{def2}}</span>
+                                <span class="{{blur2}}">{{def2_text}}</span>
                             </div>
-                            <div class="definition-card" [hidden]="!gameState.allDefinitions[2]">
+                            <div class="definition-card">
                                 <span class="def-number">3.</span>
-                                <span class="definition-text-blurred" [class]="gameState.revealedCount > 2 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[2] || ''">{{def3}}</span>
+                                <span class="{{blur3}}">{{def3_text}}</span>
                             </div>
-                            <div class="definition-card" [hidden]="!gameState.allDefinitions[3]">
+                            <div class="definition-card">
                                 <span class="def-number">4.</span>
-                                <span class="definition-text-blurred" [class]="gameState.revealedCount > 3 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[3] || ''">{{def4}}</span>
+                                <span class="{{blur4}}">{{def4_text}}</span>
                             </div>
-                            <div class="definition-card" [hidden]="!gameState.allDefinitions[4]">
+                            <div class="definition-card">
                                 <span class="def-number">5.</span>
-                                <span class="definition-text-blurred" [class]="gameState.revealedCount > 4 ? '' : 'definition-text-blurred'" [text]="gameState.allDefinitions[4] || ''">{{def5}}</span>
+                                <span class="{{blur5}}">{{def5_text}}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 2. Word Letter Mask Tiles & Counter -->
                     <div class="synonyms-section">
                         <div class="section-label">
                             <span>Letter Hints & Word Length</span>
-                            <span>Guesses: <span class="stats-val" [text]="gameState.guessCount">{{guessCount}}</span></span>
+                            <span>Guesses: <span class="stats-val">{{guessCount}}</span></span>
                         </div>
                         <div class="mask-grid">
-                            <div class="mask-tile" [text]="gameState.letterMask[0] || '_'">{{mask0}}</div>
-                            <div class="mask-tile" [text]="gameState.letterMask[1] || '_'">{{mask1}}</div>
-                            <div class="mask-tile" [text]="gameState.letterMask[2] || '_'">{{mask2}}</div>
-                            <div class="mask-tile" [text]="gameState.letterMask[3] || '_'">{{mask3}}</div>
-                            <div class="mask-tile" [text]="gameState.letterMask[4] || '_'">{{mask4}}</div>
-                            <div class="mask-tile" [text]="gameState.letterMask[5] || '_'" hidden [hidden]="gameState.wordLength < 6">{{mask5}}</div>
-                            <div class="mask-tile" [text]="gameState.letterMask[6] || '_'" hidden [hidden]="gameState.wordLength < 7">{{mask6}}</div>
+                            <div class="mask-tile">{{mask0}}</div>
+                            <div class="mask-tile">{{mask1}}</div>
+                            <div class="mask-tile">{{mask2}}</div>
+                            <div class="mask-tile">{{mask3}}</div>
+                            <div class="mask-tile">{{mask4}}</div>
+                            {{#mask5}}<div class="mask-tile">{{mask5}}</div>{{/mask5}}
+                            {{#mask6}}<div class="mask-tile">{{mask6}}</div>{{/mask6}}
                         </div>
                     </div>
 
-                    <!-- 3. Feedback Status Banner above Input -->
-                    <div class="message-banner" [text]="gameState.lastMessage">{{lastMessage}}</div>
+                    <div class="message-banner">{{lastMessage}}</div>
 
-                    <!-- 4. Guess Input Form & Action Buttons -->
-                    <div class="form-container" [hidden]="gameState.hasWon">
-                        <form id="guess-form" method="POST" action-xhr="https://relatle.dev/api/guess"
-                            on="submit-success:AMP.setState({ gameState: event.response }),leaderboardList.refresh;
+                    {{#hasWon}}
+                    <div class="win-card">
+                        <div class="win-title">🏆 YOU WON!</div>
+                        <div class="win-score">Final Score: {{score}} Points!</div>
+                        <p style="font-size: 12px; color: #d1fae5; margin-bottom: 6px;">Share your score with your organization:</p>
+                        <div class="share-box">{{shareText}}</div>
+                    </div>
+                    {{/hasWon}}
+
+                    {{^hasWon}}
+                    <div class="form-container">
+                        <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email={{userEmail}}"
+                            on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh,leaderboardList.refresh;
                                 submit-error:AMP.setState({ gameState: { lastMessage: event.response.lastMessage || '⚠️ Could not process guess. Please try again.', isSubmitting: false } });
                                 submit:AMP.setState({ gameState: { isSubmitting: true } })">
                             
-                            <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
+                            <input type="hidden" name="email" value="{{userEmail}}">
 
                             <div class="input-group">
                                 <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD"
-                                    required autocomplete="off" [value]="gameState.currentInput"
-                                    on="input-debounced:AMP.setState({ gameState: { currentInput: event.value.toUpperCase() } })">
+                                    required autocomplete="off">
 
                                 <div class="action-buttons">
-                                    <button type="submit" class="btn btn-primary" [disabled]="gameState.isSubmitting">
-                                        <span [hidden]="gameState.isSubmitting">Submit Guess</span>
-                                        <span hidden [hidden]="!gameState.isSubmitting">Submitting...</span>
+                                    <button type="submit" class="btn btn-primary">
+                                        Submit Guess
                                     </button>
-                                    <button type="button" class="btn btn-hint" [disabled]="gameState.hasWon"
-                                        on="tap:hint-form.submit">
+                                    <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
                                         💡 Hint (-75pt)
                                     </button>
                                 </div>
@@ -536,21 +537,60 @@ export const EMAIL_HTML = `<!doctype html>
                         </form>
 
                         <!-- Hidden Form for Letter Hint Button -->
-                        <form id="hint-form" method="POST" action-xhr="https://relatle.dev/api/hint" hidden
-                            on="submit-success:AMP.setState({ gameState: event.response });
+                        <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email={{userEmail}}" hidden
+                            on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
                                 submit-error:AMP.setState({ gameState: { lastMessage: event.response.message || '⚠️ Could not process hint request. Please try again.' } })">
-                            <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
+                            <input type="hidden" name="email" value="{{userEmail}}">
                         </form>
                     </div>
-
-                    <!-- Win Victory & Share Section -->
-                    <div class="win-card" hidden [hidden]="!gameState.hasWon">
-                        <div class="win-title">🏆 YOU WON!</div>
-                        <div class="win-score" [text]="'Final Score: ' + gameState.score + ' Points!'">Final Score: {{score}} Points!</div>
-                        <p style="font-size: 12px; color: #d1fae5; margin-bottom: 6px;">Share your score with your organization:</p>
-                        <div class="share-box" [text]="gameState.shareText">{{shareText}}</div>
-                    </div>
+                    {{/hasWon}}
                 </template>
+                <div placeholder>
+                    <div class="definitions-section">
+                        <div class="section-label">
+                            <span>Revealed Definitions</span>
+                            <span>1 of 5</span>
+                        </div>
+                        <div class="definitions-cards">
+                            <div class="definition-card">
+                                <span class="def-number">1.</span>
+                                <span class="definition-text-blurred">__DEF_0__</span>
+                            </div>
+                            <div class="definition-card">
+                                <span class="def-number">2.</span>
+                                <span class="definition-text-blurred">__DEF_1__</span>
+                            </div>
+                            <div class="definition-card">
+                                <span class="def-number">3.</span>
+                                <span class="definition-text-blurred">__DEF_2__</span>
+                            </div>
+                            <div class="definition-card">
+                                <span class="def-number">4.</span>
+                                <span class="definition-text-blurred">__DEF_3__</span>
+                            </div>
+                            <div class="definition-card">
+                                <span class="def-number">5.</span>
+                                <span class="definition-text-blurred">__DEF_4__</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="synonyms-section">
+                        <div class="section-label">
+                            <span>Letter Hints & Word Length</span>
+                            <span>Guesses: <span class="stats-val">0</span></span>
+                        </div>
+                        <div class="mask-grid">
+                            <div class="mask-tile">_</div>
+                            <div class="mask-tile">_</div>
+                            <div class="mask-tile">_</div>
+                            <div class="mask-tile">_</div>
+                            <div class="mask-tile">_</div>
+                            <div class="mask-tile" hidden>_</div>
+                            <div class="mask-tile" hidden>_</div>
+                        </div>
+                    </div>
+                    <div class="message-banner">Guess the word!</div>
+                </div>
             </amp-list>
 
             <!-- Organization Leaderboard -->
@@ -558,58 +598,36 @@ export const EMAIL_HTML = `<!doctype html>
                 <div class="leaderboard-title" [text]="'🏆 ' + gameState.domain + ' Leaderboard'">
                     🏆 Organization Leaderboard
                 </div>
-
-                <!-- Lock Banner overlay when game is NOT won -->
-                <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon">
-                    🔒 Solve today's puzzle to reveal the leaderboard!
-                </div>
                 
-                <!-- AMP List for Dynamic Domain Leaderboard (Blurred until won) -->
-                <div class="leaderboard-blur-content" [class]="gameState.hasWon ? '' : 'leaderboard-blur-content'">
-                    <amp-list id="leaderboardList" width="auto" height="150" layout="fixed-height" src="https://relatle.dev/api/leaderboard">
-                        <template type="amp-mustache">
+                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" single-item src="https://email-game.teamify.workers.dev/api/leaderboard">
+                    <template type="amp-mustache">
+                        {{^hasWon}}
+                        <div class="leaderboard-lock-banner">
+                            🔒 Solve today's puzzle to reveal the leaderboard!
+                        </div>
+                        {{/hasWon}}
+
+                        <div class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
+                            {{#players}}
                             <div class="leaderboard-item">
                                 <span class="rank-number">#{{rank}}</span>
                                 <span class="player-email">{{displayEmail}}</span>
                                 <span class="player-score">{{score}}</span>
                             </div>
-                        </template>
-                        <div placeholder style="text-align: center; color: #64748b; padding: 8px;">Loading leaderboard...</div>
-                        <div fallback style="text-align: center; color: #64748b; padding: 8px;">No scores recorded for this domain yet today!</div>
-                    </amp-list>
-                </div>
-            </div>
-
-            <!-- Compact Subscribe Banner Box (Loads via amp-list upon open, hides when subscribed) -->
-            <amp-list width="auto" height="125" layout="fixed-height" single-item src="https://relatle.dev/api/sub-status" [hidden]="gameState.isSubscribed">
-                <template type="amp-mustache">
-                    {{^isSubscribed}}
-                    <div class="subscribe-banner" [hidden]="gameState.isSubscribed">
-                        <div class="subscribe-header">
-                            <span class="subscribe-icon">📬</span>
-                            <div>
-                                <div class="subscribe-title">Get Relatle Daily at 9:00 AM PST</div>
-                                <div class="subscribe-desc">Never miss today's puzzle! Join your organization's leaderboard.</div>
-                            </div>
+                            {{/players}}
+                            {{^players}}
+                            <div style="text-align: center; color: #64748b; padding: 8px;">No scores recorded for this domain yet today!</div>
+                            {{/players}}
                         </div>
-                        <form method="POST" action-xhr="https://relatle.dev/api/subscribe" style="margin-top: 6px;"
-                            on="submit-success:AMP.setState({ gameState: { isSubscribed: true, lastMessage: event.response.message } });
-                                submit-error:AMP.setState({ gameState: { lastMessage: event.response.message || '⚠️ Subscription failed.' } })">
-                            <input type="hidden" name="email" value="player@company.com" [value]="gameState.userEmail">
-                            <button type="submit" class="btn btn-subscribe">
-                                ✨ Subscribe Me Daily
-                            </button>
-                        </form>
-                    </div>
-                    {{/isSubscribed}}
-                </template>
-                <div placeholder style="text-align: center; color: #64748b; padding: 8px;">Loading subscription status...</div>
-            </amp-list>
+                    </template>
+                    <div placeholder style="text-align: center; color: #64748b; padding: 8px;">Loading leaderboard...</div>
+                </amp-list>
+            </div>
         </div>
 
         <div class="footer">
             Relatle • Dynamic Interactive AMP for Email Game<br>
-            <a class="account-link" href="https://relatle.dev/account?token=default-dev-token">⚙️ Manage Account & Preferences</a>
+            <a class="account-link" href="https://email-game.teamify.workers.dev/account?token=default-dev-token">⚙️ Manage Account & Preferences</a>
         </div>
     </div>
 </body>

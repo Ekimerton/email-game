@@ -31,6 +31,8 @@ export interface UserSettings {
   domain: string
   token: string
   showOnLeaderboard: boolean
+  daysPlayed?: number
+  playedDates?: string[]
 }
 
 export interface GameState {
@@ -175,6 +177,240 @@ async function updateUserSettings(kv: KVNamespace | undefined, settings: UserSet
   await kvPut(kv, `token:${settings.token}`, { email: settings.email, domain: settings.domain })
 }
 
+async function recordUserActivity(
+  kv: KVNamespace | undefined,
+  email: string,
+  dateStr: string
+): Promise<UserSettings> {
+  const userKey = `user:profile:${email}`
+  let profile: UserSettings = await kvGet(kv, userKey)
+  const domain = extractDomain(email)
+
+  if (!profile) {
+    const token = crypto.randomUUID()
+    profile = {
+      email,
+      domain,
+      token,
+      showOnLeaderboard: true,
+      daysPlayed: 1,
+      playedDates: [dateStr],
+    }
+  } else {
+    if (!profile.playedDates) {
+      profile.playedDates = [dateStr]
+    } else if (!profile.playedDates.includes(dateStr)) {
+      profile.playedDates.push(dateStr)
+    }
+    profile.daysPlayed = profile.playedDates.length
+  }
+
+  await updateUserSettings(kv, profile)
+  return profile
+}
+
+async function getCoworkerCount(
+  kv: KVNamespace | undefined,
+  domain: string,
+  email: string
+): Promise<number> {
+  const subscribers = await getSubscribers(kv)
+  const coworkerEmails = new Set<string>()
+
+  for (const sub of subscribers) {
+    if (sub.domain === domain) {
+      coworkerEmails.add(sub.email.toLowerCase())
+    }
+  }
+
+  const puzzle = getDailyPuzzle()
+  const leaderboard = await getDomainLeaderboard(kv, domain, puzzle.date)
+  for (const entry of leaderboard) {
+    coworkerEmails.add(entry.email.toLowerCase())
+  }
+
+  coworkerEmails.delete(email.toLowerCase())
+  return coworkerEmails.size
+}
+
+export function getFallbackHtml(options: {
+  email: string
+  domain: string
+  daysPlayed: number
+  coworkerCount: number
+  playUrl: string
+}): string {
+  const { email, domain, daysPlayed, coworkerCount, playUrl } = options
+  const puzzle = getDailyPuzzle()
+  const daysText = `${daysPlayed} day${daysPlayed === 1 ? '' : 's'}`
+  const coworkersText = coworkerCount === 1 ? '1 coworker' : `${coworkerCount} coworkers`
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatle #${puzzle.id} - Daily Word Puzzle</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #f8fafc;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #0f172a;
+      padding: 24px 12px;
+      box-sizing: border-box;
+    }
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .header {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      padding: 20px;
+      text-align: center;
+    }
+    .header-title {
+      font-size: 26px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .header-sub {
+      font-size: 12px;
+      color: #e0e7ff;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+    .body-content {
+      padding: 24px 20px;
+    }
+    .stats-card {
+      background: #0f172a;
+      border: 1px solid #3b82f6;
+      border-radius: 12px;
+      padding: 18px 16px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .stats-text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      margin: 0;
+    }
+    .highlight-user {
+      color: #38bdf8;
+      font-weight: 700;
+    }
+    .highlight-stat {
+      color: #fbbf24;
+      font-weight: 800;
+    }
+    .highlight-domain {
+      color: #a5b4fc;
+      font-weight: 700;
+    }
+    .cta-container {
+      text-align: center;
+      margin: 24px 0 16px 0;
+    }
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff !important;
+      font-size: 16px;
+      font-weight: 800;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 10px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    }
+    .cta-hint {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 12px;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .puzzle-preview {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 20px;
+    }
+    .puzzle-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #818cf8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .puzzle-clue {
+      font-size: 13px;
+      color: #cbd5e1;
+      font-style: italic;
+    }
+    .footer {
+      border-top: 1px solid #334155;
+      padding: 14px;
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+    }
+    .footer a {
+      color: #818cf8;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <h1 class="header-title">RELATLE</h1>
+        <div class="header-sub">Daily Multi-Definition Word Game • ${puzzle.date}</div>
+      </div>
+      <div class="body-content">
+        <div class="stats-card">
+          <p class="stats-text">
+            <span class="highlight-user">${email}</span> has played Relatle for <span class="highlight-stat">${daysText}</span>, and competes with <span class="highlight-stat">${coworkersText}</span> at <span class="highlight-domain">${domain}</span>!
+          </p>
+        </div>
+
+        <div class="cta-container">
+          <a href="${playUrl}" class="cta-button">👉 Play Today's Relatle #${puzzle.id}</a>
+          <p class="cta-hint">Forwarding this email? Try today's puzzle so your colleagues can challenge your score on the domain leaderboard!</p>
+        </div>
+
+        <div class="puzzle-preview">
+          <div class="puzzle-label">Today's Clue #1 (${puzzle.word.length} letters)</div>
+          <div class="puzzle-clue">"${puzzle.definitions[0]}"</div>
+        </div>
+      </div>
+      <div class="footer">
+        Relatle Daily Puzzle • <a href="${playUrl}">Play Online</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+}
+
 // Evaluate Wordle-style letter matches
 function evaluateGuess(target: string, guess: string): LetterStatus[] {
   const targetArr = target.toUpperCase().split('')
@@ -291,6 +527,18 @@ async function removeSubscriber(kv: KVNamespace | undefined, email: string): Pro
   return subscribers
 }
 
+async function ensureSubscribedOnOpen(kv: KVNamespace | undefined, email: string): Promise<boolean> {
+  const subscribers = await getSubscribers(kv)
+  const existing = subscribers.find(s => s.email === email)
+
+  if (!existing) {
+    await addSubscriber(kv, email)
+    return true
+  }
+
+  return existing.status === 'active'
+}
+
 // Helper to initialize or retrieve game state for a user and date
 async function getOrCreateGameState(
   kv: KVNamespace | undefined,
@@ -303,9 +551,9 @@ async function getOrCreateGameState(
 
   const stored = await kvGet(kv, stateKey)
   const leaderboard = await getDomainLeaderboard(kv, domain, puzzle.date)
-  const subscribers = await getSubscribers(kv)
-  const isSubscribed = subscribers.some(s => s.email === userEmail && s.status === 'active')
-  const userToken = await getOrCreateUserToken(kv, userEmail)
+  const isSubscribed = await ensureSubscribedOnOpen(kv, userEmail)
+  const userProfile = await recordUserActivity(kv, userEmail, puzzle.date)
+  const userToken = userProfile.token
 
   if (stored) {
     stored.userEmail = userEmail
@@ -351,13 +599,47 @@ async function getOrCreateGameState(
 // Enable CORS for AMP emails (Strict AMP for Email CORS header rules)
 app.use('/api/*', async (c, next) => {
   const originHeader = c.req.header('Origin')
+  const refererHeader = c.req.header('Referer')
   const ampSourceOrigin = c.req.query('__amp_source_origin')
 
+  let refererOrigin = ''
+  if (refererHeader) {
+    try {
+      refererOrigin = new URL(refererHeader).origin
+    } catch (_) {}
+  }
+
+  const reqUrl = new URL(c.req.url)
+
   const setCorsHeaders = (headers: Headers) => {
-    // Determine allowed origin for Gmail AMP, AMP Playground, or web dev
-    const allowedOrigin = (originHeader && originHeader !== 'null')
-      ? originHeader
-      : (ampSourceOrigin ? `https://${ampSourceOrigin.includes('@') ? ampSourceOrigin.split('@')[1] : ampSourceOrigin}` : 'https://mail.google.com')
+    let allowedOrigin = (originHeader && originHeader !== 'null') ? originHeader : refererOrigin
+
+    if (!allowedOrigin) {
+      if (ampSourceOrigin) {
+        const sourceDomain = ampSourceOrigin.includes('@') ? ampSourceOrigin.split('@')[1] : ampSourceOrigin
+        allowedOrigin = `https://${sourceDomain}`
+      } else {
+        allowedOrigin = reqUrl.origin
+      }
+    }
+
+    // Determine target source origin for AMP specification
+    let sourceOrigin = ampSourceOrigin
+    if (!sourceOrigin) {
+      if (originHeader && originHeader.includes('mail.google.com')) {
+        sourceOrigin = 'gmail.com'
+      } else if (originHeader && originHeader.includes('amp.dev')) {
+        sourceOrigin = 'amp.dev'
+      } else if (originHeader) {
+        try {
+          sourceOrigin = new URL(originHeader).hostname
+        } catch (_) {
+          sourceOrigin = 'gmail.com'
+        }
+      } else {
+        sourceOrigin = 'gmail.com'
+      }
+    }
 
     headers.set('Access-Control-Allow-Origin', allowedOrigin)
     headers.set('Vary', 'Origin')
@@ -365,10 +647,10 @@ app.use('/api/*', async (c, next) => {
     headers.set('Access-Control-Allow-Headers', 'Content-Type, AMP-Same-Origin, Authorization, x-user-email')
     headers.set('Access-Control-Expose-Headers', 'AMP-Access-Control-Allow-Source-Origin')
     headers.set('Access-Control-Allow-Credentials', 'true')
-
-    if (ampSourceOrigin) {
-      headers.set('AMP-Access-Control-Allow-Source-Origin', ampSourceOrigin)
-    }
+    headers.set('AMP-Access-Control-Allow-Source-Origin', sourceOrigin)
+    headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+    headers.set('Pragma', 'no-cache')
+    headers.set('Expires', '0')
   }
 
   if (c.req.method === 'OPTIONS') {
@@ -391,21 +673,28 @@ app.get('/', async (c) => {
   const { state, puzzle } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam)
 
   const reqUrl = new URL(c.req.url)
-  let currentOrigin = reqUrl.origin
-  if (!currentOrigin.includes('localhost') && !currentOrigin.includes('127.0.0.1')) {
-    currentOrigin = currentOrigin.replace(/^http:/, 'https:')
-  }
+  const devMode = c.req.query('dev') === 'true'
+  const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.workers.dev').replace(/\/$/, '')
+
+  let currentOrigin = (devMode && (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'))
+    ? reqUrl.origin
+    : prodOrigin
 
   let html = EMAIL_HTML
     .replaceAll('https://relatle.dev', currentOrigin)
     .replaceAll('https://email-game.teamify.workers.dev', currentOrigin)
-    .replaceAll('http://localhost:8787', currentOrigin)
+
+  if (currentOrigin.startsWith('https:')) {
+    html = html.replaceAll('http://', 'https://')
+  }
 
   const encodedEmail = encodeURIComponent(userEmail)
   const encodedDomain = encodeURIComponent(state.domain)
 
   // Append user email query param to form actions & amp-list endpoints
   html = html
+    .replaceAll(`${currentOrigin}/api/guess?email={{userEmail}}`, `${currentOrigin}/api/guess?email=${encodedEmail}`)
+    .replaceAll(`${currentOrigin}/api/hint?email={{userEmail}}`, `${currentOrigin}/api/hint?email=${encodedEmail}`)
     .replaceAll(`${currentOrigin}/api/guess`, `${currentOrigin}/api/guess?email=${encodedEmail}`)
     .replaceAll(`${currentOrigin}/api/hint`, `${currentOrigin}/api/hint?email=${encodedEmail}`)
     .replaceAll(`${currentOrigin}/api/subscribe`, `${currentOrigin}/api/subscribe?email=${encodedEmail}`)
@@ -420,10 +709,6 @@ app.get('/', async (c) => {
     .replace(
       `src="${currentOrigin}/api/state"`,
       `src="${currentOrigin}/api/state?email=${encodedEmail}"`
-    )
-    .replace(
-      `src="${currentOrigin}/api/sub-status"`,
-      `src="${currentOrigin}/api/sub-status?email=${encodedEmail}"`
     )
 
   // Inject current user state JSON into <amp-state>
@@ -447,9 +732,9 @@ app.get('/', async (c) => {
   // Pre-render Definition Counts
   html = html.replace('1 of 5', `${state.revealedCount} of ${state.totalDefinitions}`)
 
-  // Pre-render Message Banner & Stats Bar
+  // Pre-render Message Banner & Stats Bar in placeholder
   html = html.replace('Guess the word!', state.lastMessage)
-  html = html.replace('<span>Guesses: <span class="stats-val" [text]="gameState.guessCount">0</span></span>', `<span>Guesses: <span class="stats-val" [text]="gameState.guessCount">${state.guessCount}</span></span>`)
+  html = html.replace('<span>Guesses: <span class="stats-val">0</span></span>', `<span>Guesses: <span class="stats-val">${state.guessCount}</span></span>`)
   html = html.replace('<span>Hints Used: <span class="stats-val" [text]="gameState.hintsUsed">0</span></span>', `<span>Hints Used: <span class="stats-val" [text]="gameState.hintsUsed">${state.hintsUsed}</span></span>`)
   
   const currentMaxPts = state.hasWon ? state.score : Math.max(100, 1000 - Math.max(0, (state.guessCount - 1) * 100) - (state.hintsUsed * 75))
@@ -458,58 +743,74 @@ app.get('/', async (c) => {
   // Pre-render Leaderboard Section Title
   html = html.replace('🏆 Organization Leaderboard', `🏆 ${state.domain} Leaderboard`)
 
-  // Pre-render win card and un-blur leaderboard if user has already won
+  // Pre-render win state: hide form container if user has already won
   if (state.hasWon) {
-    html = html.replace('<div class="win-card" hidden', '<div class="win-card"')
     html = html.replace('<div class="form-container"', '<div class="form-container" hidden')
-    html = html.replace('<div class="leaderboard-lock-banner" [hidden]="gameState.hasWon">', '<div class="leaderboard-lock-banner" hidden [hidden]="gameState.hasWon">')
-    html = html.replace('<div class="leaderboard-blur-content" [class]="gameState.hasWon ? \'\' : \'leaderboard-blur-content\'">', '<div class="" [class]="gameState.hasWon ? \'\' : \'leaderboard-blur-content\'">')
-    if (state.score) {
-      html = html.replace('Final Score: 1000 Points!', `Final Score: ${state.score} Points!`)
-    }
-    if (state.shareText) {
-      html = html.replace(/RELATLE #1[\s\S]*?Org Rank: #1/, state.shareText)
-    }
   }
 
-  // Pre-render revealed & blurred definition cards inner text without duplicating definition numbers
+  // Pre-render definition cards text & blur in placeholder
   for (let i = 0; i < 5; i++) {
-    const def = puzzle.definitions[i]
-    if (def) {
-      const isRevealed = i < state.revealedCount
-      const targetPlaceholder = `[text]="gameState.allDefinitions[${i}] || ''"></span>`
-      const replacementText = `[text]="gameState.allDefinitions[${i}] || ''">${def}</span>`
-      html = html.replace(targetPlaceholder, replacementText)
+    const def = puzzle.definitions[i] || ''
+    const isRevealed = i < state.revealedCount
+    html = html.replace(`__DEF_${i}__`, def)
 
-      if (isRevealed) {
-        html = html.replace(
-          `<span class="definition-text-blurred" [class]="gameState.revealedCount > ${i} ? '' : 'definition-text-blurred'"`,
-          `<span class="" [class]="gameState.revealedCount > ${i} ? '' : 'definition-text-blurred'"`
-        )
-      }
-    } else {
+    if (isRevealed) {
+      // Un-blur revealed definitions in placeholder
       html = html.replace(
-        `[hidden]="!gameState.allDefinitions[${i}]">`,
-        `[hidden]="!gameState.allDefinitions[${i}]" hidden>`
+        `<span class="definition-text-blurred">${def}</span>`,
+        `<span>${def}</span>`
       )
     }
   }
 
-  // Pre-render letter mask tiles in initial HTML according to target wordLength
+  // Pre-render letter mask tiles in placeholder
   for (let i = 0; i < 7; i++) {
     if (i < state.wordLength) {
       const char = (state.letterMask && state.letterMask[i]) || '_'
-      // Strip static hidden attribute for tiles up to target wordLength so correct tile count renders immediately
+      // Un-hide tiles up to wordLength and fill with current mask value
       html = html.replace(
-        `<div class="mask-tile" [text]="gameState.letterMask[${i}] || '_'" hidden [hidden]="gameState.wordLength < ${i + 1}">_</div>`,
-        `<div class="mask-tile" [text]="gameState.letterMask[${i}] || '_'">${char}</div>`
+        `<div class="mask-tile" hidden>_</div>`,
+        `<div class="mask-tile">${char}</div>`
       )
-      html = html.replace(
-        `<div class="mask-tile" [text]="gameState.letterMask[${i}] || '_'">_</div>`,
-        `<div class="mask-tile" [text]="gameState.letterMask[${i}] || '_'">${char}</div>`
-      )
+      // Replace visible placeholder underscores with actual mask chars
+      if (char !== '_') {
+        // Only replace the first occurrence (one tile at a time)
+        html = html.replace(
+          `<div class="mask-tile">_</div>`,
+          `<div class="mask-tile">${char}</div>`
+        )
+      }
     }
   }
+
+  return c.html(html)
+})
+
+// Serve non-AMP Fallback HTML with personalized engagement stats & CTA
+app.get('/fallback', async (c) => {
+  const userEmail = await getUserEmail(c)
+  const dateParam = c.req.query('date')
+  const puzzle = getDailyPuzzle(dateParam)
+  const domain = extractDomain(userEmail)
+  const profile = await recordUserActivity(c.env?.GAME_STATE_KV, userEmail, puzzle.date)
+  const coworkerCount = await getCoworkerCount(c.env?.GAME_STATE_KV, domain, userEmail)
+
+  const reqUrl = new URL(c.req.url)
+  const devMode = c.req.query('dev') === 'true'
+  const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.workers.dev').replace(/\/$/, '')
+
+  const publicUrl = (devMode && (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'))
+    ? reqUrl.origin
+    : prodOrigin
+
+  const playUrl = `${publicUrl}/?email=${encodeURIComponent(userEmail)}`
+  const html = getFallbackHtml({
+    email: userEmail,
+    domain,
+    daysPlayed: profile.daysPlayed || 1,
+    coworkerCount,
+    playUrl,
+  })
 
   return c.html(html)
 })
@@ -967,40 +1268,55 @@ app.get('/api/subscribers', async (c) => {
 app.get('/api/sub-status', async (c) => {
   try {
     const userEmail = await getUserEmail(c)
-    const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
-    const isSubscribed = subscribers.some(s => s.email === userEmail && s.status === 'active')
+    const isSubscribed = await ensureSubscribedOnOpen(c.env?.GAME_STATE_KV, userEmail)
     const payload = { isSubscribed, userEmail }
     return c.json({ items: [payload], ...payload })
   } catch (error: any) {
-    const fallback = { isSubscribed: false, userEmail: 'player@company.com' }
+    const fallback = { isSubscribed: true, userEmail: 'player@company.com' }
     return c.json({ items: [fallback], ...fallback })
   }
 })
+
+// Helper to build standardized state payload for AMP list and AMP.setState
+function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
+  const ts = Date.now()
+  const encodedEmail = encodeURIComponent(state.userEmail)
+  const encodedDomain = encodeURIComponent(state.domain)
+
+  const statePayload = {
+    ...state,
+    userEmail: state.userEmail,
+    stateUrl: `https://email-game.teamify.workers.dev/api/state?email=${encodedEmail}&t=${ts}`,
+    leaderboardUrl: `https://email-game.teamify.workers.dev/api/leaderboard?domain=${encodedDomain}&email=${encodedEmail}&t=${ts}`,
+    def1_text: puzzle.definitions[0] || '',
+    def2_text: puzzle.definitions[1] || '',
+    def3_text: puzzle.definitions[2] || '',
+    def4_text: puzzle.definitions[3] || '',
+    def5_text: puzzle.definitions[4] || '',
+    blur1: state.revealedCount >= 1 ? '' : 'definition-text-blurred',
+    blur2: state.revealedCount >= 2 ? '' : 'definition-text-blurred',
+    blur3: state.revealedCount >= 3 ? '' : 'definition-text-blurred',
+    blur4: state.revealedCount >= 4 ? '' : 'definition-text-blurred',
+    blur5: state.revealedCount >= 5 ? '' : 'definition-text-blurred',
+    mask0: state.letterMask[0] || '_',
+    mask1: state.letterMask[1] || '_',
+    mask2: state.letterMask[2] || '_',
+    mask3: state.letterMask[3] || '_',
+    mask4: state.letterMask[4] || '_',
+    mask5: state.wordLength >= 6 ? (state.letterMask[5] || '_') : '',
+    mask6: state.wordLength >= 7 ? (state.letterMask[6] || '_') : '',
+  }
+  return { items: [statePayload], ...statePayload }
+}
 
 // Get game state
 app.get('/api/state', async (c) => {
   try {
     const userEmail = await getUserEmail(c)
     const dateParam = c.req.query('date')
-    const { state } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam)
+    const { state, puzzle } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam)
 
-    const statePayload = {
-      ...state,
-      def1: state.allDefinitions[0] || '',
-      def2: state.allDefinitions[1] || '',
-      def3: state.allDefinitions[2] || '',
-      def4: state.allDefinitions[3] || '',
-      def5: state.allDefinitions[4] || '',
-      mask0: state.letterMask[0] || '_',
-      mask1: state.letterMask[1] || '_',
-      mask2: state.letterMask[2] || '_',
-      mask3: state.letterMask[3] || '_',
-      mask4: state.letterMask[4] || '_',
-      mask5: state.letterMask[5] || '_',
-      mask6: state.letterMask[6] || '_',
-    }
-
-    return c.json({ items: [statePayload], ...statePayload })
+    return c.json(buildStatePayload(state, puzzle))
   } catch (error: any) {
     console.error('Error fetching game state:', error)
     return c.json({ error: 'Failed to fetch game state' }, 500)
@@ -1022,15 +1338,13 @@ app.post('/api/guess', async (c) => {
     )
 
     if (state.hasWon) {
-      return c.json(state)
+      return c.json(buildStatePayload(state, puzzle))
     }
 
     if (!guess || guess.length !== puzzle.word.length) {
-      return c.json({
-        ...state,
-        lastMessage: `⚠️ Please enter a ${puzzle.word.length}-letter word.`,
-        isSubmitting: false,
-      })
+      state.lastMessage = `⚠️ Please enter a ${puzzle.word.length}-letter word.`
+      state.isSubmitting = false
+      return c.json(buildStatePayload(state, puzzle))
     }
 
     const statuses = evaluateGuess(puzzle.word, guess)
@@ -1090,7 +1404,7 @@ app.post('/api/guess', async (c) => {
 
     await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
 
-    return c.json(state)
+    return c.json(buildStatePayload(state, puzzle))
   } catch (error: any) {
     console.error('Error submitting guess:', error)
     return c.json({ error: 'Failed to process guess' }, 500)
@@ -1111,7 +1425,7 @@ app.post('/api/hint', async (c) => {
     )
 
     if (state.hasWon) {
-      return c.json(state)
+      return c.json(buildStatePayload(state, puzzle))
     }
 
     const unrevealedIndices: number[] = []
@@ -1123,7 +1437,7 @@ app.post('/api/hint', async (c) => {
 
     if (unrevealedIndices.length === 0) {
       state.lastMessage = '💡 All letters have already been revealed!'
-      return c.json(state)
+      return c.json(buildStatePayload(state, puzzle))
     }
 
     const targetIdx = unrevealedIndices[0]
@@ -1135,7 +1449,7 @@ app.post('/api/hint', async (c) => {
     state.lastMessage = `💡 Hint revealed letter #${targetIdx + 1}: "${puzzle.word[targetIdx]}"!`
 
     await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
-    return c.json(state)
+    return c.json(buildStatePayload(state, puzzle))
   } catch (error: any) {
     console.error('Error revealing hint:', error)
     return c.json({ error: 'Failed to reveal hint' }, 500)
@@ -1165,10 +1479,18 @@ app.get('/api/leaderboard', async (c) => {
       }
     }))
 
-    return c.json({
+    const { state: userState } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateStr)
+
+    const payload = {
       domain,
       date: dateStr,
-      items
+      hasWon: userState.hasWon,
+      players: items
+    }
+
+    return c.json({
+      items: [payload],
+      ...payload
     })
   } catch (error: any) {
     return c.json({ items: [] })

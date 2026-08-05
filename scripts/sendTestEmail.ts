@@ -16,9 +16,13 @@ async function sendTestEmail() {
 
   // Fetch pre-rendered AMP HTML from local server
   let ampHtml = ''
+  let fallbackHtml = ''
   try {
-    const localRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(targetEmail)}`)
+    const localRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(targetEmail)}&forceHttps=true`)
     ampHtml = await localRes.text()
+
+    const fallbackRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(targetEmail)}`)
+    fallbackHtml = await fallbackRes.text()
   } catch (err) {
     console.error('⚠️ Could not connect to http://localhost:8787. Make sure `npm run dev` is running!')
     process.exit(1)
@@ -42,7 +46,7 @@ async function sendTestEmail() {
       to: targetEmail,
       subject,
       text: `Play today's Relatle puzzle: ${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}`,
-      html: `<!doctype html><html><body><p>Your email client does not support interactive AMP emails. <a href="${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}">Click here to play online</a>.</p></body></html>`,
+      html: fallbackHtml,
       amp: ampHtml,
     }
 
@@ -66,7 +70,7 @@ async function sendTestEmail() {
         to: targetEmail,
         subject,
         text: `Play today's Relatle puzzle: ${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}`,
-        html: `<!doctype html><html><body><p>Your email client does not support interactive AMP emails. <a href="${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}">Click here to play online</a>.</p></body></html>`,
+        html: fallbackHtml,
         amp: ampHtml,
       }
 
