@@ -60,6 +60,27 @@ const REDACTED_DEF_TEXT = '█████████████████�
 // Persistent memory store for development fallback & 429 rate limit protection
 const MEMORY_STORE = new Map<string, any>()
 
+// Tunable constant height for non-definition UI elements (headers, letter clues grid, message banner, section margins/gaps)
+const BASE_STATIC_STATE_LIST_HEIGHT = 148
+
+// Calculate individual definition card height based on line wrapping (57 chars per line)
+// 1-line definition box = 29.59px; 2-line = 45.19px (adds 15.6px per additional line)
+function calculateDefinitionCardHeight(text: string): number {
+  const charCount = text ? text.length : 0
+  const lines = Math.max(1, Math.ceil(charCount / 57))
+  return 29.59 + (lines - 1) * 15.6
+}
+
+// Calculate dynamic total amp-list height for pre-render
+function calculateStateListHeight(puzzle: DailyPuzzle, baseStaticHeight: number = BASE_STATIC_STATE_LIST_HEIGHT): number {
+  if (!puzzle || !puzzle.definitions || puzzle.definitions.length === 0) {
+    return 380
+  }
+  const gaps = (puzzle.definitions.length - 1) * 4
+  const defsHeight = puzzle.definitions.reduce((sum, def) => sum + calculateDefinitionCardHeight(def), 0)
+  return Math.ceil(defsHeight + gaps + baseStaticHeight)
+}
+
 async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
   if (kv) {
     try {
@@ -113,7 +134,7 @@ async function getUserEmail(c: any, parsedBody?: Record<string, any>): Promise<s
     try {
       const body = await c.req.parseBody()
       emailParam = body['email'] as string
-    } catch (_) {}
+    } catch (_) { }
   }
 
   if (emailParam && typeof emailParam === 'string' && emailParam.includes('@')) {
@@ -479,7 +500,7 @@ async function updateDomainLeaderboard(
 ): Promise<LeaderboardEntry[]> {
   const key = `leaderboard:${domain}:${date}`
   const list = (await getDomainLeaderboard(kv, domain, date)) || []
-  
+
   const existingIdx = list.findIndex((item) => item.email === entry.email)
   if (existingIdx >= 0) {
     list[existingIdx] = entry
@@ -585,7 +606,7 @@ app.use('/api/*', async (c, next) => {
   if (refererHeader) {
     try {
       refererOrigin = new URL(refererHeader).origin
-    } catch (_) {}
+    } catch (_) { }
   }
 
   let allowedOrigin = (originHeader && originHeader !== 'null') ? originHeader : (refererOrigin || 'https://mail.google.com')
@@ -652,9 +673,9 @@ app.get('/', async (c) => {
     .replaceAll('USER_DOMAIN_PLACEHOLDER', encodedDomain)
     .replaceAll('default-dev-token', userToken)
 
-  if (currentOrigin.startsWith('https:')) {
-    html = html.replaceAll('http://', 'https://')
-  }
+  // Dynamically calculate and replace amp-list height on pre-render
+  const dynamicStateListHeight = calculateStateListHeight(puzzle)
+  html = html.replace('height="380"', `height="${dynamicStateListHeight}"`)
 
   // Pre-render Header Meta (Date and Domain)
   html = html.replace('2026-08-05', puzzle.date)
@@ -1269,9 +1290,8 @@ app.post('/api/guess', async (c) => {
       state.revealedCount = puzzle.definitions.length
       state.score = calculateScore(state.guessCount, state.hintsUsed)
       state.letterMask = puzzle.word.split('')
-      state.lastMessage = `🎉 Amazing! You solved today's word ("${puzzle.word}") in ${state.guessCount} guess${
-        state.guessCount > 1 ? 'es' : ''
-      }! Score: ${state.score} pts`
+      state.lastMessage = `🎉 Amazing! You solved today's word ("${puzzle.word}") in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
+        }! Score: ${state.score} pts`
 
       const leaderboardEntry: LeaderboardEntry = {
         email: userEmail,
@@ -1291,9 +1311,8 @@ app.post('/api/guess', async (c) => {
 
       const rank = updatedLeaderboard.findIndex((e) => e.email === userEmail) + 1
 
-      state.shareText = `RELATLE #${puzzle.id} (${puzzle.date})\n🎯 Solved in ${state.guessCount} guess${
-        state.guessCount > 1 ? 'es' : ''
-      }!\n⭐ Score: ${state.score} pts | Org Rank: #${rank} (${domain})\n\nPlay at: https://relatle.dev`
+      state.shareText = `RELATLE #${puzzle.id} (${puzzle.date})\n🎯 Solved in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
+        }!\n⭐ Score: ${state.score} pts | Org Rank: #${rank} (${domain})\n\nPlay at: https://relatle.dev`
     } else {
       if (state.revealedCount < puzzle.definitions.length) {
         state.revealedCount += 1
@@ -1362,7 +1381,7 @@ app.get('/api/leaderboard', async (c) => {
     const domain = c.req.query('domain') || extractDomain(userEmail)
     const dateStr = c.req.query('date') || getDailyPuzzle().date
     const leaderboard = await getDomainLeaderboard(c.env?.GAME_STATE_KV, domain, dateStr)
-    
+
     // Format items array with full uncensored emails or Anonymous if privacy toggled
     const items = await Promise.all(leaderboard.map(async (entry, index) => {
       const userSettings = await getUserByToken(c.env?.GAME_STATE_KV, entry.email) || { showOnLeaderboard: true }
