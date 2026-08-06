@@ -85,6 +85,12 @@
             margin-bottom: 8px;
         }
 
+        .message-banner-win {
+            background: linear-gradient(135deg, #065f46, #047857);
+            border: 1px solid #10b981;
+            color: #a7f3d0;
+        }
+
         /* Definition Cards at Top */
         .definitions-section {
             margin-bottom: 8px;
@@ -119,6 +125,7 @@
             display: flex;
             align-items: baseline;
             gap: 6px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         }
 
         .def-number {
@@ -455,16 +462,7 @@
                         </div>
                     </div>
 
-                    <div class="message-banner">{{lastMessage}}</div>
-
-                    {{#hasWon}}
-                    <div class="win-card">
-                        <div class="win-title">🏆 YOU WON!</div>
-                        <div class="win-score">Final Score: {{score}} Points!</div>
-                        <p style="font-size: 12px; color: #d1fae5; margin-bottom: 6px;">Share your score with your organization:</p>
-                        <div class="share-box">{{shareText}}</div>
-                    </div>
-                    {{/hasWon}}
+                    <div class="message-banner {{#hasWon}}message-banner-win{{/hasWon}}">{{lastMessage}}</div>
                 </template>
                 <div placeholder>
                     <div class="definitions-section">

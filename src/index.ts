@@ -1187,8 +1187,9 @@ function getRedactedText(text: string): string {
 
 // Helper to build standardized state payload for AMP list
 function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
+  const activeRevealedCount = state.hasWon ? puzzle.definitions.length : state.revealedCount
   const definitions = puzzle.definitions.map((def, i) => {
-    const isRevealed = i < state.revealedCount
+    const isRevealed = i < activeRevealedCount
     return {
       num: i + 1,
       text: isRevealed ? def : getRedactedText(def),
@@ -1196,7 +1197,7 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
   })
 
   const statePayload = {
-    revealedCount: state.revealedCount,
+    revealedCount: activeRevealedCount,
     totalDefinitions: puzzle.definitions.length,
     definitions,
     letterMask: state.letterMask,
@@ -1265,6 +1266,7 @@ app.post('/api/guess', async (c) => {
 
     if (isCorrect) {
       state.hasWon = true
+      state.revealedCount = puzzle.definitions.length
       state.score = calculateScore(state.guessCount, state.hintsUsed)
       state.letterMask = puzzle.word.split('')
       state.lastMessage = `🎉 Amazing! You solved today's word ("${puzzle.word}") in ${state.guessCount} guess${
