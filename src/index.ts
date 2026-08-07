@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { OAuth2Client } from 'google-auth-library'
-import { getDailyPuzzle, DailyPuzzle } from './puzzles'
+import { getDailyPuzzle, DailyPuzzle, formatPrettyDate } from './puzzles'
 import { EMAIL_HTML } from './emailHtml'
 
 export type LetterStatus = 'correct' | 'present' | 'absent'
@@ -275,18 +275,18 @@ export function getFallbackHtml(options: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Relatle #${puzzle.id} - Daily Word Puzzle</title>
+  <title>Untitled Word Game #${puzzle.id} - Daily Word Puzzle</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #0f172a;
+      background-color: #27272a;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: #f8fafc;
     }
     .wrapper {
       width: 100%;
-      background-color: #0f172a;
+      background-color: #27272a;
       padding: 24px 12px;
       box-sizing: border-box;
     }
@@ -294,36 +294,50 @@ export function getFallbackHtml(options: {
       max-width: 520px;
       margin: 0 auto;
       background: #1e293b;
-      border: 1px solid #334155;
+      border: none;
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
     }
     .header {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed);
-      padding: 20px;
-      text-align: center;
+      background: #000000;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .header-title {
-      font-size: 26px;
+      font-size: 20px;
       font-weight: 900;
       color: #ffffff;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
       text-transform: uppercase;
       margin: 0;
     }
-    .header-sub {
-      font-size: 12px;
-      color: #e0e7ff;
-      margin-top: 4px;
+    .domain-badge-fallback {
+      background: #27272a;
+      color: #ffffff;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .header-date {
+      font-size: 11px;
+      color: #a1a1aa;
       font-weight: 600;
     }
     .body-content {
       padding: 24px 20px;
     }
     .stats-card {
-      background: #0f172a;
-      border: 1px solid #3b82f6;
+      background: #18181b;
+      border: 1px solid #27272a;
       border-radius: 12px;
       padding: 18px 16px;
       margin-bottom: 20px;
@@ -336,15 +350,15 @@ export function getFallbackHtml(options: {
       margin: 0;
     }
     .highlight-user {
-      color: #38bdf8;
+      color: #ffffff;
       font-weight: 700;
     }
     .highlight-stat {
-      color: #fbbf24;
+      color: #ffffff;
       font-weight: 800;
     }
     .highlight-domain {
-      color: #a5b4fc;
+      color: #ffffff;
       font-weight: 700;
     }
     .cta-container {
@@ -353,7 +367,7 @@ export function getFallbackHtml(options: {
     }
     .cta-button {
       display: inline-block;
-      background: linear-gradient(135deg, #10b981, #059669);
+      background: #2563eb;
       color: #ffffff !important;
       font-size: 16px;
       font-weight: 800;
@@ -361,7 +375,7 @@ export function getFallbackHtml(options: {
       padding: 14px 28px;
       border-radius: 10px;
       letter-spacing: 0.5px;
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
     }
     .cta-hint {
       font-size: 12px;
@@ -407,18 +421,21 @@ export function getFallbackHtml(options: {
   <div class="wrapper">
     <div class="container">
       <div class="header">
-        <h1 class="header-title">RELATLE</h1>
-        <div class="header-sub">Daily Multi-Definition Word Game • ${puzzle.date}</div>
+        <div class="header-left">
+          <h1 class="header-title">UNTITLED WORD GAME</h1>
+          <span class="domain-badge-fallback">${domain}</span>
+        </div>
+        <div class="header-date">${formatPrettyDate(puzzle.date)}</div>
       </div>
       <div class="body-content">
         <div class="stats-card">
           <p class="stats-text">
-            <span class="highlight-user">${email}</span> has played Relatle for <span class="highlight-stat">${daysText}</span>, and competes with <span class="highlight-stat">${coworkersText}</span> at <span class="highlight-domain">${domain}</span>!
+            <span class="highlight-user">${email}</span> has played Untitled Word Game for <span class="highlight-stat">${daysText}</span>, and competes with <span class="highlight-stat">${coworkersText}</span> at <span class="highlight-domain">${domain}</span>!
           </p>
         </div>
 
         <div class="cta-container">
-          <a href="${playUrl}" class="cta-button">👉 Play Today's Relatle #${puzzle.id}</a>
+          <a href="${playUrl}" class="cta-button">Play Today's Untitled Word Game #${puzzle.id}</a>
           <p class="cta-hint">Forwarding this email? Try today's puzzle so your colleagues can challenge your score on the domain leaderboard!</p>
         </div>
 
@@ -428,7 +445,7 @@ export function getFallbackHtml(options: {
         </div>
       </div>
       <div class="footer">
-        Relatle Daily Puzzle • <a href="${playUrl}">Play Online</a>
+        Untitled Word Game Daily Puzzle • <a href="${playUrl}">Play Online</a>
       </div>
     </div>
   </div>
@@ -679,8 +696,8 @@ app.get('/', async (c) => {
   html = html.replace('height="380"', `height="${dynamicStateListHeight}"`)
 
   // Pre-render Header Meta (Date and Domain)
-  html = html.replace('2026-08-05', puzzle.date)
-  html = html.replace('🏢 company.com', `🏢 ${domain}`)
+  html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
+  html = html.replace('company.com', domain)
 
   // Pre-render Definition Counts (Always 1 of N for initial state)
   html = html.replace('1 of 5', `1 of ${puzzle.definitions.length}`)
@@ -830,7 +847,7 @@ app.get('/account', async (c) => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Relatle Account & Preferences</title>
+  <title>Untitled Word Game Account & Preferences</title>
   
   <!-- Load React & ReactDOM via CDN for lightweight high-performance SPA -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -1075,12 +1092,12 @@ app.get('/account', async (c) => {
           {toast && <div className="toast">{toast}</div>}
 
           <div className="header">
-            <div className="title">RELATLE</div>
+            <div className="title">UNTITLED WORD GAME</div>
             <div className="subtitle">Interactive Account & Preferences</div>
             <div className="user-badge">
-              <span>👤 {user.email}</span>
+              <span>{user.email}</span>
               <span>•</span>
-              <span>🏢 {user.domain}</span>
+              <span>{user.domain}</span>
             </div>
           </div>
 
@@ -1133,7 +1150,7 @@ app.get('/account', async (c) => {
           </div>
 
           <div className="footer-text">
-            Relatle • Secure Token Authentication & React SPA Settings
+            Untitled Word Game • Secure Token Authentication & React SPA Settings
           </div>
         </div>
       );
@@ -1268,7 +1285,7 @@ app.post('/api/guess', async (c) => {
     }
 
     if (!guess || guess.length !== puzzle.word.length) {
-      state.lastMessage = `⚠️ Please enter a ${puzzle.word.length}-letter word.`
+      state.lastMessage = `Please enter a ${puzzle.word.length}-letter word.`
       await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
       return c.json(buildStatePayload(state, puzzle))
     }
@@ -1292,7 +1309,7 @@ app.post('/api/guess', async (c) => {
       state.revealedCount = puzzle.definitions.length
       state.score = calculateScore(state.guessCount, state.hintsUsed)
       state.letterMask = puzzle.word.split('')
-      state.lastMessage = `🎉 Solved "${puzzle.word}" in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''}! Score: ${state.score} pts`
+      state.lastMessage = `Solved "${puzzle.word}" in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''}! Score: ${state.score} pts`
 
       const leaderboardEntry: LeaderboardEntry = {
         email: userEmail,
@@ -1312,13 +1329,13 @@ app.post('/api/guess', async (c) => {
 
       const rank = updatedLeaderboard.findIndex((e) => e.email === userEmail) + 1
 
-      state.shareText = `RELATLE #${puzzle.id} (${puzzle.date})\n🎯 Solved in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
-        }!\n⭐ Score: ${state.score} pts | Org Rank: #${rank} (${domain})\n\nPlay at: https://relatle.dev`
+      state.shareText = `UNTITLED WORD GAME #${puzzle.id} (${formatPrettyDate(puzzle.date)})\nSolved in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
+        }!\nScore: ${state.score} pts | Org Rank: #${rank} (${domain})\n\nPlay at: https://relatle.dev`
     } else {
       if (state.revealedCount < puzzle.definitions.length) {
         state.revealedCount += 1
       }
-      state.lastMessage = `❌ "${guess}" is incorrect. Def #${state.revealedCount} revealed!`
+      state.lastMessage = `"${guess}" is incorrect. Def #${state.revealedCount} revealed!`
     }
 
     await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
@@ -1355,7 +1372,7 @@ app.post('/api/hint', async (c) => {
     }
 
     if (unrevealedIndices.length === 0) {
-      state.lastMessage = '💡 All letters have already been revealed!'
+      state.lastMessage = 'All letters have already been revealed!'
       return c.json(buildStatePayload(state, puzzle))
     }
 
@@ -1365,7 +1382,7 @@ app.post('/api/hint', async (c) => {
 
     state.hintsUsed += 1
     state.letterMask = updatedMask
-    state.lastMessage = `💡 Letter #${targetIdx + 1} is "${puzzle.word[targetIdx]}"!`
+    state.lastMessage = `Letter #${targetIdx + 1} is "${puzzle.word[targetIdx]}"!`
 
     await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
     return c.json(buildStatePayload(state, puzzle))
@@ -1419,11 +1436,11 @@ app.get('/api/leaderboard', async (c) => {
 export default {
   fetch: app.fetch,
   async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
-    console.log('⏰ Executing daily 9:00 AM PST Cron Dispatch...', event.scheduledTime)
+    console.log('Executing daily 9:00 AM PST Cron Dispatch...', event.scheduledTime)
     const puzzle = getDailyPuzzle()
     const subscribers = await getSubscribers(env.GAME_STATE_KV)
     const activeSubscribers = subscribers.filter(s => s.status === 'active')
 
-    console.log(`[Cron Dispatch] Ready to dispatch RELATLE #${puzzle.id} (${puzzle.date}) to ${activeSubscribers.length} active subscribers.`)
+    console.log(`[Cron Dispatch] Ready to dispatch UNTITLED WORD GAME #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${activeSubscribers.length} active subscribers.`)
   }
 }

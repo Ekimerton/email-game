@@ -19,8 +19,8 @@ export const EMAIL_HTML = `<!doctype html>
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            background-color: #27272a;
+            color: #18181b;
             line-height: 1.3;
             padding: 4px;
         }
@@ -28,20 +28,26 @@ export const EMAIL_HTML = `<!doctype html>
         .email-container {
             margin: 0 auto;
             max-width: 480px;
-            background: #1e293b;
+            background: #ffffff;
             border-radius: 12px;
-            border: 1px solid #334155;
+            border: none;
             overflow: hidden;
-            box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         /* Compact Top Bar */
         .game-header-compact {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            background: #000000;
             padding: 8px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .header-left-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .header-title-compact {
@@ -52,21 +58,19 @@ export const EMAIL_HTML = `<!doctype html>
             text-transform: uppercase;
         }
 
-        .header-meta-compact {
-            font-size: 11px;
-            color: #e0e7ff;
-            font-weight: 600;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
         .domain-badge-compact {
-            background: rgba(0, 0, 0, 0.3);
-            color: #a5b4fc;
+            background: #27272a;
+            color: #ffffff;
             padding: 2px 6px;
             border-radius: 8px;
             font-weight: 700;
+            font-size: 11px;
+        }
+
+        .header-date-compact {
+            font-size: 11px;
+            color: #a1a1aa;
+            font-weight: 600;
         }
 
         .game-body {
@@ -75,21 +79,24 @@ export const EMAIL_HTML = `<!doctype html>
 
         /* Feedback Status Banner at Top */
         .message-banner {
-            background: #334155;
+            background: #f4f4f5;
+            border: 1px solid #e4e4e7;
             border-radius: 6px;
             padding: 6px 10px;
             font-size: 12px;
             font-weight: 600;
             text-align: center;
-            color: #f8fafc;
+            color: #18181b;
+            line-height: 1.3;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
             margin-top: 16px;
             margin-bottom: 8px;
         }
 
         .message-banner-win {
-            background: linear-gradient(135deg, #065f46, #047857);
-            border: 1px solid #10b981;
-            color: #a7f3d0;
+            background: #f4f4f5;
+            border: 1px solid #18181b;
+            color: #18181b;
         }
 
         /* Definition Cards at Top */
@@ -100,7 +107,7 @@ export const EMAIL_HTML = `<!doctype html>
         .section-label {
             font-size: 11px;
             font-weight: 700;
-            color: #94a3b8;
+            color: #52525b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 4px;
@@ -115,13 +122,13 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .definition-card {
-            background: #0f172a;
-            border: 1px solid #334155;
+            background: #f4f4f5;
+            border: 1px solid #e4e4e7;
             border-radius: 6px;
             padding: 6px 10px;
             font-size: 12px;
             font-weight: 600;
-            color: #f1f5f9;
+            color: #18181b;
             line-height: 1.3;
             display: flex;
             align-items: baseline;
@@ -131,12 +138,12 @@ export const EMAIL_HTML = `<!doctype html>
 
         .def-number {
             font-weight: 800;
-            color: #818cf8;
+            color: #2563eb;
             flex-shrink: 0;
         }
 
         .definition-text-blurred {
-            color: #64748b;
+            color: #a1a1aa;
             letter-spacing: 1px;
             opacity: 0.7;
         }
@@ -155,15 +162,15 @@ export const EMAIL_HTML = `<!doctype html>
         .mask-tile {
             width: 36px;
             height: 40px;
-            background: #0f172a;
-            border: 2px solid #475569;
+            background: #ffffff;
+            border: 2px solid #d4d4d8;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 18px;
             font-weight: 800;
-            color: #fbbf24;
+            color: #18181b;
             text-transform: uppercase;
         }
 
@@ -180,13 +187,13 @@ export const EMAIL_HTML = `<!doctype html>
 
         .guess-input {
             width: 100%;
-            background: #0f172a;
-            border: 2px solid #6366f1;
+            background: #ffffff;
+            border: 2px solid #18181b;
             border-radius: 8px;
             padding: 8px 10px;
             font-size: 18px;
             font-weight: 800;
-            color: #ffffff;
+            color: #18181b;
             text-transform: uppercase;
             letter-spacing: 4px;
             text-align: center;
@@ -194,8 +201,8 @@ export const EMAIL_HTML = `<!doctype html>
 
         .guess-input:focus {
             outline: none;
-            border-color: #818cf8;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+            border-color: #18181b;
+            box-shadow: none;
         }
 
         .action-buttons {
@@ -215,13 +222,13 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: #2563eb;
             color: #ffffff;
         }
 
         .btn-hint {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: #ffffff;
+            background: #e4e4e7;
+            color: #18181b;
         }
 
         .btn:disabled {
@@ -232,24 +239,24 @@ export const EMAIL_HTML = `<!doctype html>
         .stats-bar {
             display: flex;
             justify-content: space-around;
-            background: #0f172a;
+            background: #f4f4f5;
             padding: 6px;
             border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
-            color: #94a3b8;
+            color: #52525b;
             margin-bottom: 10px;
         }
 
         .stats-val {
-            color: #38bdf8;
+            color: #52525b;
             font-weight: 800;
         }
 
         /* Victory Card */
         .win-card {
-            background: linear-gradient(135deg, #065f46, #047857);
-            border: 1px solid #10b981;
+            background: #18181b;
+            border: 1px solid #27272a;
             border-radius: 10px;
             padding: 10px 12px;
             text-align: center;
@@ -265,19 +272,19 @@ export const EMAIL_HTML = `<!doctype html>
 
         .win-score {
             font-size: 13px;
-            color: #a7f3d0;
+            color: #d4d4d8;
             font-weight: 700;
             margin-bottom: 6px;
         }
 
         .share-box {
-            background: #064e3b;
-            border: 1px dashed #34d399;
+            background: #27272a;
+            border: 1px dashed #71717a;
             border-radius: 6px;
             padding: 6px 8px;
             font-family: monospace;
             font-size: 11px;
-            color: #ecfdf5;
+            color: #f4f4f5;
             text-align: left;
             white-space: pre-wrap;
             word-break: break-all;
@@ -285,8 +292,8 @@ export const EMAIL_HTML = `<!doctype html>
 
         /* Subscribe Banner Box */
         .subscribe-banner {
-            background: linear-gradient(135deg, #1e1b4b, #312e81);
-            border: 1px solid #6366f1;
+            background: #18181b;
+            border: 1px solid #27272a;
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 10px;
@@ -311,21 +318,21 @@ export const EMAIL_HTML = `<!doctype html>
 
         .subscribe-desc {
             font-size: 11px;
-            color: #c7d2fe;
+            color: #a1a1aa;
             margin-top: 1px;
             line-height: 1.2;
         }
 
         .btn-subscribe {
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            background: #27272a;
             color: #ffffff;
             width: 100%;
         }
 
         /* Leaderboard */
         .leaderboard-section {
-            background: #0f172a;
-            border: 1px solid #334155;
+            background: #f4f4f5;
+            border: 1px solid #e4e4e7;
             border-radius: 8px;
             padding: 10px;
             position: relative;
@@ -336,7 +343,7 @@ export const EMAIL_HTML = `<!doctype html>
         .leaderboard-title {
             font-size: 12px;
             font-weight: 800;
-            color: #38bdf8;
+            color: #18181b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 6px;
@@ -353,11 +360,11 @@ export const EMAIL_HTML = `<!doctype html>
             top: 40px;
             left: 10px;
             right: 10px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid #38bdf8;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #71717a;
             border-radius: 8px;
             padding: 8px 12px;
-            color: #38bdf8;
+            color: #18181b;
             font-size: 11px;
             font-weight: 700;
             text-align: center;
@@ -369,7 +376,7 @@ export const EMAIL_HTML = `<!doctype html>
             justify-content: space-between;
             align-items: center;
             padding: 6px 8px;
-            border-bottom: 1px solid #1e293b;
+            border-bottom: 1px solid #e4e4e7;
             font-size: 12px;
         }
 
@@ -380,30 +387,30 @@ export const EMAIL_HTML = `<!doctype html>
         .rank-number {
             font-weight: 800;
             width: 20px;
-            color: #fbbf24;
+            color: #18181b;
         }
 
         .player-email {
             flex: 1;
             font-weight: 600;
-            color: #cbd5e1;
+            color: #27272a;
         }
 
         .player-score {
             font-weight: 800;
-            color: #10b981;
+            color: #18181b;
         }
 
         .footer {
             padding: 10px;
             text-align: center;
             font-size: 10px;
-            color: #64748b;
-            border-top: 1px solid #334155;
+            color: #71717a;
+            border-top: 1px solid #e4e4e7;
         }
 
         .account-link {
-            color: #a5b4fc;
+            color: #18181b;
             text-decoration: underline;
             margin-top: 4px;
             display: inline-block;
@@ -416,11 +423,11 @@ export const EMAIL_HTML = `<!doctype html>
     <div class="email-container">
         <!-- Compact 1-Line Header -->
         <div class="game-header-compact">
-            <h1 class="header-title-compact">RELATLE</h1>
-            <div class="header-meta-compact">
-                <span>2026-08-05</span>
-                <span class="domain-badge-compact">🏢 company.com</span>
+            <div class="header-left-compact">
+                <h1 class="header-title-compact">UNTITLED WORD GAME</h1>
+                <span class="domain-badge-compact">company.com</span>
             </div>
+            <span class="header-date-compact">Aug 5, 2026</span>
         </div>
 
         <div class="game-body">
@@ -503,7 +510,7 @@ export const EMAIL_HTML = `<!doctype html>
 
                         <div class="action-buttons">
                             <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
-                                💡 Hint (-75pt)
+                                Hint (-75pt)
                             </button>
                             <button type="submit" class="btn btn-primary">
                                 Submit Guess
@@ -523,14 +530,14 @@ export const EMAIL_HTML = `<!doctype html>
             <!-- Organization Leaderboard -->
             <div class="leaderboard-section">
                 <div class="leaderboard-title">
-                    🏆 Organization Leaderboard
+                    Organization Leaderboard
                 </div>
                 
                 <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&amp;email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         {{^hasWon}}
                         <div class="leaderboard-lock-banner">
-                            🔒 Solve today's puzzle to reveal the leaderboard!
+                            Solve today's puzzle to reveal the leaderboard!
                         </div>
                         {{/hasWon}}
 
@@ -549,7 +556,7 @@ export const EMAIL_HTML = `<!doctype html>
                     </template>
                     <div placeholder>
                         <div class="leaderboard-lock-banner">
-                            🔒 Solve today's puzzle to reveal the leaderboard!
+                            Solve today's puzzle to reveal the leaderboard!
                         </div>
                         <div class="leaderboard-blur-content">
                             <div class="leaderboard-item">
@@ -574,8 +581,8 @@ export const EMAIL_HTML = `<!doctype html>
         </div>
 
         <div class="footer">
-            Relatle • Dynamic Interactive AMP for Email Game<br>
-            <a class="account-link" href="https://email-game.teamify.workers.dev/account?token=default-dev-token">⚙️ Manage Account & Preferences</a>
+            Untitled Word Game • Dynamic Interactive AMP for Email Game<br>
+            <a class="account-link" href="https://email-game.teamify.workers.dev/account?token=default-dev-token">Manage Account & Preferences</a>
         </div>
     </div>
 </body>

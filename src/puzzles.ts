@@ -111,6 +111,18 @@ export function getDailyPuzzle(dateStr?: string): DailyPuzzle {
   }
 }
 
+export function formatPrettyDate(dateStr: string): string {
+  if (!dateStr) return ''
+  const parts = dateStr.split('-')
+  if (parts.length !== 3) return dateStr
+  const year = Number(parts[0])
+  const month = Number(parts[1])
+  const day = Number(parts[2])
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  if (!year || !month || !day || month < 1 || month > 12) return dateStr
+  return `${months[month - 1]} ${day}, ${year}`
+}
+
 function hashCode(str: string): number {
   let hash = 0
   for (let i = 0; i < str.length; i++) {
@@ -120,3 +132,4 @@ function hashCode(str: string): number {
   }
   return hash
 }
+

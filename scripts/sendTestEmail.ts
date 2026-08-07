@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import nodemailer from 'nodemailer'
-import { getDailyPuzzle } from '../src/puzzles'
+import { getDailyPuzzle, formatPrettyDate } from '../src/puzzles'
 
 async function sendTestEmail() {
   const targetEmail = process.env.TEST_EMAIL || 'ekim0252@gmail.com'
@@ -9,8 +9,8 @@ async function sendTestEmail() {
 
   const publicHttpsUrl = (process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.workers.dev').replace(/\/$/, '')
 
-  console.log(`🚀 Preparing test AMP Email via Resend SMTP from: ${senderEmail} -> ${targetEmail}...`)
-  console.log(`🔒 Using Public HTTPS Endpoint Origin: ${publicHttpsUrl}`)
+  console.log(`Preparing test AMP Email via Resend SMTP from: ${senderEmail} -> ${targetEmail}...`)
+  console.log(`Using Public HTTPS Endpoint Origin: ${publicHttpsUrl}`)
 
   let ampHtml = ''
   let fallbackHtml = ''
@@ -21,15 +21,15 @@ async function sendTestEmail() {
     const fallbackRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(targetEmail)}`)
     fallbackHtml = await fallbackRes.text()
   } catch (err) {
-    console.error('⚠️ Could not connect to http://localhost:8787. Make sure `npm run dev` is running!')
+    console.error('Could not connect to http://localhost:8787. Make sure `npm run dev` is running!')
     process.exit(1)
   }
 
   const puzzle = getDailyPuzzle()
-  const subject = `🧩 Relatle #${puzzle.id} - Today's Multi-Definition Puzzle (${puzzle.date})`
+  const subject = `Untitled Word Game #${puzzle.id} - Today's Multi-Definition Puzzle (${formatPrettyDate(puzzle.date)})`
 
   if (!resendApiKey) {
-    console.log('\n⚠️ RESEND_API_KEY is missing in .env!')
+    console.log('\nRESEND_API_KEY is missing in .env!')
     console.log('Add RESEND_API_KEY="re_..." to your .env file.')
     process.exit(1)
   }
@@ -49,14 +49,14 @@ async function sendTestEmail() {
       from: senderEmail,
       to: targetEmail,
       subject,
-      text: `Play today's Relatle puzzle: ${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}`,
+      text: `Play today's Untitled Word Game puzzle: ${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}`,
       html: fallbackHtml,
       amp: ampHtml,
     })
 
-    console.log(`✅ Test AMP Email sent successfully via Resend SMTP to ${targetEmail}! Message ID: ${info.messageId}`)
+    console.log(`Test AMP Email sent successfully via Resend SMTP to ${targetEmail}! Message ID: ${info.messageId}`)
   } catch (err) {
-    console.error('⚠️ Failed to send via Resend SMTP:', err)
+    console.error('Failed to send via Resend SMTP:', err)
   }
 }
 
