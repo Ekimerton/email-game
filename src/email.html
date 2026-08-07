@@ -9,7 +9,11 @@
     <script async custom-element="amp-list" src="https://cdn.ampproject.org/v0/amp-list-0.1.js"></script>
     <script async custom-template="amp-mustache" src="https://cdn.ampproject.org/v0/amp-mustache-0.2.js"></script>
 
-    <style amp4email-boilerplate>body{visibility:hidden}</style>
+    <style amp4email-boilerplate>
+        body {
+            visibility: hidden
+        }
+    </style>
     <style amp-custom>
         /* Josh Comeau's Modern CSS Reset (AMP4EMAIL Adapted) */
         * {
@@ -26,16 +30,29 @@
             padding: 4px;
         }
 
-        img, picture, video, canvas, svg {
+        img,
+        picture,
+        video,
+        canvas,
+        svg {
             display: block;
             max-width: 100%;
         }
 
-        input, button, textarea, select {
+        input,
+        button,
+        textarea,
+        select {
             font: inherit;
         }
 
-        p, h1, h2, h3, h4, h5, h6 {
+        p,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
             overflow-wrap: break-word;
         }
 
@@ -57,8 +74,8 @@
             padding: 0;
         }
 
-        amp-list > [placeholder],
-        amp-list > [role="list"],
+        amp-list>[placeholder],
+        amp-list>[role="list"],
         amp-list [role="listitem"] {
             display: block;
             position: relative;
@@ -418,7 +435,7 @@
         .rank-number {
             font-weight: 800;
             width: 20px;
-            color: #18181b;
+            color: #2563eb;
         }
 
         .player-email {
@@ -455,7 +472,7 @@
         <!-- Compact 1-Line Header -->
         <div class="game-header-compact">
             <div class="header-left-compact">
-                <h1 class="header-title-compact">UNTITLED WORD GAME</h1>
+                <h1 class="header-title-compact">Word Game</h1>
                 <span class="domain-badge-compact">company.com</span>
             </div>
             <span class="header-date-compact">Aug 5, 2026</span>
@@ -533,15 +550,16 @@
 
             <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
             <div class="form-container">
-                <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER"
+                <form id="guess-form" method="POST"
+                    action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER"
                     on="submit-success:AMP.setState({ gameState: event.response }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
                         submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
-                    
+
                     <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
 
                     <div class="input-group">
-                        <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD"
-                            required autocomplete="off">
+                        <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD" required
+                            autocomplete="off">
 
                         <div class="action-buttons">
                             <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
@@ -555,8 +573,9 @@
                 </form>
 
                 <!-- Hidden Form for Letter Hint Button -->
-                <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER" hidden
-                    on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
+                <form id="hint-form" method="POST"
+                    action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER"
+                    hidden on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
                         submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
                     <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
                 </form>
@@ -567,8 +586,9 @@
                 <div class="leaderboard-title">
                     Organization Leaderboard
                 </div>
-                
-                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&amp;email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER">
+
+                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height"
+                    src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&amp;email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="leaderboard-container">
                             {{^hasWon}}
@@ -577,7 +597,8 @@
                             </div>
                             {{/hasWon}}
 
-                            <div class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
+                            <div
+                                class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
                                 {{#players}}
                                 <div class="leaderboard-item">
                                     <span class="rank-number">#{{rank}}</span>
@@ -586,7 +607,8 @@
                                 </div>
                                 {{/players}}
                                 {{^players}}
-                                <div style="text-align: center; color: #64748b; padding: 8px;">No scores recorded for this domain yet today!</div>
+                                <div style="text-align: center; color: #64748b; padding: 8px;">No scores recorded for
+                                    this domain yet today!</div>
                                 {{/players}}
                             </div>
                         </div>
@@ -620,8 +642,9 @@
         </div>
 
         <div class="footer">
-            Untitled Word Game • Dynamic Interactive AMP for Email Game<br>
-            <a class="account-link" href="https://email-game.teamify.workers.dev/account?token=default-dev-token">Manage Account & Preferences</a>
+            Word Game • Dynamic Interactive AMP for Email Game<br>
+            <a class="account-link" href="https://email-game.teamify.workers.dev/account?token=default-dev-token">Manage
+                Account & Preferences</a>
         </div>
     </div>
 </body>

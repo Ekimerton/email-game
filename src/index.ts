@@ -275,7 +275,7 @@ export function getFallbackHtml(options: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Untitled Word Game #${puzzle.id} - Daily Word Puzzle</title>
+  <title>Word Game #${puzzle.id} - Daily Word Puzzle</title>
   <style>
     body {
       margin: 0;
@@ -422,7 +422,7 @@ export function getFallbackHtml(options: {
     <div class="container">
       <div class="header">
         <div class="header-left">
-          <h1 class="header-title">UNTITLED WORD GAME</h1>
+          <h1 class="header-title">Word Game</h1>
           <span class="domain-badge-fallback">${domain}</span>
         </div>
         <div class="header-date">${formatPrettyDate(puzzle.date)}</div>
@@ -430,12 +430,12 @@ export function getFallbackHtml(options: {
       <div class="body-content">
         <div class="stats-card">
           <p class="stats-text">
-            <span class="highlight-user">${email}</span> has played Untitled Word Game for <span class="highlight-stat">${daysText}</span>, and competes with <span class="highlight-stat">${coworkersText}</span> at <span class="highlight-domain">${domain}</span>!
+            <span class="highlight-user">${email}</span> has played Word Game for <span class="highlight-stat">${daysText}</span>, and competes with <span class="highlight-stat">${coworkersText}</span> at <span class="highlight-domain">${domain}</span>!
           </p>
         </div>
 
         <div class="cta-container">
-          <a href="${playUrl}" class="cta-button">Play Today's Untitled Word Game #${puzzle.id}</a>
+          <a href="${playUrl}" class="cta-button">Play Today's Word Game #${puzzle.id}</a>
           <p class="cta-hint">Forwarding this email? Try today's puzzle so your colleagues can challenge your score on the domain leaderboard!</p>
         </div>
 
@@ -445,7 +445,7 @@ export function getFallbackHtml(options: {
         </div>
       </div>
       <div class="footer">
-        Untitled Word Game Daily Puzzle • <a href="${playUrl}">Play Online</a>
+        Word Game Daily Puzzle • <a href="${playUrl}">Play Online</a>
       </div>
     </div>
   </div>
@@ -847,7 +847,7 @@ app.get('/account', async (c) => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Untitled Word Game Account & Preferences</title>
+  <title>Word Game Account & Preferences</title>
   
   <!-- Load React & ReactDOM via CDN for lightweight high-performance SPA -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -1092,7 +1092,7 @@ app.get('/account', async (c) => {
           {toast && <div className="toast">{toast}</div>}
 
           <div className="header">
-            <div className="title">UNTITLED WORD GAME</div>
+            <div className="title">Word Game</div>
             <div className="subtitle">Interactive Account & Preferences</div>
             <div className="user-badge">
               <span>{user.email}</span>
@@ -1150,7 +1150,7 @@ app.get('/account', async (c) => {
           </div>
 
           <div className="footer-text">
-            Untitled Word Game • Secure Token Authentication & React SPA Settings
+            Word Game • Secure Token Authentication & React SPA Settings
           </div>
         </div>
       );
@@ -1330,7 +1330,7 @@ app.post('/api/guess', async (c) => {
 
       const rank = updatedLeaderboard.findIndex((e) => e.email === userEmail) + 1
 
-      state.shareText = `UNTITLED WORD GAME #${puzzle.id} (${formatPrettyDate(puzzle.date)})\nSolved in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
+      state.shareText = `Word Game #${puzzle.id} (${formatPrettyDate(puzzle.date)})\nSolved in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
         }!\nScore: ${state.score} pts | Org Rank: #${rank} (${domain})\n\nPlay at: https://relatle.dev`
     } else {
       if (state.revealedCount < puzzle.definitions.length) {
@@ -1442,6 +1442,6 @@ export default {
     const subscribers = await getSubscribers(env.GAME_STATE_KV)
     const activeSubscribers = subscribers.filter(s => s.status === 'active')
 
-    console.log(`[Cron Dispatch] Ready to dispatch UNTITLED WORD GAME #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${activeSubscribers.length} active subscribers.`)
+    console.log(`[Cron Dispatch] Ready to dispatch Word Game #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${activeSubscribers.length} active subscribers.`)
   }
 }

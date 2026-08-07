@@ -26,7 +26,7 @@ async function sendTestEmail() {
   }
 
   const puzzle = getDailyPuzzle()
-  const subject = `Untitled Word Game #${puzzle.id} - Today's Multi-Definition Puzzle (${formatPrettyDate(puzzle.date)})`
+  const subject = `Word Game #${puzzle.id} - Today's Multi-Definition Puzzle (${formatPrettyDate(puzzle.date)})`
 
   if (!resendApiKey) {
     console.log('\nRESEND_API_KEY is missing in .env!')
@@ -49,7 +49,7 @@ async function sendTestEmail() {
       from: senderEmail,
       to: targetEmail,
       subject,
-      text: `Play today's Untitled Word Game puzzle: ${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}`,
+      text: `Play today's Word Game puzzle: ${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}`,
       html: fallbackHtml,
       amp: ampHtml,
     })

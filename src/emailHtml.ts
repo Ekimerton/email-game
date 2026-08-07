@@ -418,7 +418,7 @@ export const EMAIL_HTML = `<!doctype html>
         .rank-number {
             font-weight: 800;
             width: 20px;
-            color: #18181b;
+            color: #2563eb;
         }
 
         .player-email {
@@ -455,7 +455,7 @@ export const EMAIL_HTML = `<!doctype html>
         <!-- Compact 1-Line Header -->
         <div class="game-header-compact">
             <div class="header-left-compact">
-                <h1 class="header-title-compact">UNTITLED WORD GAME</h1>
+                <h1 class="header-title-compact">Word Game</h1>
                 <span class="domain-badge-compact">company.com</span>
             </div>
             <span class="header-date-compact">Aug 5, 2026</span>
@@ -620,7 +620,7 @@ export const EMAIL_HTML = `<!doctype html>
         </div>
 
         <div class="footer">
-            Untitled Word Game • Dynamic Interactive AMP for Email Game<br>
+            Word Game • Dynamic Interactive AMP for Email Game<br>
             <a class="account-link" href="https://email-game.teamify.workers.dev/account?token=default-dev-token">Manage Account & Preferences</a>
         </div>
     </div>
