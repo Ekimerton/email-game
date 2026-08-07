@@ -61,7 +61,7 @@ const REDACTED_DEF_TEXT = '█████████████████�
 const MEMORY_STORE = new Map<string, any>()
 
 // Tunable constant height for non-definition UI elements (headers, letter clues grid, message banner, section margins/gaps)
-const BASE_STATIC_STATE_LIST_HEIGHT = 136
+const BASE_STATIC_STATE_LIST_HEIGHT = 128
 
 // Calculate individual definition card height based on line wrapping (57 chars per line)
 // 1-line definition box = 29.59px; 2-line = 45.19px (adds 15.6px per additional line)
@@ -707,7 +707,7 @@ app.get('/', async (c) => {
   html = html.replace('Guess the word!', initialMsg)
 
   // Pre-render Leaderboard Section Title
-  html = html.replace('🏆 Organization Leaderboard', `🏆 ${domain} Leaderboard`)
+  html = html.replace('Organization Leaderboard', `${domain} Leaderboard`)
 
   // Pre-render definition cards (Definition #1 revealed, rest dots) for initial state placeholder
   const placeholderDefsHtml = puzzle.definitions.map((def, i) => {
@@ -1240,6 +1240,7 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
     totalDefinitions: puzzle.definitions.length,
     definitions,
     letterMask: state.letterMask,
+    formattedLetterMask: state.letterMask.map(char => ({ char })),
     guessCount: state.guessCount,
     hintsUsed: state.hintsUsed,
     score: state.score,

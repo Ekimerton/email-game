@@ -11,6 +11,7 @@ export const EMAIL_HTML = `<!doctype html>
 
     <style amp4email-boilerplate>body{visibility:hidden}</style>
     <style amp-custom>
+        /* Josh Comeau's Modern CSS Reset (AMP4EMAIL Adapted) */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -18,11 +19,24 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         body {
+            line-height: 1.3;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #27272a;
             color: #18181b;
-            line-height: 1.3;
             padding: 4px;
+        }
+
+        img, picture, video, canvas, svg {
+            display: block;
+            max-width: 100%;
+        }
+
+        input, button, textarea, select {
+            font: inherit;
+        }
+
+        p, h1, h2, h3, h4, h5, h6 {
+            overflow-wrap: break-word;
         }
 
         .email-container {
@@ -33,6 +47,29 @@ export const EMAIL_HTML = `<!doctype html>
             border: none;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* AMP List Layout Reset */
+        amp-list {
+            display: block;
+            position: relative;
+            margin: 0;
+            padding: 0;
+        }
+
+        amp-list > [placeholder],
+        amp-list > [role="list"],
+        amp-list [role="listitem"] {
+            display: block;
+            position: relative;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            box-sizing: border-box;
         }
 
         /* Compact Top Bar */
@@ -89,14 +126,8 @@ export const EMAIL_HTML = `<!doctype html>
             color: #18181b;
             line-height: 1.3;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            margin-top: 16px;
-            margin-bottom: 8px;
-        }
-
-        .message-banner-win {
-            background: #f4f4f5;
-            border: 1px solid #18181b;
-            color: #18181b;
+            margin-top: 8px;
+            margin-bottom: 0;
         }
 
         /* Definition Cards at Top */
@@ -444,55 +475,59 @@ export const EMAIL_HTML = `<!doctype html>
             <amp-list id="stateList" width="auto" height="380" layout="fixed-height"
                 src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER">
                 <template type="amp-mustache">
-                    <div class="definitions-section">
-                        <div class="section-label">
-                            <span>Revealed Definitions</span>
-                            <span>{{revealedCount}} of {{totalDefinitions}}</span>
-                        </div>
-                        <div class="definitions-cards">
-                            {{#definitions}}
-                            <div class="definition-card">
-                                <span class="def-number">{{num}}.</span>
-                                <span>{{text}}</span>
+                    <div class="state-container">
+                        <div class="definitions-section">
+                            <div class="section-label">
+                                <span>Revealed Definitions</span>
+                                <span>{{revealedCount}} of {{totalDefinitions}}</span>
                             </div>
-                            {{/definitions}}
+                            <div class="definitions-cards">
+                                {{#definitions}}
+                                <div class="definition-card">
+                                    <span class="def-number">{{num}}.</span>
+                                    <span>{{text}}</span>
+                                </div>
+                                {{/definitions}}
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="synonyms-section">
-                        <div class="section-label">
-                            <span>Letter Hints & Word Length</span>
-                            <span>Guesses: <span class="stats-val">{{guessCount}}</span></span>
+                        <div class="synonyms-section">
+                            <div class="section-label">
+                                <span>Letter Hints & Word Length</span>
+                                <span>Guesses: <span class="stats-val">{{guessCount}}</span></span>
+                            </div>
+                            <div class="mask-grid">
+                                {{#letterMask}}
+                                <div class="mask-tile">{{.}}</div>
+                                {{/letterMask}}
+                            </div>
                         </div>
-                        <div class="mask-grid">
-                            {{#letterMask}}
-                            <div class="mask-tile">{{.}}</div>
-                            {{/letterMask}}
-                        </div>
-                    </div>
 
-                    <div class="message-banner {{#hasWon}}message-banner-win{{/hasWon}}">{{lastMessage}}</div>
+                        <div class="message-banner {{#hasWon}}message-banner-win{{/hasWon}}">{{lastMessage}}</div>
+                    </div>
                 </template>
                 <div placeholder>
-                    <div class="definitions-section">
-                        <div class="section-label">
-                            <span>Revealed Definitions</span>
-                            <span>1 of 5</span>
+                    <div class="state-container">
+                        <div class="definitions-section">
+                            <div class="section-label">
+                                <span>Revealed Definitions</span>
+                                <span>1 of 5</span>
+                            </div>
+                            <div class="definitions-cards">
+                                __PLACEHOLDER_DEFS__
+                            </div>
                         </div>
-                        <div class="definitions-cards">
-                            __PLACEHOLDER_DEFS__
+                        <div class="synonyms-section">
+                            <div class="section-label">
+                                <span>Letter Hints & Word Length</span>
+                                <span>Guesses: <span class="stats-val">0</span></span>
+                            </div>
+                            <div class="mask-grid">
+                                __PLACEHOLDER_MASK_TILES__
+                            </div>
                         </div>
+                        <div class="message-banner">Guess the word!</div>
                     </div>
-                    <div class="synonyms-section">
-                        <div class="section-label">
-                            <span>Letter Hints & Word Length</span>
-                            <span>Guesses: <span class="stats-val">0</span></span>
-                        </div>
-                        <div class="mask-grid">
-                            __PLACEHOLDER_MASK_TILES__
-                        </div>
-                    </div>
-                    <div class="message-banner">Guess the word!</div>
                 </div>
             </amp-list>
 
@@ -535,44 +570,48 @@ export const EMAIL_HTML = `<!doctype html>
                 
                 <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&amp;email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
-                        {{^hasWon}}
-                        <div class="leaderboard-lock-banner">
-                            Solve today's puzzle to reveal the leaderboard!
-                        </div>
-                        {{/hasWon}}
-
-                        <div class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
-                            {{#players}}
-                            <div class="leaderboard-item">
-                                <span class="rank-number">#{{rank}}</span>
-                                <span class="player-email">{{displayEmail}}</span>
-                                <span class="player-score">{{score}}</span>
+                        <div class="leaderboard-container">
+                            {{^hasWon}}
+                            <div class="leaderboard-lock-banner">
+                                Solve today's puzzle to reveal the leaderboard!
                             </div>
-                            {{/players}}
-                            {{^players}}
-                            <div style="text-align: center; color: #64748b; padding: 8px;">No scores recorded for this domain yet today!</div>
-                            {{/players}}
+                            {{/hasWon}}
+
+                            <div class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
+                                {{#players}}
+                                <div class="leaderboard-item">
+                                    <span class="rank-number">#{{rank}}</span>
+                                    <span class="player-email">{{displayEmail}}</span>
+                                    <span class="player-score">{{score}}</span>
+                                </div>
+                                {{/players}}
+                                {{^players}}
+                                <div style="text-align: center; color: #64748b; padding: 8px;">No scores recorded for this domain yet today!</div>
+                                {{/players}}
+                            </div>
                         </div>
                     </template>
                     <div placeholder>
-                        <div class="leaderboard-lock-banner">
-                            Solve today's puzzle to reveal the leaderboard!
-                        </div>
-                        <div class="leaderboard-blur-content">
-                            <div class="leaderboard-item">
-                                <span class="rank-number">#1</span>
-                                <span class="player-email">alex@company.com</span>
-                                <span class="player-score">925 pts</span>
+                        <div class="leaderboard-container">
+                            <div class="leaderboard-lock-banner">
+                                Solve today's puzzle to reveal the leaderboard!
                             </div>
-                            <div class="leaderboard-item">
-                                <span class="rank-number">#2</span>
-                                <span class="player-email">sarah@company.com</span>
-                                <span class="player-score">850 pts</span>
-                            </div>
-                            <div class="leaderboard-item">
-                                <span class="rank-number">#3</span>
-                                <span class="player-email">david@company.com</span>
-                                <span class="player-score">775 pts</span>
+                            <div class="leaderboard-blur-content">
+                                <div class="leaderboard-item">
+                                    <span class="rank-number">#1</span>
+                                    <span class="player-email">alex@company.com</span>
+                                    <span class="player-score">925 pts</span>
+                                </div>
+                                <div class="leaderboard-item">
+                                    <span class="rank-number">#2</span>
+                                    <span class="player-email">sarah@company.com</span>
+                                    <span class="player-score">850 pts</span>
+                                </div>
+                                <div class="leaderboard-item">
+                                    <span class="rank-number">#3</span>
+                                    <span class="player-email">david@company.com</span>
+                                    <span class="player-score">775 pts</span>
+                                </div>
                             </div>
                         </div>
                     </div>
