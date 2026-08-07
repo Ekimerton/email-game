@@ -53,7 +53,7 @@ type Bindings = {
   GAME_STATE_KV: KVNamespace
 }
 
-const app = new Hono<{ Bindings: Bindings }>()
+export const app = new Hono<{ Bindings: Bindings }>()
 const client = new OAuth2Client()
 const REDACTED_DEF_TEXT = '████████████████████████████████'
 
@@ -277,178 +277,98 @@ export function getFallbackHtml(options: {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Word Game #${puzzle.id} - Daily Word Puzzle</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #27272a;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: #f8fafc;
-    }
-    .wrapper {
-      width: 100%;
-      background-color: #27272a;
-      padding: 24px 12px;
-      box-sizing: border-box;
-    }
-    .container {
-      max-width: 520px;
-      margin: 0 auto;
-      background: #1e293b;
-      border: none;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-    }
-    .header {
-      background: #000000;
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .header-title {
-      font-size: 20px;
-      font-weight: 900;
-      color: #ffffff;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin: 0;
-    }
-    .domain-badge-fallback {
-      background: #27272a;
-      color: #ffffff;
-      padding: 2px 6px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 11px;
-    }
-    .header-date {
-      font-size: 11px;
-      color: #a1a1aa;
-      font-weight: 600;
-    }
-    .body-content {
-      padding: 24px 20px;
-    }
-    .stats-card {
-      background: #18181b;
-      border: 1px solid #27272a;
-      border-radius: 12px;
-      padding: 18px 16px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    .stats-text {
-      font-size: 15px;
-      line-height: 1.6;
-      color: #e2e8f0;
-      margin: 0;
-    }
-    .highlight-user {
-      color: #ffffff;
-      font-weight: 700;
-    }
-    .highlight-stat {
-      color: #ffffff;
-      font-weight: 800;
-    }
-    .highlight-domain {
-      color: #ffffff;
-      font-weight: 700;
-    }
-    .cta-container {
-      text-align: center;
-      margin: 24px 0 16px 0;
-    }
-    .cta-button {
-      display: inline-block;
-      background: #2563eb;
-      color: #ffffff !important;
-      font-size: 16px;
-      font-weight: 800;
-      text-decoration: none;
-      padding: 14px 28px;
-      border-radius: 10px;
-      letter-spacing: 0.5px;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
-    }
-    .cta-hint {
-      font-size: 12px;
-      color: #94a3b8;
-      margin-top: 12px;
-      text-align: center;
-      line-height: 1.4;
-    }
-    .puzzle-preview {
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 14px;
-      margin-top: 20px;
-    }
-    .puzzle-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: #818cf8;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-    }
-    .puzzle-clue {
-      font-size: 13px;
-      color: #cbd5e1;
-      font-style: italic;
-    }
-    .footer {
-      border-top: 1px solid #334155;
-      padding: 14px;
-      text-align: center;
-      font-size: 11px;
-      color: #64748b;
-    }
-    .footer a {
-      color: #818cf8;
-      text-decoration: none;
-    }
+    body { margin: 0; padding: 0; background-color: #18181b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #f4f4f5; }
+    a { color: #3b82f6; text-decoration: none; }
+    .cta-btn:hover { background-color: #1d4ed8 !important; }
   </style>
 </head>
-<body>
-  <div class="wrapper">
-    <div class="container">
-      <div class="header">
-        <div class="header-left">
-          <h1 class="header-title">Word Game</h1>
-          <span class="domain-badge-fallback">${domain}</span>
-        </div>
-        <div class="header-date">${formatPrettyDate(puzzle.date)}</div>
-      </div>
-      <div class="body-content">
-        <div class="stats-card">
-          <p class="stats-text">
-            <span class="highlight-user">${email}</span> has played Word Game for <span class="highlight-stat">${daysText}</span>, and competes with <span class="highlight-stat">${coworkersText}</span> at <span class="highlight-domain">${domain}</span>!
-          </p>
-        </div>
+<body style="margin: 0; padding: 0; background-color: #18181b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f4f4f5;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #18181b; width: 100%; min-height: 100vh; padding: 24px 12px;">
+    <tr>
+      <td align="center" valign="top">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 500px; background-color: #27272a; border-radius: 12px; overflow: hidden; border: 1px solid #3f3f46; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #000000; padding: 12px 16px; border-bottom: 1px solid #3f3f46;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td align="left" valign="middle">
+                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px; text-transform: uppercase;">WORD GAME</span>
+                    <span style="background-color: #27272a; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; margin-left: 8px; vertical-align: middle;">${domain}</span>
+                  </td>
+                  <td align="right" valign="middle" style="font-size: 11px; color: #a1a1aa; font-weight: 600;">
+                    ${formatPrettyDate(puzzle.date)}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-        <div class="cta-container">
-          <a href="${playUrl}" class="cta-button">Play Today's Word Game #${puzzle.id}</a>
-          <p class="cta-hint">Forwarding this email? Try today's puzzle so your colleagues can challenge your score on the domain leaderboard!</p>
-        </div>
+          <!-- Forwarded Email Alert Banner -->
+          <tr>
+            <td style="padding: 12px 16px; background-color: #18181b; border-bottom: 1px solid #3f3f46;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="font-size: 12px; color: #fbbf24; font-weight: 600; line-height: 1.4;">
+                    ⚡ <strong>Static / Forwarded Email View:</strong> Live in-email typing is stripped when forwarding. Play today's interactive game directly online!
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-        <div class="puzzle-preview">
-          <div class="puzzle-label">Today's Clue #1 (${puzzle.word.length} letters)</div>
-          <div class="puzzle-clue">"${puzzle.definitions[0]}"</div>
-        </div>
-      </div>
-      <div class="footer">
-        Word Game Daily Puzzle • <a href="${playUrl}">Play Online</a>
-      </div>
-    </div>
-  </div>
+          <!-- Main Content Body -->
+          <tr>
+            <td style="padding: 24px 20px;">
+              <!-- User Stats Card -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #18181b; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
+                <tr>
+                  <td style="font-size: 14px; line-height: 1.5; color: #e4e4e7; text-align: center;">
+                    <strong style="color: #ffffff;">${email}</strong> has played Word Game for <strong style="color: #60a5fa;">${daysText}</strong>, and competes with <strong style="color: #34d399;">${coworkersText}</strong> at <strong style="color: #ffffff;">${domain}</strong>!
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Call to Action Button -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${playUrl}" class="cta-btn" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 16px; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 8px; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+                      ▶ Play Today's Puzzle #${puzzle.id}
+                    </a>
+                    <div style="font-size: 12px; color: #a1a1aa; margin-top: 10px; line-height: 1.4;">
+                      Challenge your colleagues &amp; climb the <strong>${domain}</strong> leaderboard!
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Puzzle Teaser Clue -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #09090b; border: 1px solid #3f3f46; border-radius: 8px; padding: 14px;">
+                <tr>
+                  <td>
+                    <div style="font-size: 11px; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
+                      Today's Clue #1 (${puzzle.word.length} letters)
+                    </div>
+                    <div style="font-size: 13px; color: #cbd5e1; font-style: italic; line-height: 1.4;">
+                      "${puzzle.definitions[0]}"
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="border-top: 1px solid #3f3f46; padding: 14px; text-align: center; font-size: 11px; color: #71717a; background-color: #18181b;">
+              Word Game Daily Puzzle &bull; <a href="${playUrl}" style="color: #60a5fa; text-decoration: none;">Play Online</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`
 }

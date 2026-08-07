@@ -16,13 +16,20 @@ async function sendTestEmail() {
   let fallbackHtml = ''
   try {
     const localRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(targetEmail)}&forceHttps=true`)
-    ampHtml = await localRes.text()
-
-    const fallbackRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(targetEmail)}`)
-    fallbackHtml = await fallbackRes.text()
+    if (localRes.ok) {
+      ampHtml = await localRes.text()
+      const fallbackRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(targetEmail)}`)
+      fallbackHtml = await fallbackRes.text()
+    } else {
+      throw new Error('Localhost server returned non-ok status')
+    }
   } catch (err) {
-    console.error('Could not connect to http://localhost:8787. Make sure `npm run dev` is running!')
-    process.exit(1)
+    console.log('Dev server not running on localhost:8787. Rendering templates directly via Hono app...')
+    const { app } = await import('../src/index')
+    const ampRes = await app.request(`/?email=${encodeURIComponent(targetEmail)}&forceHttps=true`)
+    ampHtml = await ampRes.text()
+    const fbRes = await app.request(`/fallback?email=${encodeURIComponent(targetEmail)}`)
+    fallbackHtml = await fbRes.text()
   }
 
   const puzzle = getDailyPuzzle()
@@ -52,6 +59,12 @@ async function sendTestEmail() {
       text: `Play today's Word Game puzzle: ${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}`,
       html: fallbackHtml,
       amp: ampHtml,
+      headers: {
+        'List-Unsubscribe': `<${publicHttpsUrl}/unsubscribe?email=${encodeURIComponent(targetEmail)}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        'Feedback-ID': `word-game-daily:resend`,
+        'X-Entity-Ref-ID': `puzzle-${puzzle.id}`,
+      },
     })
 
     console.log(`Test AMP Email sent successfully via Resend SMTP to ${targetEmail}! Message ID: ${info.messageId}`)
