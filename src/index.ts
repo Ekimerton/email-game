@@ -61,7 +61,7 @@ const REDACTED_DEF_TEXT = '█████████████████�
 const MEMORY_STORE = new Map<string, any>()
 
 // Tunable constant height for non-definition UI elements (headers, letter clues grid, message banner, section margins/gaps)
-const BASE_STATIC_STATE_LIST_HEIGHT = 148
+const BASE_STATIC_STATE_LIST_HEIGHT = 136
 
 // Calculate individual definition card height based on line wrapping (57 chars per line)
 // 1-line definition box = 29.59px; 2-line = 45.19px (adds 15.6px per additional line)
@@ -588,7 +588,7 @@ async function getOrCreateGameState(
     hintsUsed: 0,
     score: 0,
     hasWon: false,
-    lastMessage: `Guess the ${puzzle.word.length}-letter word! Definition #1 revealed.`,
+    lastMessage: `Guess the ${puzzle.word.length}-letter word! Def #1 revealed.`,
     shareText: '',
     revealedCount: 1,
   }
@@ -671,6 +671,7 @@ app.get('/', async (c) => {
     .replaceAll('https://email-game.teamify.workers.dev', currentOrigin)
     .replaceAll('USER_EMAIL_PLACEHOLDER', encodedEmail)
     .replaceAll('USER_DOMAIN_PLACEHOLDER', encodedDomain)
+    .replaceAll('USER_DATE_PLACEHOLDER', puzzle.date)
     .replaceAll('default-dev-token', userToken)
 
   // Dynamically calculate and replace amp-list height on pre-render
@@ -685,7 +686,7 @@ app.get('/', async (c) => {
   html = html.replace('1 of 5', `1 of ${puzzle.definitions.length}`)
 
   // Pre-render Message Banner (Always initial prompt for initial state placeholder)
-  const initialMsg = `Guess the ${puzzle.word.length}-letter word! Definition #1 revealed.`
+  const initialMsg = `Guess the ${puzzle.word.length}-letter word! Def #1 revealed.`
   html = html.replace('Guess the word!', initialMsg)
 
   // Pre-render Leaderboard Section Title
@@ -1268,6 +1269,7 @@ app.post('/api/guess', async (c) => {
 
     if (!guess || guess.length !== puzzle.word.length) {
       state.lastMessage = `⚠️ Please enter a ${puzzle.word.length}-letter word.`
+      await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
       return c.json(buildStatePayload(state, puzzle))
     }
 
@@ -1290,8 +1292,7 @@ app.post('/api/guess', async (c) => {
       state.revealedCount = puzzle.definitions.length
       state.score = calculateScore(state.guessCount, state.hintsUsed)
       state.letterMask = puzzle.word.split('')
-      state.lastMessage = `🎉 Amazing! You solved today's word ("${puzzle.word}") in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
-        }! Score: ${state.score} pts`
+      state.lastMessage = `🎉 Solved "${puzzle.word}" in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''}! Score: ${state.score} pts`
 
       const leaderboardEntry: LeaderboardEntry = {
         email: userEmail,
@@ -1317,7 +1318,7 @@ app.post('/api/guess', async (c) => {
       if (state.revealedCount < puzzle.definitions.length) {
         state.revealedCount += 1
       }
-      state.lastMessage = `❌ "${guess}" is incorrect. Revealed Definition #${state.revealedCount}!`
+      state.lastMessage = `❌ "${guess}" is incorrect. Def #${state.revealedCount} revealed!`
     }
 
     await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
@@ -1364,7 +1365,7 @@ app.post('/api/hint', async (c) => {
 
     state.hintsUsed += 1
     state.letterMask = updatedMask
-    state.lastMessage = `💡 Hint revealed letter #${targetIdx + 1}: "${puzzle.word[targetIdx]}"!`
+    state.lastMessage = `💡 Letter #${targetIdx + 1} is "${puzzle.word[targetIdx]}"!`
 
     await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
     return c.json(buildStatePayload(state, puzzle))

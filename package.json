@@ -4,6 +4,9 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
+    "build:check": "tsc --noEmit && wrangler deploy --dry-run",
+    "test": "vitest run",
+    "ci": "npm run build:check && npm run test",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "create-kv": "wrangler kv namespace create GAME_STATE_KV",
     "test-send": "tsx scripts/sendTestEmail.ts"
@@ -17,9 +20,13 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240725.0",
+    "@types/amphtml-validator": "^1.0.4",
     "@types/node": "^24.9.2",
     "@types/nodemailer": "^6.4.17",
+    "amphtml-validator": "^1.0.38",
     "tsx": "^4.19.3",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10",
     "wrangler": "^4.4.0"
   }
 }

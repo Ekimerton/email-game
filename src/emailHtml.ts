@@ -82,6 +82,7 @@ export const EMAIL_HTML = `<!doctype html>
             font-weight: 600;
             text-align: center;
             color: #f8fafc;
+            margin-top: 16px;
             margin-bottom: 8px;
         }
 
@@ -328,6 +329,7 @@ export const EMAIL_HTML = `<!doctype html>
             border-radius: 8px;
             padding: 10px;
             position: relative;
+            margin-top: 16px;
             margin-bottom: 10px;
         }
 
@@ -433,7 +435,7 @@ export const EMAIL_HTML = `<!doctype html>
 
             <!-- Dynamic State Section - fetched fresh on every email open -->
             <amp-list id="stateList" width="auto" height="380" layout="fixed-height"
-                src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER">
+                src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER">
                 <template type="amp-mustache">
                     <div class="definitions-section">
                         <div class="section-label">
@@ -489,7 +491,7 @@ export const EMAIL_HTML = `<!doctype html>
 
             <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
             <div class="form-container">
-                <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER"
+                <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER"
                     on="submit-success:AMP.setState({ gameState: event.response }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
                         submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
                     
@@ -500,18 +502,18 @@ export const EMAIL_HTML = `<!doctype html>
                             required autocomplete="off">
 
                         <div class="action-buttons">
-                            <button type="submit" class="btn btn-primary">
-                                Submit Guess
-                            </button>
                             <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
                                 💡 Hint (-75pt)
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                Submit Guess
                             </button>
                         </div>
                     </div>
                 </form>
 
                 <!-- Hidden Form for Letter Hint Button -->
-                <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER" hidden
+                <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER" hidden
                     on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
                         submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
                     <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
@@ -524,7 +526,7 @@ export const EMAIL_HTML = `<!doctype html>
                     🏆 Organization Leaderboard
                 </div>
                 
-                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER">
+                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&amp;email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         {{^hasWon}}
                         <div class="leaderboard-lock-banner">
