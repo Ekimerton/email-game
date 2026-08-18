@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getDailyPuzzle, PUZZLES, formatPrettyDate } from '../src/puzzles'
+import { getDailyPuzzle, PUZZLES, formatPrettyDate, getTodayDateString } from '../src/puzzles'
 
 describe('Daily Puzzles Module', () => {
   it('should contain valid puzzles in predefined list', () => {
@@ -15,6 +15,12 @@ describe('Daily Puzzles Module', () => {
   it('should return predefined puzzle for a known date', () => {
     const puzzle = getDailyPuzzle('2026-08-17')
     expect(puzzle.word).toBe('WOUND')
+  })
+
+  it('should return today\'s puzzle based on EST (America/New_York)', () => {
+    const estDate = getTodayDateString('America/New_York')
+    const puzzle = getDailyPuzzle()
+    expect(puzzle.date).toBe(estDate)
   })
 
   it('should fallback deterministically for an unknown future date', () => {

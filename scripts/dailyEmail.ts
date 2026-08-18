@@ -65,7 +65,7 @@ async function getEmailContent(email: string): Promise<{ ampHtml: string; fallba
 
 async function main() {
   const puzzle = getDailyPuzzle()
-  const today = new Date().toISOString().split('T')[0]
+  const today = puzzle.date
   const subject = `Word Game #${puzzle.id} — ${puzzle.word.charAt(0) + puzzle.word.slice(1).toLowerCase()} — ${formatPrettyDate(today)}`
 
   console.log(`\n📅 Daily Email — ${today}`)
