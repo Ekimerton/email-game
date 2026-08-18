@@ -23,11 +23,11 @@ export const PUZZLES: DailyPuzzle[] = [
     date: "2026-08-18",
     word: "RESUME",
     definitions: [
-      "A summary or account of education and employment experiences and qualifications, a curriculum vitae (often for presentation to a potential future employer when applying for a job).",
-      "A summary or synopsis.",
-      "To start (something) again that has been stopped or paused from the point at which it was stopped or paused; continue, carry on.",
-      "To summarise.",
-      "To take back possession of (something)."
+      "To pick (something) up again : to go back to using or doing.",
+      "To take (something) back to oneself.",
+      "A set of accomplishments.",
+      "To return to or begin (something) again after interruption.",
+      "A short account of one's career and qualifications."
     ]
   },
   {
