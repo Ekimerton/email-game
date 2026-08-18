@@ -270,105 +270,62 @@ export function getFallbackHtml(options: {
   const daysText = `${daysPlayed} day${daysPlayed === 1 ? '' : 's'}`
   const coworkersText = coworkerCount === 1 ? '1 coworker' : `${coworkerCount} coworkers`
 
+  // Use clean public URL without raw query string email parameters to pass Gmail security filters
+  const cleanPlayUrl = playUrl.split('?')[0]
+
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Word Game #${puzzle.id} - Daily Word Puzzle</title>
-  <style>
-    body { margin: 0; padding: 0; background-color: #18181b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #f4f4f5; }
-    a { color: #3b82f6; text-decoration: none; }
-    .cta-btn:hover { background-color: #1d4ed8 !important; }
-  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #18181b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f4f4f5;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #18181b; width: 100%; min-height: 100vh; padding: 24px 12px;">
-    <tr>
-      <td align="center" valign="top">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 500px; background-color: #27272a; border-radius: 12px; overflow: hidden; border: 1px solid #3f3f46; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-          <!-- Header -->
-          <tr>
-            <td style="background-color: #000000; padding: 12px 16px; border-bottom: 1px solid #3f3f46;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                  <td align="left" valign="middle">
-                    <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px; text-transform: uppercase;">WORD GAME</span>
-                    <span style="background-color: #27272a; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; margin-left: 8px; vertical-align: middle;">${domain}</span>
-                  </td>
-                  <td align="right" valign="middle" style="font-size: 11px; color: #a1a1aa; font-weight: 600;">
-                    ${formatPrettyDate(puzzle.date)}
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
+  <div style="max-width: 500px; margin: 20px auto; background-color: #27272a; border-radius: 12px; overflow: hidden; border: 1px solid #3f3f46; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    <!-- Header -->
+    <div style="background-color: #000000; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3f3f46;">
+      <div>
+        <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px; text-transform: uppercase;">WORD GAME</span>
+        <span style="background-color: #27272a; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; margin-left: 8px;">${domain}</span>
+      </div>
+      <span style="font-size: 12px; color: #a1a1aa; font-weight: 600;">${formatPrettyDate(puzzle.date)}</span>
+    </div>
 
-          <!-- Forwarded Email Alert Banner -->
-          <tr>
-            <td style="padding: 12px 16px; background-color: #18181b; border-bottom: 1px solid #3f3f46;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                  <td style="font-size: 12px; color: #fbbf24; font-weight: 600; line-height: 1.4;">
-                    ⚡ <strong>Static / Forwarded Email View:</strong> Live in-email typing is stripped when forwarding. Play today's interactive game directly online!
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
+    <!-- Main Content Body -->
+    <div style="padding: 24px 20px;">
+      <!-- User Stats Card -->
+      <div style="background-color: #18181b; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
+        <p style="font-size: 14px; line-height: 1.5; color: #e4e4e7; margin: 0;">
+          <strong style="color: #ffffff;">${email}</strong> has played Word Game for <strong style="color: #60a5fa;">${daysText}</strong>, and competes with <strong style="color: #34d399;">${coworkersText}</strong> at <strong style="color: #ffffff;">${domain}</strong>!
+        </p>
+      </div>
 
-          <!-- Main Content Body -->
-          <tr>
-            <td style="padding: 24px 20px;">
-              <!-- User Stats Card -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #18181b; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
-                <tr>
-                  <td style="font-size: 14px; line-height: 1.5; color: #e4e4e7; text-align: center;">
-                    <strong style="color: #ffffff;">${email}</strong> has played Word Game for <strong style="color: #60a5fa;">${daysText}</strong>, and competes with <strong style="color: #34d399;">${coworkersText}</strong> at <strong style="color: #ffffff;">${domain}</strong>!
-                  </td>
-                </tr>
-              </table>
+      <!-- Call to Action Button -->
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="${cleanPlayUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 16px; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 8px; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+          ▶ Play Today's Word Game #${puzzle.id}
+        </a>
+        <div style="font-size: 12px; color: #a1a1aa; margin-top: 10px; line-height: 1.4;">
+          Solve today's puzzle &amp; climb the <strong>${domain}</strong> leaderboard online!
+        </div>
+      </div>
 
-              <!-- Call to Action Button -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
-                <tr>
-                  <td align="center">
-                    <a href="${playUrl}" class="cta-btn" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 16px; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 8px; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
-                      ▶ Play Today's Puzzle #${puzzle.id}
-                    </a>
-                    <div style="font-size: 12px; color: #a1a1aa; margin-top: 10px; line-height: 1.4;">
-                      Challenge your colleagues &amp; climb the <strong>${domain}</strong> leaderboard!
-                    </div>
-                  </td>
-                </tr>
-              </table>
+      <!-- Puzzle Teaser Clue -->
+      <div style="background-color: #09090b; border: 1px solid #3f3f46; border-radius: 8px; padding: 14px;">
+        <div style="font-size: 11px; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
+          Today's Clue #1 (${puzzle.word.length} letters)
+        </div>
+        <div style="font-size: 13px; color: #cbd5e1; font-style: italic; line-height: 1.4;">
+          "${puzzle.definitions[0]}"
+        </div>
+      </div>
+    </div>
 
-              <!-- Puzzle Teaser Clue -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #09090b; border: 1px solid #3f3f46; border-radius: 8px; padding: 14px;">
-                <tr>
-                  <td>
-                    <div style="font-size: 11px; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
-                      Today's Clue #1 (${puzzle.word.length} letters)
-                    </div>
-                    <div style="font-size: 13px; color: #cbd5e1; font-style: italic; line-height: 1.4;">
-                      "${puzzle.definitions[0]}"
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="border-top: 1px solid #3f3f46; padding: 14px; text-align: center; font-size: 11px; color: #71717a; background-color: #18181b;">
-              Word Game Daily Puzzle &bull; <a href="${playUrl}" style="color: #60a5fa; text-decoration: none;">Play Online</a>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
+    <!-- Footer -->
+    <div style="border-top: 1px solid #3f3f46; padding: 14px; text-align: center; font-size: 11px; color: #71717a; background-color: #18181b;">
+      Word Game Daily Puzzle &bull; <a href="${cleanPlayUrl}" style="color: #60a5fa; text-decoration: none;">Play Online</a>
+    </div>
+  </div>
 </body>
 </html>`
 }
@@ -548,21 +505,20 @@ app.use('/api/*', async (c, next) => {
 
   let allowedOrigin = (originHeader && originHeader !== 'null') ? originHeader : (refererOrigin || 'https://mail.google.com')
 
-  // Determine target source origin for AMP specification (MUST match __amp_source_origin exactly if provided)
   let sourceOrigin = ampSourceOrigin || ''
   if (!sourceOrigin) {
     if (originHeader && originHeader.includes('mail.google.com')) {
-      sourceOrigin = 'gmail.com'
+      sourceOrigin = 'https://mail.google.com'
     } else if (originHeader && (originHeader.includes('amp.dev') || originHeader.includes('gmail.dev'))) {
-      sourceOrigin = 'amp.dev'
+      sourceOrigin = 'amp@gmail.dev'
     } else if (originHeader) {
       try {
-        sourceOrigin = new URL(originHeader).hostname
+        sourceOrigin = new URL(originHeader).origin
       } catch (_) {
-        sourceOrigin = 'gmail.com'
+        sourceOrigin = 'https://mail.google.com'
       }
     } else {
-      sourceOrigin = 'gmail.com'
+      sourceOrigin = 'https://mail.google.com'
     }
   }
 

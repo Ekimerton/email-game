@@ -1,0 +1,292 @@
+[
+  {
+    "word": "WOUND",
+    "definitions": [
+      {
+        "num": 1,
+        "text": "To blow air through a wind instrument or horn to make a sound.",
+        "pos": "verb"
+      },
+      {
+        "num": 2,
+        "text": "To hurt or injure (someone) by cutting, piercing, or tearing the skin.",
+        "pos": "verb"
+      },
+      {
+        "num": 3,
+        "text": "An injury to a person by which the skin is divided or its continuity broken.",
+        "pos": "noun"
+      },
+      {
+        "num": 4,
+        "text": "A hurt to a person's feelings, reputation, prospects, etc.",
+        "pos": "noun"
+      },
+      {
+        "num": 5,
+        "text": "An injury, such as a cut, stab, or tear, to a (usually external) part of the body.",
+        "pos": "noun"
+      }
+    ]
+  },
+  {
+    "word": "RESUME",
+    "definitions": [
+      {
+        "num": 1,
+        "text": "A summary or account of education and employment experiences and qualifications, a curriculum vitae (often for presentation to a potential future employer when applying for a job).",
+        "pos": "noun"
+      },
+      {
+        "num": 2,
+        "text": "A summary or synopsis.",
+        "pos": "noun"
+      },
+      {
+        "num": 3,
+        "text": "To start (something) again that has been stopped or paused from the point at which it was stopped or paused; continue, carry on.",
+        "pos": "verb"
+      },
+      {
+        "num": 4,
+        "text": "To summarise.",
+        "pos": "verb"
+      },
+      {
+        "num": 5,
+        "text": "To take back possession of (something).",
+        "pos": "verb"
+      }
+    ]
+  },
+  {
+    "word": "STILL",
+    "definitions": [
+      {
+        "num": 1,
+        "text": "Not moving; calm.",
+        "pos": "adjective"
+      },
+      {
+        "num": 2,
+        "text": "A steep hill or ascent.",
+        "pos": "noun"
+      },
+      {
+        "num": 3,
+        "text": "A resident of the Falkland Islands.",
+        "pos": "noun"
+      },
+      {
+        "num": 4,
+        "text": "A photograph, as opposed to movie footage.",
+        "pos": "noun"
+      },
+      {
+        "num": 5,
+        "text": "A period of calm or silence.",
+        "pos": "noun"
+      }
+    ]
+  },
+  {
+    "word": "OFFSHORE",
+    "definitions": [
+      {
+        "num": 1,
+        "text": "Located in the sea away from the coast.",
+        "pos": "adjective"
+      },
+      {
+        "num": 2,
+        "text": "To use foreign labor to substitute for local labor.",
+        "pos": "verb"
+      },
+      {
+        "num": 3,
+        "text": "Something or someone in, from, or associated with another country.",
+        "pos": "noun"
+      },
+      {
+        "num": 4,
+        "text": "An island, outcrop, or other land away from shore.",
+        "pos": "noun"
+      },
+      {
+        "num": 5,
+        "text": "An area or or portion of sea away from the shore.",
+        "pos": "noun"
+      }
+    ]
+  },
+  {
+    "word": "GAIN",
+    "definitions": [
+      {
+        "num": 1,
+        "text": "To have or receive advantage or profit; to acquire gain; to grow rich; to advance in interest, health, or happiness; to make progress.",
+        "pos": "verb"
+      },
+      {
+        "num": 2,
+        "text": "To acquire possession of.",
+        "pos": "verb"
+      },
+      {
+        "num": 3,
+        "text": "The factor by which a signal is multiplied.",
+        "pos": "noun"
+      },
+      {
+        "num": 4,
+        "text": "What is gained.",
+        "pos": "noun"
+      },
+      {
+        "num": 5,
+        "text": "The act of gaining; acquisition.",
+        "pos": "noun"
+      }
+    ]
+  },
+  {
+    "word": "SPELL",
+    "definitions": [
+      {
+        "num": 1,
+        "text": "To read (something) as though letter by letter; to peruse slowly or with effort.",
+        "pos": "verb"
+      },
+      {
+        "num": 2,
+        "text": "To put under the influence of a spell; to affect by a spell; to bewitch; to fascinate; to charm.",
+        "pos": "verb"
+      },
+      {
+        "num": 3,
+        "text": "Speech, discourse.",
+        "pos": "noun"
+      },
+      {
+        "num": 4,
+        "text": "A magical effect or influence induced by an incantation or formula.",
+        "pos": "noun"
+      },
+      {
+        "num": 5,
+        "text": "Words or a formula supposed to have magical powers.",
+        "pos": "noun"
+      }
+    ]
+  },
+  {
+    "word": "BLOODY",
+    "definitions": [
+      {
+        "num": 1,
+        "text": "Used as an intensifier.",
+        "pos": "adjective"
+      },
+      {
+        "num": 2,
+        "text": "Characterised by bloodshed.",
+        "pos": "adjective"
+      },
+      {
+        "num": 3,
+        "text": "Covered in blood.",
+        "pos": "adjective"
+      },
+      {
+        "num": 4,
+        "text": "To demonstrably harm the cause of an opponent.",
+        "pos": "verb"
+      },
+      {
+        "num": 5,
+        "text": "To draw blood from one's opponent in a fight.",
+        "pos": "verb"
+      }
+    ]
+  },
+  {
+    "word": "PARAGRAPH",
+    "definitions": [
+      {
+        "num": 1,
+        "text": "To sort text into paragraphs.",
+        "pos": "verb"
+      },
+      {
+        "num": 2,
+        "text": "An offset of 16 bytes in Intel memory architectures.",
+        "pos": "noun"
+      },
+      {
+        "num": 3,
+        "text": "A mark or note set in the margin to call attention to something in the text, such as a change of subject.",
+        "pos": "noun"
+      },
+      {
+        "num": 4,
+        "text": "A passage in text that is about a different subject from the preceding text, marked by commencing on a new line, the first line sometimes being indented.",
+        "pos": "noun"
+      }
+    ]
+  },
+  {
+    "word": "TRUSTEE",
+    "definitions": [
+      {
+        "num": 1,
+        "text": "To attach (a debtor's wages, credits, or property in the hands of a third person) in the interest of the creditor.",
+        "pos": "verb"
+      },
+      {
+        "num": 2,
+        "text": "To commit (property) to the care of a trustee.",
+        "pos": "verb"
+      },
+      {
+        "num": 3,
+        "text": "A person in whose hands the effects of another are attached in a trustee process.",
+        "pos": "noun"
+      },
+      {
+        "num": 4,
+        "text": "A person to whom property is legally committed in trust, to be applied either for the benefit of specified individuals, or for public uses; one who is intrusted with property for the benefit of another.",
+        "pos": "noun"
+      }
+    ]
+  },
+  {
+    "word": "SILENT",
+    "definitions": [
+      {
+        "num": 1,
+        "text": "Keeping at rest; inactive; calm; undisturbed.",
+        "pos": "adjective"
+      },
+      {
+        "num": 2,
+        "text": "Not speaking; indisposed to talk; speechless; mute; taciturn; not loquacious; not talkative.",
+        "pos": "adjective"
+      },
+      {
+        "num": 3,
+        "text": "Free from sound or noise; absolutely still; perfectly quiet.",
+        "pos": "adjective"
+      },
+      {
+        "num": 4,
+        "text": "A silent movie",
+        "pos": "noun"
+      },
+      {
+        "num": 5,
+        "text": "That which is silent; a time of silence.",
+        "pos": "noun"
+      }
+    ]
+  }
+]

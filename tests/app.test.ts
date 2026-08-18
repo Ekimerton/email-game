@@ -25,9 +25,8 @@ describe('Hono App & Layout Calculations', () => {
     expect(html).toContain('testuser@nvidia.engineering')
     expect(html).toContain('5 days')
     expect(html).toContain('12 coworkers')
-    expect(html).toContain('Static / Forwarded Email View')
-    expect(html).toContain('Play Today\'s Puzzle')
-    expect(html).toContain('https://email-game.teamify.workers.dev/?email=testuser%40nvidia.engineering')
+    expect(html).toContain('Play Today\'s Word Game')
+    expect(html).toContain('https://email-game.teamify.workers.dev')
   })
 })
 

@@ -2,97 +2,172 @@ export interface DailyPuzzle {
   id: string
   date: string
   word: string
-  category: string
   definitions: string[]
 }
 
 export const PUZZLES: DailyPuzzle[] = [
   {
     id: "1",
-    date: "2026-08-01",
-    word: "CURRENT",
-    category: "Multi-meaning Noun & Adjective",
+    date: "2026-08-17",
+    word: "WOUND",
     definitions: [
-      "Belonging to the present time; happening or being used now.",
-      "A body of water or air moving in a definite direction through a surrounding body.",
-      "A flow of electricity through a conductor or circuit.",
-      "The general tendency, movement, or course of events or thoughts."
+      "To blow air through a wind instrument or horn to make a sound.",
+      "To hurt or injure (someone) by cutting, piercing, or tearing the skin.",
+      "An injury to a person by which the skin is divided or its continuity broken.",
+      "A hurt to a person's feelings, reputation, prospects, etc.",
+      "An injury, such as a cut, stab, or tear, to a (usually external) part of the body."
     ]
   },
   {
     id: "2",
-    date: "2026-08-02",
-    word: "SPRING",
-    category: "Multi-meaning Noun & Verb",
+    date: "2026-08-18",
+    word: "RESUME",
     definitions: [
-      "The season of the year between winter and summer when vegetation begins to grow.",
-      "A elastic metal coil or device that recovers its shape after being compressed or stretched.",
-      "A natural stream of water issuing from the ground.",
-      "To move, jump, or leap rapidly and suddenly upward or forward.",
-      "To originate or arise from a specific source."
+      "A summary or account of education and employment experiences and qualifications, a curriculum vitae (often for presentation to a potential future employer when applying for a job).",
+      "A summary or synopsis.",
+      "To start (something) again that has been stopped or paused from the point at which it was stopped or paused; continue, carry on.",
+      "To summarise.",
+      "To take back possession of (something)."
     ]
   },
   {
     id: "3",
-    date: "2026-08-03",
-    word: "LIGHT",
-    category: "Multi-meaning Noun, Adjective & Verb",
+    date: "2026-08-19",
+    word: "STILL",
     definitions: [
-      "The natural agent that stimulates sight and makes things visible.",
-      "Having a considerable or sufficient amount of natural brightness.",
-      "Of little weight; not heavy.",
-      "To ignite or cause something to begin burning.",
-      "Gentle or delicate in motion or touch."
+      "Not moving; calm.",
+      "A steep hill or ascent.",
+      "A resident of the Falkland Islands.",
+      "A photograph, as opposed to movie footage.",
+      "A period of calm or silence."
     ]
   },
   {
     id: "4",
-    date: "2026-08-04",
-    word: "CHARGE",
-    category: "Multi-meaning Noun & Verb",
+    date: "2026-08-20",
+    word: "OFFSHORE",
     definitions: [
-      "To demand an amount as a price from someone for a service or goods.",
-      "To rush forward in a sudden, violent attack or movement.",
-      "The property of matter that experiences a force when placed in an electromagnetic field.",
-      "To store electrical energy in a battery or device.",
-      "An official accusation of a crime or offense."
+      "Located in the sea away from the coast.",
+      "To use foreign labor to substitute for local labor.",
+      "Something or someone in, from, or associated with another country.",
+      "An island, outcrop, or other land away from shore.",
+      "An area or portion of sea away from the shore."
     ]
   },
   {
     id: "5",
-    date: "2026-08-05",
-    word: "STRIKE",
-    category: "Multi-meaning Noun & Verb",
+    date: "2026-08-21",
+    word: "GAIN",
     definitions: [
-      "To hit forcibly and deliberately with one's hand or a weapon.",
-      "A refusal to work organized by a body of employees as a form of protest.",
-      "A sudden discovery or attainment of something valuable like oil or gold.",
-      "In baseball, a pitch that is missed or judged to be through the strike zone.",
-      "To ignite a match by rubbing it against a rough surface."
+      "To have or receive advantage or profit; to acquire gain; to grow rich; to advance in interest, health, or happiness; to make progress.",
+      "To acquire possession of.",
+      "The factor by which a signal is multiplied.",
+      "What is gained.",
+      "The act of gaining; acquisition."
     ]
   },
   {
     id: "6",
-    date: "2026-08-06",
-    word: "BARK",
-    category: "Multi-meaning Noun & Verb",
+    date: "2026-08-22",
+    word: "SPELL",
     definitions: [
-      "The tough, protective outer sheath of the trunk and branches of a tree.",
-      "The sharp, abrupt sound made by a dog or certain other wild animals.",
-      "To utter words sharply, commandingly, or aggressively.",
-      "A small sailing ship or vessel from historical times."
+      "To read (something) as though letter by letter; to peruse slowly or with effort.",
+      "To put under the influence of a spell; to affect by a spell; to bewitch; to fascinate; to charm.",
+      "Speech, discourse.",
+      "A magical effect or influence induced by an incantation or formula.",
+      "Words or a formula supposed to have magical powers."
     ]
   },
   {
     id: "7",
-    date: "2026-08-07",
-    word: "BANK",
-    category: "Multi-meaning Noun & Verb",
+    date: "2026-08-23",
+    word: "BLOODY",
     definitions: [
-      "A financial institution licensed to receive deposits and make loans.",
-      "The land alongside or sloping down to a river or body of water.",
-      "A row or tier of similar objects like switches, keys, or elevators.",
-      "To tilt an aircraft laterally when making a turn."
+      "Used as an intensifier.",
+      "Characterised by bloodshed.",
+      "Covered in blood.",
+      "To demonstrably harm the cause of an opponent.",
+      "To draw blood from one's opponent in a fight."
+    ]
+  },
+  {
+    id: "8",
+    date: "2026-08-24",
+    word: "PARAGRAPH",
+    definitions: [
+      "To sort text into paragraphs.",
+      "An offset of 16 bytes in Intel memory architectures.",
+      "A mark or note set in the margin to call attention to something in the text, such as a change of subject.",
+      "A passage in text that is about a different subject from the preceding text, marked by commencing on a new line, the first line sometimes being indented."
+    ]
+  },
+  {
+    id: "9",
+    date: "2026-08-25",
+    word: "TRUSTEE",
+    definitions: [
+      "To attach (a debtor's wages, credits, or property in the hands of a third person) in the interest of the creditor.",
+      "To commit (property) to the care of a trustee.",
+      "A person in whose hands the effects of another are attached in a trustee process.",
+      "A person to whom property is legally committed in trust, to be applied either for the benefit of specified individuals, or for public uses."
+    ]
+  },
+  {
+    id: "10",
+    date: "2026-08-26",
+    word: "SILENT",
+    definitions: [
+      "Keeping at rest; inactive; calm; undisturbed.",
+      "Not speaking; indisposed to talk; speechless; mute; taciturn.",
+      "Free from sound or noise; absolutely still; perfectly quiet.",
+      "A silent movie.",
+      "That which is silent; a time of silence."
+    ]
+  },
+  {
+    id: "11",
+    date: "2026-08-27",
+    word: "CORK",
+    definitions: [
+      "An aerialist maneuver involving a rotation where the rider goes heels over head, with the board overhead.",
+      "To position one's drift net just outside of another person's net, thereby intercepting and catching all the fish that would have gone into that person's net.",
+      "To injure through a blow; to induce a haematoma.",
+      "The dead protective tissue between the bark and cambium in woody plants.",
+      "A bottle stopper made from cork or any other material."
+    ]
+  },
+  {
+    id: "12",
+    date: "2026-08-28",
+    word: "DAWN",
+    definitions: [
+      "To begin to brighten with daylight.",
+      "The earliest phase of something.",
+      "The time when the sun rises.",
+      "The morning twilight period immediately before sunrise."
+    ]
+  },
+  {
+    id: "13",
+    date: "2026-08-29",
+    word: "VENTURE",
+    definitions: [
+      "To dare to engage in; to attempt without any certainty of success.",
+      "To risk or offer.",
+      "The thing risked; especially, something sent to sea in trade.",
+      "An event that is not, or cannot be, foreseen.",
+      "A risky or daring undertaking or journey."
+    ]
+  },
+  {
+    id: "14",
+    date: "2026-08-30",
+    word: "SEARCH",
+    definitions: [
+      "To look for, seek.",
+      "To look in a place for something.",
+      "The act of searching in general.",
+      "An attempt to find something."
     ]
   }
 ]
@@ -100,10 +175,10 @@ export const PUZZLES: DailyPuzzle[] = [
 export function getDailyPuzzle(dateStr?: string): DailyPuzzle {
   const targetDate = dateStr || new Date().toISOString().split('T')[0]
   const puzzle = PUZZLES.find(p => p.date === targetDate)
-  
+
   if (puzzle) return puzzle
 
-  // Fallback dynamic generator if date beyond predefined list
+  // Fallback: cycle through puzzles if date beyond predefined list
   const idx = Math.abs(hashCode(targetDate)) % PUZZLES.length
   return {
     ...PUZZLES[idx],
@@ -132,4 +207,3 @@ function hashCode(str: string): number {
   }
   return hash
 }
-

@@ -473,7 +473,7 @@ export const EMAIL_HTML = `<!doctype html>
 
             <!-- Dynamic State Section - fetched fresh on every email open -->
             <amp-list id="stateList" width="auto" height="380" layout="fixed-height"
-                src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER">
+                src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                 <template type="amp-mustache">
                     <div class="state-container">
                         <div class="definitions-section">
@@ -533,7 +533,7 @@ export const EMAIL_HTML = `<!doctype html>
 
             <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
             <div class="form-container">
-                <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER"
+                <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
                     on="submit-success:AMP.setState({ gameState: event.response }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
                         submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
                     
@@ -555,7 +555,7 @@ export const EMAIL_HTML = `<!doctype html>
                 </form>
 
                 <!-- Hidden Form for Letter Hint Button -->
-                <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER" hidden
+                <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER" hidden
                     on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
                         submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
                     <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
@@ -568,7 +568,7 @@ export const EMAIL_HTML = `<!doctype html>
                     Organization Leaderboard
                 </div>
                 
-                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&amp;email=USER_EMAIL_PLACEHOLDER&amp;date=USER_DATE_PLACEHOLDER">
+                <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="leaderboard-container">
                             {{^hasWon}}

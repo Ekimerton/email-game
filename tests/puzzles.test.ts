@@ -13,8 +13,8 @@ describe('Daily Puzzles Module', () => {
   })
 
   it('should return predefined puzzle for a known date', () => {
-    const puzzle = getDailyPuzzle('2026-08-01')
-    expect(puzzle.word).toBe('CURRENT')
+    const puzzle = getDailyPuzzle('2026-08-17')
+    expect(puzzle.word).toBe('WOUND')
   })
 
   it('should fallback deterministically for an unknown future date', () => {
