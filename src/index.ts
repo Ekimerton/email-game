@@ -60,13 +60,25 @@ const REDACTED_DEF_TEXT = '█████████████████�
 // Persistent memory store for development fallback & 429 rate limit protection
 const MEMORY_STORE = new Map<string, any>()
 
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
+// Tunable constant height for non-definition UI elements (headers, letter clues grid, message banner, section margins/gaps)
+const BASE_STATIC_STATE_LIST_HEIGHT = 128
+
+// Calculate individual definition card height based on line wrapping (57 chars per line)
+// 1-line definition box = 29.59px; 2-line = 45.19px (adds 15.6px per additional line)
+function calculateDefinitionCardHeight(text: string): number {
+  const charCount = text ? text.length : 0
+  const lines = Math.max(1, Math.ceil(charCount / 57))
+  return 29.59 + (lines - 1) * 15.6
+}
+
+// Calculate dynamic total amp-list height for pre-render
+function calculateStateListHeight(puzzle: DailyPuzzle, baseStaticHeight: number = BASE_STATIC_STATE_LIST_HEIGHT): number {
+  if (!puzzle || !puzzle.definitions || puzzle.definitions.length === 0) {
+    return 380
+  }
+  const gaps = (puzzle.definitions.length - 1) * 4
+  const defsHeight = puzzle.definitions.reduce((sum, def) => sum + calculateDefinitionCardHeight(def), 0)
+  return Math.ceil(defsHeight + gaps + baseStaticHeight)
 }
 
 async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
@@ -537,11 +549,10 @@ app.get('/', async (c) => {
   const userToken = await getOrCreateUserToken(c.env?.GAME_STATE_KV, userEmail)
 
   const reqUrl = new URL(c.req.url)
-  const forceHttps = c.req.query('forceHttps') === 'true'
-  const isLocalhost = (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1')
+  const devMode = c.req.query('dev') === 'true'
   const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.workers.dev').replace(/\/$/, '')
 
-  let currentOrigin = (isLocalhost && !forceHttps)
+  let currentOrigin = (devMode && (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'))
     ? reqUrl.origin
     : prodOrigin
 
@@ -556,12 +567,16 @@ app.get('/', async (c) => {
     .replaceAll('USER_DATE_PLACEHOLDER', puzzle.date)
     .replaceAll('default-dev-token', userToken)
 
+  // Dynamically calculate and replace amp-list height on pre-render
+  const dynamicStateListHeight = calculateStateListHeight(puzzle)
+  html = html.replace('height="380"', `height="${dynamicStateListHeight}"`)
+
   // Pre-render Header Meta (Date and Domain)
   html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
   html = html.replace('company.com', domain)
 
-  // Pre-render Definition Counts
-  html = html.replaceAll('of 5', `of ${puzzle.definitions.length}`)
+  // Pre-render Definition Counts (Always 1 of N for initial state)
+  html = html.replace('1 of 5', `1 of ${puzzle.definitions.length}`)
 
   // Pre-render Message Banner (Always initial prompt for initial state placeholder)
   const initialMsg = `Guess the ${puzzle.word.length}-letter word! Def #1 revealed.`
@@ -570,23 +585,14 @@ app.get('/', async (c) => {
   // Pre-render Leaderboard Section Title
   html = html.replace('Organization Leaderboard', `${domain} Leaderboard`)
 
-  const activeRevealed = state.hasWon ? puzzle.definitions.length : (state.revealedCount || 1)
-  html = html.replace('"revealedCount": 1', `"revealedCount": ${activeRevealed}`)
-  html = html.replace('"hasWon": false', `"hasWon": ${state.hasWon ? 'true' : 'false'}`)
-
-  // Pre-render definition cards in standard responsive HTML
-  const defsCardsHtml = puzzle.definitions.map((def, i) => {
-    const num = i + 1
-    const isInitiallyRevealed = i < activeRevealed
-    const redacted = getRedactedText(def)
-    const escaped = escapeHtml(def)
-    if (isInitiallyRevealed) {
-      return `<div class="definition-card"><span class="def-number">${num}.</span> <span>${escaped}</span></div>`
-    }
-    return `<div class="definition-card"><span class="def-number">${num}.</span> <span [hidden]="(revealedCount || gameState.revealedCount) >= ${num}">${redacted}</span><span [hidden]="(revealedCount || gameState.revealedCount) < ${num}" hidden>${escaped}</span></div>`
+  // Pre-render definition cards (Definition #1 revealed, rest dots) for initial state placeholder
+  const placeholderDefsHtml = puzzle.definitions.map((def, i) => {
+    const isRevealed = i === 0
+    const text = isRevealed ? def : getRedactedText(def)
+    return `<div class="definition-card"><span class="def-number">${i + 1}.</span> <span>${text}</span></div>`
   }).join('')
 
-  html = html.replace('__DEFINITIONS_CARDS__', defsCardsHtml)
+  html = html.replace('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
 
   // Pre-render letter mask tiles (all '_') for initial state placeholder
   const placeholderMaskHtml = Array.from({ length: puzzle.word.length }, () => {
@@ -1119,10 +1125,7 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
     shareText: state.shareText,
   }
 
-  return {
-    ...statePayload,
-    items: [statePayload],
-  }
+  return { items: [statePayload] }
 }
 
 // Get game state

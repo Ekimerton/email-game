@@ -483,28 +483,31 @@
             <amp-state id="gameState">
                 <script type="application/json">
                     {
-                        "revealedCount": 1,
                         "hasWon": false
                     }
                 </script>
             </amp-state>
 
-            <!-- Definitions Section - Native HTML for automatic responsive wrapping -->
-            <div class="definitions-section">
-                <div class="section-label">
-                    <span>Revealed Definitions</span>
-                    <span [text]="(revealedCount || gameState.revealedCount) + ' of 5'">1 of 5</span>
-                </div>
-                <div class="definitions-cards">
-                    __DEFINITIONS_CARDS__
-                </div>
-            </div>
-
-            <!-- Dynamic State Section - Letter Hints, Guesses & Message Banner -->
-            <amp-list id="stateList" width="auto" height="104" layout="fixed-height"
+            <!-- Dynamic State Section - fetched fresh on every email open -->
+            <amp-list id="stateList" width="auto" height="380" layout="fixed-height"
                 src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                 <template type="amp-mustache">
                     <div class="state-container">
+                        <div class="definitions-section">
+                            <div class="section-label">
+                                <span>Revealed Definitions</span>
+                                <span>{{revealedCount}} of {{totalDefinitions}}</span>
+                            </div>
+                            <div class="definitions-cards">
+                                {{#definitions}}
+                                <div class="definition-card">
+                                    <span class="def-number">{{num}}.</span>
+                                    <span>{{text}}</span>
+                                </div>
+                                {{/definitions}}
+                            </div>
+                        </div>
+
                         <div class="synonyms-section">
                             <div class="section-label">
                                 <span>Letter Hints & Word Length</span>
@@ -522,6 +525,15 @@
                 </template>
                 <div placeholder>
                     <div class="state-container">
+                        <div class="definitions-section">
+                            <div class="section-label">
+                                <span>Revealed Definitions</span>
+                                <span>1 of 5</span>
+                            </div>
+                            <div class="definitions-cards">
+                                __PLACEHOLDER_DEFS__
+                            </div>
+                        </div>
                         <div class="synonyms-section">
                             <div class="section-label">
                                 <span>Letter Hints & Word Length</span>
@@ -540,8 +552,8 @@
             <div class="form-container">
                 <form id="guess-form" method="POST"
                     action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
-                    on="submit-success:AMP.setState({ gameState: event.response, revealedCount: event.response.revealedCount }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
-                        submit-error:AMP.setState({ gameState: event.response, revealedCount: event.response.revealedCount }),stateList.refresh">
+                    on="submit-success:AMP.setState({ gameState: event.response }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
+                        submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
 
                     <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
 
@@ -563,9 +575,8 @@
                 <!-- Hidden Form for Letter Hint Button -->
                 <form id="hint-form" method="POST"
                     action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
-                    hidden
-                    on="submit-success:AMP.setState({ gameState: event.response, revealedCount: event.response.revealedCount }),stateList.refresh;
-                        submit-error:AMP.setState({ gameState: event.response, revealedCount: event.response.revealedCount }),stateList.refresh">
+                    hidden on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
+                        submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
                     <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
                 </form>
             </div>
