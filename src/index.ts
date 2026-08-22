@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { OAuth2Client } from 'google-auth-library'
 import { getDailyPuzzle, DailyPuzzle, formatPrettyDate } from './puzzles'
 import { EMAIL_HTML } from './emailHtml'
+import { generateAccountToken, verifyAccountToken, getAccountUrl, extractEmailDomain } from './auth'
 
 export type LetterStatus = 'correct' | 'present' | 'absent'
 
@@ -29,7 +30,6 @@ export interface SubscriberEntry {
 export interface UserSettings {
   email: string
   domain: string
-  token: string
   showOnLeaderboard: boolean
   daysPlayed?: number
   playedDates?: string[]
@@ -51,6 +51,7 @@ export interface GameState {
 
 type Bindings = {
   GAME_STATE_KV: KVNamespace
+  AUTH_SECRET?: string
 }
 
 export const app = new Hono<{ Bindings: Bindings }>()
@@ -96,9 +97,7 @@ async function kvPut(kv: KVNamespace | undefined, key: string, value: any): Prom
 
 // Helper to extract domain from email
 function extractDomain(email: string): string {
-  if (!email || !email.includes('@')) return 'public'
-  const domain = email.split('@')[1].toLowerCase().trim()
-  return domain || 'public'
+  return extractEmailDomain(email)
 }
 
 // Display full uncensored email address in organization leaderboard
@@ -147,46 +146,31 @@ async function getUserEmail(c: any, parsedBody?: Record<string, any>): Promise<s
   return 'player@company.com'
 }
 
-// User UUID token security helper
-async function getOrCreateUserToken(kv: KVNamespace | undefined, email: string): Promise<string> {
-  const userKey = `user:profile:${email}`
-  const existingProfile = await kvGet(kv, userKey)
-  if (existingProfile?.token) {
-    return existingProfile.token
+async function getUserSettings(kv: KVNamespace | undefined, email: string): Promise<UserSettings> {
+  const cleanEmail = email.toLowerCase().trim()
+  const domain = extractDomain(cleanEmail)
+  const userKey = `user:profile:${cleanEmail}`
+  const existing = await kvGet(kv, userKey)
+  if (existing) {
+    return {
+      email: existing.email || cleanEmail,
+      domain: existing.domain || domain,
+      showOnLeaderboard: typeof existing.showOnLeaderboard === 'boolean' ? existing.showOnLeaderboard : true,
+      daysPlayed: existing.daysPlayed,
+      playedDates: existing.playedDates,
+    }
   }
-
-  const newToken = crypto.randomUUID()
-  const domain = extractDomain(email)
-  const profile: UserSettings = {
-    email,
-    domain,
-    token: newToken,
-    showOnLeaderboard: true
-  }
-
-  await kvPut(kv, userKey, profile)
-  await kvPut(kv, `token:${newToken}`, { email, domain })
-  return newToken
-}
-
-async function getUserByToken(kv: KVNamespace | undefined, token: string): Promise<UserSettings | null> {
-  if (!token) return null
-  const mapping = await kvGet(kv, `token:${token}`)
-  if (!mapping?.email) return null
-  const profile = await kvGet(kv, `user:profile:${mapping.email}`)
-  if (profile) return profile
 
   return {
-    email: mapping.email,
-    domain: mapping.domain || extractDomain(mapping.email),
-    token,
-    showOnLeaderboard: true
+    email: cleanEmail,
+    domain,
+    showOnLeaderboard: true,
   }
 }
 
 async function updateUserSettings(kv: KVNamespace | undefined, settings: UserSettings): Promise<void> {
-  await kvPut(kv, `user:profile:${settings.email}`, settings)
-  await kvPut(kv, `token:${settings.token}`, { email: settings.email, domain: settings.domain })
+  const cleanEmail = settings.email.toLowerCase().trim()
+  await kvPut(kv, `user:profile:${cleanEmail}`, settings)
 }
 
 async function recordUserActivity(
@@ -194,28 +178,14 @@ async function recordUserActivity(
   email: string,
   dateStr: string
 ): Promise<UserSettings> {
-  const userKey = `user:profile:${email}`
-  let profile: UserSettings = await kvGet(kv, userKey)
-  const domain = extractDomain(email)
+  const profile = await getUserSettings(kv, email)
 
-  if (!profile) {
-    const token = crypto.randomUUID()
-    profile = {
-      email,
-      domain,
-      token,
-      showOnLeaderboard: true,
-      daysPlayed: 1,
-      playedDates: [dateStr],
-    }
-  } else {
-    if (!profile.playedDates) {
-      profile.playedDates = [dateStr]
-    } else if (!profile.playedDates.includes(dateStr)) {
-      profile.playedDates.push(dateStr)
-    }
-    profile.daysPlayed = profile.playedDates.length
+  if (!profile.playedDates) {
+    profile.playedDates = [dateStr]
+  } else if (!profile.playedDates.includes(dateStr)) {
+    profile.playedDates.push(dateStr)
   }
+  profile.daysPlayed = profile.playedDates.length
 
   await updateUserSettings(kv, profile)
   return profile
@@ -251,6 +221,7 @@ export function getFallbackHtml(options: {
   daysPlayed: number
   coworkerCount: number
   playUrl: string
+  accountUrl?: string
 }): string {
   const { email, domain, daysPlayed, coworkerCount, playUrl } = options
   const puzzle = getDailyPuzzle()
@@ -259,6 +230,7 @@ export function getFallbackHtml(options: {
 
   // Use clean public URL without raw query string email parameters to pass Gmail security filters
   const cleanPlayUrl = playUrl.split('?')[0]
+  const accountUrl = options.accountUrl || getAccountUrl(email, cleanPlayUrl)
 
   return `<!doctype html>
 <html lang="en">
@@ -267,8 +239,8 @@ export function getFallbackHtml(options: {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Word Game #${puzzle.id} - Daily Word Puzzle</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #52C3E6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f4f4f5;">
-  <div style="max-width: 500px; margin: 20px auto; padding: 0 10px;">
+<body style="margin: 0; padding: 0; background-color: #52C3E6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #18181b;">
+  <div style="max-width: 480px; margin: 0 auto; padding: 8px 4px 16px;">
     <!-- Top Meta Row: Game # on Left, Date on Right -->
     <div style="padding: 4px 4px 6px; display: flex; justify-content: space-between; align-items: center;">
       <span style="font-size: 12px; color: #09090b; font-weight: 700; opacity: 0.8;">WORD GAME #${puzzle.id}</span>
@@ -277,65 +249,57 @@ export function getFallbackHtml(options: {
 
     <!-- Centered Title & Tagline -->
     <div style="text-align: center; padding: 2px 4px 12px;">
-      <div style="font-size: 24px; font-weight: 900; color: #09090b; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; line-height: 1.1;">WORD GAME</div>
-      <p style="font-size: 12px; font-weight: 600; color: #09090b; margin: 0; opacity: 0.9;">
+      <h1 style="font-size: 24px; font-weight: 900; letter-spacing: 2px; color: #09090b; text-transform: uppercase; margin: 0 0 2px 0; line-height: 1.1;">WORD GAME</h1>
+      <p style="font-size: 12px; font-weight: 600; line-height: 1.3; color: #09090b; letter-spacing: 0.1px; margin: 0; opacity: 0.9;">
         The daily word game you can play in your email!
       </p>
     </div>
 
-    <!-- Game Card -->
-    <div style="background-color: #27272a; border-radius: 12px; overflow: hidden; border: 1px solid #3f3f46; box-shadow: 0 10px 25px rgba(0,0,0,0.25); margin-bottom: 12px;">
-      <!-- Main Content Body -->
-      <div style="padding: 20px 20px 24px;">
-        <div style="font-size: 13px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <span style="background-color: #EF476F; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; text-transform: lowercase;">${domain}</span>
-          <span>Leaderboard</span>
-        </div>
-        <!-- User Stats Card -->
-        <div style="background-color: #18181b; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
-          <p style="font-size: 14px; line-height: 1.5; color: #e4e4e7; margin: 0;">
-            <strong style="color: #ffffff;">${email}</strong> has played Word Game for <strong style="color: #60a5fa;">${daysText}</strong>, and competes with <strong style="color: #34d399;">${coworkersText}</strong> at <strong style="color: #ffffff;">${domain}</strong>!
-          </p>
-        </div>
+    <!-- Single Game Card -->
+    <div style="background: #ffffff; border-radius: 12px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10); padding: 20px 18px 22px; margin: 0 auto 12px;">
+      <!-- Domain Header Badge -->
+      <div style="text-align: center; margin-bottom: 14px;">
+        <span style="background: #EF476F; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; text-transform: lowercase; display: inline-block;">${domain}</span>
+        <span style="font-size: 13px; font-weight: 800; color: #18181b; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px;">Leaderboard</span>
+      </div>
 
-        <!-- Call to Action Button -->
-        <div style="text-align: center; margin: 24px 0;">
-          <a href="${cleanPlayUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 16px; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 8px; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
-            ▶ Play Today's Word Game #${puzzle.id}
-          </a>
-          <div style="font-size: 12px; color: #a1a1aa; margin-top: 10px; line-height: 1.4;">
-            Solve today's puzzle &amp; climb the <strong>${domain}</strong> leaderboard online!
-          </div>
-        </div>
+      <!-- User Stats / Invitation Card -->
+      <div style="background: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; text-align: center;">
+        <p style="font-size: 13px; line-height: 1.5; color: #27272a; margin: 0;">
+          <strong style="color: #09090b;">${email}</strong> has played Word Game for <strong style="color: #2563eb;">${daysText}</strong>, and competes with <strong style="color: #059669;">${coworkersText}</strong> at <strong style="color: #09090b;">${domain}</strong>!
+        </p>
+      </div>
 
-        <!-- Puzzle Teaser Clue -->
-        <div style="background-color: #09090b; border: 1px solid #3f3f46; border-radius: 8px; padding: 14px;">
-          <div style="font-size: 11px; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
-            Today's Clue #1 (${puzzle.word.length} letters)
-          </div>
-          <div style="font-size: 13px; color: #cbd5e1; font-style: italic; line-height: 1.4;">
-            "${puzzle.definitions[0]}"
-          </div>
+      <!-- Puzzle Teaser Clue -->
+      <div style="background: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 8px; padding: 12px 14px; margin-bottom: 18px;">
+        <div style="font-size: 11px; font-weight: 700; color: #52525b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+          Today's Clue #1 (${puzzle.word.length} letters)
+        </div>
+        <div style="font-size: 13px; color: #09090b; font-weight: 600; font-style: italic; line-height: 1.4;">
+          &ldquo;${puzzle.definitions[0]}&rdquo;
+        </div>
+      </div>
+
+      <!-- Call to Action Button -->
+      <div style="text-align: center; margin-bottom: 4px;">
+        <a href="${cleanPlayUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 15px; font-weight: 800; text-decoration: none; padding: 12px 26px; border-radius: 8px; letter-spacing: 0.3px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);">
+          ▶ Play Today's Word Game #${puzzle.id}
+        </a>
+        <div style="font-size: 11px; color: #71717a; margin-top: 8px; line-height: 1.4;">
+          Solve today's puzzle &amp; climb the <strong>${domain}</strong> leaderboard online!
         </div>
       </div>
     </div>
 
-    <!-- How to Play Card -->
-    <div style="background-color: #27272a; border-radius: 12px; overflow: hidden; border: 1px solid #3f3f46; box-shadow: 0 10px 25px rgba(0,0,0,0.25); padding: 18px 20px; margin-bottom: 12px;">
-      <div style="font-size: 12px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; text-align: center;">
-        How to Play
-      </div>
-      <div style="font-size: 12px; line-height: 1.5; color: #d4d4d8;">
-        <div style="margin-bottom: 6px;"><strong>1. Guess the Word:</strong> Submit guesses matching the mystery word length.</div>
-        <div style="margin-bottom: 6px;"><strong>2. Unlock Clues:</strong> Each incorrect guess reveals the next definition clue.</div>
-        <div style="margin-bottom: 6px;"><strong>3. Use Hints:</strong> Reveal letter hints if you need assistance (-75 pts).</div>
-        <div><strong>4. Leaderboard:</strong> Solve the puzzle to reveal your domain rankings!</div>
-      </div>
+    <!-- Notice for non-Gmail / Yahoo Mail users -->
+    <div style="text-align: center; padding: 4px 10px 10px; font-size: 11px; line-height: 1.4; color: #09090b; opacity: 0.85;">
+      💡 <strong>Note for Outlook &amp; Apple Mail users:</strong> Interactive in-email gameplay is supported in <strong>Gmail</strong> and <strong>Yahoo Mail</strong>. On other email clients, click the button above to play directly in your browser!
     </div>
 
     <!-- Footer -->
-    <div style="padding: 8px 14px 16px; text-align: center; font-size: 11px; color: #09090b; font-weight: 600; opacity: 0.85;">
-      Word Game Daily Puzzle &bull; <a href="${cleanPlayUrl}" style="color: #EF476F; text-decoration: underline; font-weight: 700;">Play Online</a>
+    <div style="padding: 4px 10px 16px; text-align: center; font-size: 11px; color: #09090b; opacity: 0.85; font-weight: 500;">
+      Word Game • Dynamic Daily Word Puzzle<br>
+      <a href="${accountUrl}" style="color: #EF476F; text-decoration: underline; font-weight: 700; margin-top: 6px; display: inline-block;">Manage Account &amp; Preferences</a>
     </div>
   </div>
 </body>
@@ -558,7 +522,8 @@ app.get('/', async (c) => {
   const dateParam = c.req.query('date')
   const { state, puzzle } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam)
   const domain = extractDomain(userEmail)
-  const userToken = await getOrCreateUserToken(c.env?.GAME_STATE_KV, userEmail)
+  const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+  const userToken = generateAccountToken(userEmail, authSecret)
 
   const reqUrl = new URL(c.req.url)
   const devMode = c.req.query('dev') === 'true'
@@ -643,12 +608,16 @@ app.get('/fallback', async (c) => {
     : prodOrigin
 
   const playUrl = `${publicUrl}/?email=${encodeURIComponent(userEmail)}`
+  const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+  const accountUrl = getAccountUrl(userEmail, publicUrl, authSecret)
+
   const html = getFallbackHtml({
     email: userEmail,
     domain,
     daysPlayed: profile.daysPlayed || 1,
     coworkerCount,
     playUrl,
+    accountUrl,
   })
 
   return c.html(html)
@@ -656,27 +625,23 @@ app.get('/fallback', async (c) => {
 
 // Secure REST API for React SPA Account Preferences
 app.get('/api/account', async (c) => {
-  const token = c.req.query('token')
-  let userProfile = await getUserByToken(c.env?.GAME_STATE_KV, token || '')
+  const token = c.req.query('token') || c.req.header('Authorization')?.replace(/^Bearer\s+/i, '')
+  const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+  const verified = verifyAccountToken(token, authSecret)
 
-  if (!userProfile) {
-    const fallbackEmail = await getUserEmail(c)
-    const fallbackToken = await getOrCreateUserToken(c.env?.GAME_STATE_KV, fallbackEmail)
-    userProfile = await getUserByToken(c.env?.GAME_STATE_KV, fallbackToken)
-  }
-
-  if (!userProfile) {
+  if (!verified) {
     return c.json({ success: false, message: 'Invalid or missing authentication token.' }, 401)
   }
 
+  const userProfile = await getUserSettings(c.env?.GAME_STATE_KV, verified.email)
   const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
-  const isSubscribed = subscribers.some(s => s.email === userProfile!.email && s.status === 'active')
+  const isSubscribed = subscribers.some(s => s.email.toLowerCase() === verified.email.toLowerCase() && s.status === 'active')
 
   return c.json({
     success: true,
     email: userProfile.email,
     domain: userProfile.domain,
-    token: userProfile.token,
+    token,
     isSubscribed,
     showOnLeaderboard: userProfile.showOnLeaderboard
   })
@@ -686,24 +651,25 @@ app.get('/api/account', async (c) => {
 app.post('/api/account/toggle-subscription', async (c) => {
   try {
     const body = await c.req.json()
-    const token = body.token
-    const userProfile = await getUserByToken(c.env?.GAME_STATE_KV, token)
+    const token = body?.token
+    const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+    const verified = verifyAccountToken(token, authSecret)
 
-    if (!userProfile) {
+    if (!verified) {
       return c.json({ success: false, message: 'Invalid authentication token.' }, 401)
     }
 
     const targetSubscribed = Boolean(body.subscribed)
     if (targetSubscribed) {
-      await addSubscriber(c.env?.GAME_STATE_KV, userProfile.email)
+      await addSubscriber(c.env?.GAME_STATE_KV, verified.email)
     } else {
-      await removeSubscriber(c.env?.GAME_STATE_KV, userProfile.email)
+      await removeSubscriber(c.env?.GAME_STATE_KV, verified.email)
     }
 
     return c.json({
       success: true,
       isSubscribed: targetSubscribed,
-      message: targetSubscribed ? '🎉 Subscribed to daily 9:00 AM PST emails!' : ' Unsubscribed from daily emails.'
+      message: targetSubscribed ? '🎉 Subscribed to daily 9:00 AM PST emails!' : 'Unsubscribed from daily emails.'
     })
   } catch (error: any) {
     return c.json({ success: false, message: 'Failed to update subscription.' }, 500)
@@ -714,13 +680,15 @@ app.post('/api/account/toggle-subscription', async (c) => {
 app.post('/api/account/toggle-privacy', async (c) => {
   try {
     const body = await c.req.json()
-    const token = body.token
-    const userProfile = await getUserByToken(c.env?.GAME_STATE_KV, token)
+    const token = body?.token
+    const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+    const verified = verifyAccountToken(token, authSecret)
 
-    if (!userProfile) {
+    if (!verified) {
       return c.json({ success: false, message: 'Invalid authentication token.' }, 401)
     }
 
+    const userProfile = await getUserSettings(c.env?.GAME_STATE_KV, verified.email)
     const showOnLeaderboard = Boolean(body.showOnLeaderboard)
     userProfile.showOnLeaderboard = showOnLeaderboard
     await updateUserSettings(c.env?.GAME_STATE_KV, userProfile)
@@ -879,6 +847,19 @@ app.get('/account', async (c) => {
       animation: spin 1s ease-in-out infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .play-link-btn {
+      display: inline-block;
+      margin-top: 14px;
+      background: #2563eb;
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      transition: background 0.2s;
+    }
+    .play-link-btn:hover { background: #1d4ed8; }
     .footer-text { text-align: center; font-size: 11px; color: #64748b; margin-top: 20px; }
   </style>
 </head>
@@ -899,8 +880,16 @@ app.get('/account', async (c) => {
       const token = urlParams.get('token') || '';
 
       useEffect(() => {
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
         fetch('/api/account?token=' + encodeURIComponent(token))
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error('Unauthorized');
+            return res.json();
+          })
           .then(data => {
             if (data.success) {
               setUser(data);
@@ -910,7 +899,7 @@ app.get('/account', async (c) => {
             setLoading(false);
           })
           .catch(() => {
-            setToast('⚠️ Connection error');
+            setUser(null);
             setLoading(false);
           });
       }, []);
@@ -975,14 +964,21 @@ app.get('/account', async (c) => {
 
       if (!user) {
         return (
-          <div className="card-container" style={{ textAlign: 'center' }}>
-            <h2 style={{ color: '#f87171', fontSize: '20px', marginBottom: '8px' }}>⚠️ Invalid Account Link</h2>
-            <p style={{ color: '#cbd5e1', fontSize: '13px' }}>
-              This account link is invalid or expired. Please click the account link in your daily email to open your account settings.
+          <div className="card-container" style={{ textAlign: 'center', padding: '36px 24px' }}>
+            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🔒</div>
+            <h2 style={{ color: '#f87171', fontSize: '20px', marginBottom: '8px' }}>Invalid Account Link</h2>
+            <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: 1.5 }}>
+              This account link is invalid, tampered with, or expired.<br />
+              Please click <strong>Manage Account & Preferences</strong> from your daily Word Game email to access your settings.
             </p>
+            <div style={{ marginTop: '20px' }}>
+              <a href="/" className="play-link-btn">▶ Play Today's Game</a>
+            </div>
           </div>
         );
       }
+
+      const playUrl = '/?email=' + encodeURIComponent(user.email);
 
       return (
         <div className="card-container">
@@ -1046,8 +1042,12 @@ app.get('/account', async (c) => {
             </div>
           </div>
 
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <a href={playUrl} className="play-link-btn">▶ Return to Today's Game</a>
+          </div>
+
           <div className="footer-text">
-            Word Game • Secure Token Authentication & React SPA Settings
+            Word Game • Secure Spoof-Proof Token Authentication
           </div>
         </div>
       );
@@ -1305,7 +1305,7 @@ app.get('/api/leaderboard', async (c) => {
 
     // Format items array with full uncensored emails or Anonymous if privacy toggled
     const items = await Promise.all(leaderboard.map(async (entry, index) => {
-      const userSettings = await getUserByToken(c.env?.GAME_STATE_KV, entry.email) || { showOnLeaderboard: true }
+      const userSettings = await getUserSettings(c.env?.GAME_STATE_KV, entry.email)
       const displayEmail = userSettings.showOnLeaderboard
         ? formatDisplayEmail(entry.email)
         : 'Anonymous Player'

@@ -29,7 +29,10 @@ describe('Hono App & Layout Calculations', () => {
     expect(html).toContain('Play Today\'s Word Game')
     expect(html).toContain('https://email-game.teamify.workers.dev')
     expect(html).toContain('The daily word game you can play in your email!')
-    expect(html).toContain('How to Play')
+    expect(html).toContain('Note for Outlook &amp; Apple Mail users')
+    expect(html).toContain('Gmail')
+    expect(html).toContain('Yahoo Mail')
+    expect(html).toContain('Manage Account &amp; Preferences')
     expect(html).toContain('Game #')
   })
 
