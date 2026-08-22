@@ -63,22 +63,9 @@ const MEMORY_STORE = new Map<string, any>()
 // Tunable constant height for non-definition UI elements (headers, letter clues grid, message banner, section margins/gaps)
 const BASE_STATIC_STATE_LIST_HEIGHT = 136
 
-// Calculate individual definition card height based on line wrapping (57 chars per line)
-// 1-line definition box = 29.59px; 2-line = 45.19px (adds 15.6px per additional line)
-function calculateDefinitionCardHeight(text: string): number {
-  const charCount = text ? text.length : 0
-  const lines = Math.max(1, Math.ceil(charCount / 57))
-  return 29.59 + (lines - 1) * 15.6
-}
-
-// Calculate dynamic total amp-list height for pre-render
-function calculateStateListHeight(puzzle: DailyPuzzle, baseStaticHeight: number = BASE_STATIC_STATE_LIST_HEIGHT): number {
-  if (!puzzle || !puzzle.definitions || puzzle.definitions.length === 0) {
-    return 380
-  }
-  const gaps = (puzzle.definitions.length - 1) * 4
-  const defsHeight = puzzle.definitions.reduce((sum, def) => sum + calculateDefinitionCardHeight(def), 0)
-  return Math.ceil(defsHeight + gaps + baseStaticHeight)
+// Calculate dynamic total amp-list height for pre-render (stable bounded height for clue stepper view)
+function calculateStateListHeight(puzzle?: DailyPuzzle): number {
+  return 250
 }
 
 async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
@@ -593,15 +580,15 @@ app.get('/', async (c) => {
 
   // Dynamically calculate and replace amp-list height on pre-render
   const dynamicStateListHeight = calculateStateListHeight(puzzle)
-  html = html.replace('height="380"', `height="${dynamicStateListHeight}"`)
+  html = html.replace('height="250"', `height="${dynamicStateListHeight}"`)
 
   // Pre-render Header Meta (Date, Domain, and Game Title)
   html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
   html = html.replace('company.com', domain)
   html = html.replace('WORD GAME #1', `WORD GAME #${puzzle.id}`)
 
-  // Pre-render Definition Counts (Always 1 of N for initial state)
-  html = html.replace('1 of 5', `1 of ${puzzle.definitions.length}`)
+  // Pre-render Definition Counts (Always 1/N unlocked for initial state)
+  html = html.replace('1/5 unlocked', `1/${puzzle.definitions.length} unlocked`)
 
   // Pre-render Message Banner (Always initial prompt for initial state placeholder)
   const initialMsg = `Guess the ${puzzle.word.length}-letter word! Def #1 revealed.`
@@ -610,12 +597,23 @@ app.get('/', async (c) => {
   // Pre-render Leaderboard Section Title
   html = html.replace('Organization Leaderboard', `${domain} Leaderboard`)
 
-  // Pre-render definition cards (Definition #1 revealed, rest dots) for initial state placeholder
-  const placeholderDefsHtml = puzzle.definitions.map((def, i) => {
-    const isRevealed = i === 0
-    const text = isRevealed ? def : getRedactedText(def)
-    return `<div class="definition-card"><span class="def-number">${i + 1}.</span> <span>${text}</span></div>`
+  // Pre-render definition clue tabs and active clue card for initial state placeholder
+  const placeholderTabsHtml = puzzle.definitions.map((_, i) => {
+    const isFirst = i === 0
+    const activeClass = isFirst ? ' active unlocked' : ' locked'
+    return `<button type="button" class="clue-tab-btn${activeClass}">Clue ${i + 1}</button>`
   }).join('')
+
+  const placeholderClueCardsHtml = puzzle.definitions.map((def, i) => {
+    const isFirst = i === 0
+    const isRevealed = i === 0
+    const hiddenAttr = isFirst ? '' : ' hidden'
+    const textClass = isRevealed ? 'clue-text' : 'clue-text blurred'
+    const text = isRevealed ? def : getRedactedText(def)
+    return `<div class="clue-content"${hiddenAttr}><div class="${textClass}">${text}</div></div>`
+  }).join('')
+
+  const placeholderDefsHtml = `<div class="clue-tabs-bar">${placeholderTabsHtml}</div><div class="active-clue-card">${placeholderClueCardsHtml}</div>`
 
   html = html.replace('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
 
@@ -1130,8 +1128,13 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
   const activeRevealedCount = state.hasWon ? puzzle.definitions.length : state.revealedCount
   const definitions = puzzle.definitions.map((def, i) => {
     const isRevealed = i < activeRevealedCount
+    const isLatest = i === Math.max(0, activeRevealedCount - 1)
+    const isFirst = i === 0
     return {
       num: i + 1,
+      isRevealed,
+      isLatest,
+      isFirst,
       text: isRevealed ? def : getRedactedText(def),
     }
   })
@@ -1150,7 +1153,7 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
     shareText: state.shareText,
   }
 
-  return { items: [statePayload] }
+  return { items: [statePayload], ...statePayload }
 }
 
 // Get game state

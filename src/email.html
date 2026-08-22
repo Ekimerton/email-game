@@ -161,12 +161,12 @@
             text-align: center;
             color: #18181b;
             line-height: 1.3;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            margin-top: 8px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin-top: 14px;
             margin-bottom: 0;
         }
 
-        /* Definition Cards at Top */
+        /* Definition Clue Stepper & Active Card */
         .definitions-section {
             margin-bottom: 8px;
         }
@@ -182,37 +182,72 @@
             justify-content: space-between;
         }
 
-        .definitions-cards {
+        .clue-tabs-bar {
             display: flex;
-            flex-direction: column;
             gap: 4px;
+            margin-bottom: 6px;
         }
 
-        .definition-card {
+        .clue-tab-btn {
+            flex: 1;
+            padding: 5px 2px;
             background: #f4f4f5;
             border: 1px solid #e4e4e7;
             border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
+            color: #71717a;
+            cursor: pointer;
+            text-align: center;
+            line-height: 1.2;
+            font-family: inherit;
+        }
+
+        .clue-tab-btn.unlocked {
+            background: #f4f4f5;
             color: #18181b;
-            line-height: 1.3;
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            border-color: #e4e4e7;
         }
 
-        .def-number {
-            font-weight: 800;
-            color: #2563eb;
-            flex-shrink: 0;
+        .clue-tab-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #1d4ed8;
         }
 
-        .definition-text-blurred {
+        .clue-tab-btn.locked {
             color: #a1a1aa;
-            letter-spacing: 1px;
             opacity: 0.7;
+        }
+
+        .active-clue-card {
+            background: #f4f4f5;
+            border: 1px solid #e4e4e7;
+            border-radius: 8px;
+            padding: 10px 14px;
+            min-height: 84px;
+            display: flex;
+            align-items: center;
+        }
+
+        .clue-content {
+            width: 100%;
+        }
+
+        .clue-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: #09090b;
+            line-height: 1.4;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .clue-text.blurred {
+            color: #a1a1aa;
+            letter-spacing: 2px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 12px;
+            font-weight: 500;
         }
 
         /* Status & Mask Tiles */
@@ -230,7 +265,7 @@
             width: 36px;
             height: 40px;
             background: #ffffff;
-            border: 2px solid #d4d4d8;
+            border: 1.5px solid #d4d4d8;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -255,7 +290,7 @@
         .guess-input {
             width: 100%;
             background: #ffffff;
-            border: 2px solid #18181b;
+            border: 1.5px solid #d4d4d8;
             border-radius: 8px;
             padding: 8px 10px;
             font-size: 18px;
@@ -268,7 +303,7 @@
 
         .guess-input:focus {
             outline: none;
-            border-color: #18181b;
+            border-color: #2563eb;
             box-shadow: none;
         }
 
@@ -536,26 +571,44 @@
             </script>
         </amp-state>
 
+        <!-- Active Clue Selection State -->
+        <amp-state id="clueView">
+            <script type="application/json">
+                {}
+            </script>
+        </amp-state>
+
         <!-- 1. Main Game Card: WORD GAME #XX -->
         <div class="card">
             <div class="card-title">WORD GAME #1</div>
 
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="380" layout="fixed-height"
+                <amp-list id="stateList" width="auto" height="250" layout="fixed-height"
                     src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
                             <div class="definitions-section">
                                 <div class="section-label">
-                                    <span>Revealed Definitions</span>
-                                    <span>{{revealedCount}} of {{totalDefinitions}}</span>
+                                    <span>Definition Clues</span>
+                                    <span><span [text]="gameState.revealedCount || {{revealedCount}}">{{revealedCount}}</span>/{{totalDefinitions}} unlocked</span>
                                 </div>
-                                <div class="definitions-cards">
+                                <div class="clue-tabs-bar">
                                     {{#definitions}}
-                                    <div class="definition-card">
-                                        <span class="def-number">{{num}}.</span>
-                                        <span>{{text}}</span>
+                                    <button type="button"
+                                        class="clue-tab-btn {{#isRevealed}}unlocked{{/isRevealed}}{{^isRevealed}}locked{{/isRevealed}} {{#isLatest}}active{{/isLatest}}"
+                                        [class]="'clue-tab-btn ' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? 'unlocked' : 'locked') + ((clueView.activeClue || {{revealedCount}}) == {{num}} ? ' active' : '')"
+                                        on="tap:AMP.setState({ clueView: { activeClue: {{num}} } })">
+                                        Clue {{num}}
+                                    </button>
+                                    {{/definitions}}
+                                </div>
+                                <div class="active-clue-card">
+                                    {{#definitions}}
+                                    <div class="clue-content"
+                                        [hidden]="(clueView.activeClue || {{revealedCount}}) != {{num}}">
+                                        <div class="clue-text {{^isRevealed}}blurred{{/isRevealed}}"
+                                            [class]="'clue-text' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? '' : ' blurred')">{{text}}</div>
                                     </div>
                                     {{/definitions}}
                                 </div>
@@ -563,7 +616,7 @@
 
                             <div class="synonyms-section">
                                 <div class="section-label">
-                                    <span>Letter Hints &amp; Word Length</span>
+                                    <span>Revealed Letters</span>
                                     <span>Guesses: <span class="stats-val">{{guessCount}}</span></span>
                                 </div>
                                 <div class="mask-grid">
@@ -580,16 +633,14 @@
                         <div class="state-container">
                             <div class="definitions-section">
                                 <div class="section-label">
-                                    <span>Revealed Definitions</span>
-                                    <span>1 of 5</span>
+                                    <span>Definition Clues</span>
+                                    <span>1/5 unlocked</span>
                                 </div>
-                                <div class="definitions-cards">
-                                    __PLACEHOLDER_DEFS__
-                                </div>
+                                __PLACEHOLDER_DEFS__
                             </div>
                             <div class="synonyms-section">
                                 <div class="section-label">
-                                    <span>Letter Hints &amp; Word Length</span>
+                                    <span>Revealed Letters</span>
                                     <span>Guesses: <span class="stats-val">0</span></span>
                                 </div>
                                 <div class="mask-grid">
@@ -605,7 +656,7 @@
                 <div class="form-container">
                     <form id="guess-form" method="POST"
                         action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
-                        on="submit-success:AMP.setState({ gameState: event.response }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
+                        on="submit-success:AMP.setState({ gameState: event.response, clueView: { activeClue: event.response.revealedCount } }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
                             submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
 
                         <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
