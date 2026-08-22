@@ -26,9 +26,17 @@ const PUBLIC_URL = (process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.
 const MAILGUN_SMTP_LOGIN = process.env.MAILGUN_SMTP_LOGIN
 const MAILGUN_SMTP_PASS = process.env.MAILGUN_SMTP_PASS
 
+function parseEmailList(raw: string | undefined): string[] {
+  if (!raw) return []
+  return raw
+    .split(/[,;\s]+/)
+    .map(e => e.trim())
+    .filter(Boolean)
+}
+
 async function getSubscribers(): Promise<string[]> {
-  // If --to flag is passed, send only to that address
-  if (toArg) return [toArg]
+  // If --to flag is passed, send only to those address(es)
+  if (toArg) return parseEmailList(toArg)
 
   // Otherwise fetch active subscribers from the worker API
   try {
@@ -39,8 +47,10 @@ async function getSubscribers(): Promise<string[]> {
     const data = await res.json() as { email: string; status: string }[]
     return data.filter(s => s.status === 'active').map(s => s.email)
   } catch (err) {
-    console.error('Could not fetch subscribers, falling back to TEST_EMAIL:', err)
-    return [process.env.TEST_EMAIL || 'ekim0252@gmail.com']
+    console.error('Could not fetch subscribers, falling back to TEST_EMAILS / TEST_EMAIL:', err)
+    const fallback = process.env.TEST_EMAILS || process.env.TEST_EMAIL || 'ekim0252@gmail.com'
+    const emails = parseEmailList(fallback)
+    return emails.length > 0 ? emails : ['ekim0252@gmail.com']
   }
 }
 
