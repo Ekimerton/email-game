@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { getDailyPuzzle } from '../src/puzzles'
 import { getFallbackHtml } from '../src/index'
+import { EMAIL_HTML } from '../src/emailHtml'
 
 describe('Hono App & Layout Calculations', () => {
   it('should generate valid daily puzzle data for today', () => {
@@ -27,6 +28,22 @@ describe('Hono App & Layout Calculations', () => {
     expect(html).toContain('12 coworkers')
     expect(html).toContain('Play Today\'s Word Game')
     expect(html).toContain('https://email-game.teamify.workers.dev')
+    expect(html).toContain('The daily word game you can play in your email!')
+    expect(html).toContain('How to Play')
+    expect(html).toContain('Game #')
+  })
+
+  it('should include the daily word game email client intro banner and WORD GAME #XX card in EMAIL_HTML', () => {
+    expect(EMAIL_HTML).toContain('game-hero')
+    expect(EMAIL_HTML).toContain('game-meta-row')
+    expect(EMAIL_HTML).toContain('WORD GAME #1')
+    expect(EMAIL_HTML).toContain('The daily word game you can play in your email!')
+  })
+
+  it('should include the How to Play section below the leaderboard in EMAIL_HTML', () => {
+    expect(EMAIL_HTML).toContain('how-to-play-section')
+    expect(EMAIL_HTML).toContain('How to Play')
+    expect(EMAIL_HTML).toContain('Guess the mystery word')
   })
 })
 

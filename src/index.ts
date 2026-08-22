@@ -61,7 +61,7 @@ const REDACTED_DEF_TEXT = '█████████████████�
 const MEMORY_STORE = new Map<string, any>()
 
 // Tunable constant height for non-definition UI elements (headers, letter clues grid, message banner, section margins/gaps)
-const BASE_STATIC_STATE_LIST_HEIGHT = 128
+const BASE_STATIC_STATE_LIST_HEIGHT = 136
 
 // Calculate individual definition card height based on line wrapping (57 chars per line)
 // 1-line definition box = 29.59px; 2-line = 45.19px (adds 15.6px per additional line)
@@ -280,50 +280,74 @@ export function getFallbackHtml(options: {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Word Game #${puzzle.id} - Daily Word Puzzle</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #18181b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f4f4f5;">
-  <div style="max-width: 500px; margin: 20px auto; background-color: #27272a; border-radius: 12px; overflow: hidden; border: 1px solid #3f3f46; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-    <!-- Header -->
-    <div style="background-color: #000000; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3f3f46;">
-      <div>
-        <span style="font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: 2px; text-transform: uppercase;">WORD GAME</span>
-        <span style="background-color: #27272a; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; margin-left: 8px;">${domain}</span>
-      </div>
-      <span style="font-size: 12px; color: #a1a1aa; font-weight: 600;">${formatPrettyDate(puzzle.date)}</span>
+<body style="margin: 0; padding: 0; background-color: #52C3E6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f4f4f5;">
+  <div style="max-width: 500px; margin: 20px auto; padding: 0 10px;">
+    <!-- Top Meta Row: Org on Left, Date on Right -->
+    <div style="padding: 4px 4px 6px; display: flex; justify-content: space-between; align-items: center;">
+      <span style="background-color: #EF476F; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">${domain}</span>
+      <span style="font-size: 12px; color: #09090b; font-weight: 700; opacity: 0.8;">${formatPrettyDate(puzzle.date)}</span>
     </div>
 
-    <!-- Main Content Body -->
-    <div style="padding: 24px 20px;">
-      <!-- User Stats Card -->
-      <div style="background-color: #18181b; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
-        <p style="font-size: 14px; line-height: 1.5; color: #e4e4e7; margin: 0;">
-          <strong style="color: #ffffff;">${email}</strong> has played Word Game for <strong style="color: #60a5fa;">${daysText}</strong>, and competes with <strong style="color: #34d399;">${coworkersText}</strong> at <strong style="color: #ffffff;">${domain}</strong>!
-        </p>
-      </div>
+    <!-- Centered Title & Tagline -->
+    <div style="text-align: center; padding: 2px 4px 12px;">
+      <div style="font-size: 24px; font-weight: 900; color: #09090b; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 2px; line-height: 1.1;">WORD GAME</div>
+      <p style="font-size: 12px; font-weight: 600; color: #09090b; margin: 0; opacity: 0.9;">
+        The daily word game you can play in your email!
+      </p>
+    </div>
 
-      <!-- Call to Action Button -->
-      <div style="text-align: center; margin: 24px 0;">
-        <a href="${cleanPlayUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 16px; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 8px; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
-          ▶ Play Today's Word Game #${puzzle.id}
-        </a>
-        <div style="font-size: 12px; color: #a1a1aa; margin-top: 10px; line-height: 1.4;">
-          Solve today's puzzle &amp; climb the <strong>${domain}</strong> leaderboard online!
+    <!-- Game Card -->
+    <div style="background-color: #27272a; border-radius: 12px; overflow: hidden; border: 1px solid #3f3f46; box-shadow: 0 10px 25px rgba(0,0,0,0.25); margin-bottom: 12px;">
+      <!-- Main Content Body -->
+      <div style="padding: 20px 20px 24px;">
+        <div style="font-size: 13px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; text-align: center;">
+          WORD GAME #${puzzle.id}
+        </div>
+        <!-- User Stats Card -->
+        <div style="background-color: #18181b; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
+          <p style="font-size: 14px; line-height: 1.5; color: #e4e4e7; margin: 0;">
+            <strong style="color: #ffffff;">${email}</strong> has played Word Game for <strong style="color: #60a5fa;">${daysText}</strong>, and competes with <strong style="color: #34d399;">${coworkersText}</strong> at <strong style="color: #ffffff;">${domain}</strong>!
+          </p>
+        </div>
+
+        <!-- Call to Action Button -->
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${cleanPlayUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 16px; font-weight: 800; text-decoration: none; padding: 14px 28px; border-radius: 8px; letter-spacing: 0.5px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+            ▶ Play Today's Word Game #${puzzle.id}
+          </a>
+          <div style="font-size: 12px; color: #a1a1aa; margin-top: 10px; line-height: 1.4;">
+            Solve today's puzzle &amp; climb the <strong>${domain}</strong> leaderboard online!
+          </div>
+        </div>
+
+        <!-- Puzzle Teaser Clue -->
+        <div style="background-color: #09090b; border: 1px solid #3f3f46; border-radius: 8px; padding: 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
+            Today's Clue #1 (${puzzle.word.length} letters)
+          </div>
+          <div style="font-size: 13px; color: #cbd5e1; font-style: italic; line-height: 1.4;">
+            "${puzzle.definitions[0]}"
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Puzzle Teaser Clue -->
-      <div style="background-color: #09090b; border: 1px solid #3f3f46; border-radius: 8px; padding: 14px;">
-        <div style="font-size: 11px; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
-          Today's Clue #1 (${puzzle.word.length} letters)
-        </div>
-        <div style="font-size: 13px; color: #cbd5e1; font-style: italic; line-height: 1.4;">
-          "${puzzle.definitions[0]}"
-        </div>
+    <!-- How to Play Card -->
+    <div style="background-color: #27272a; border-radius: 12px; overflow: hidden; border: 1px solid #3f3f46; box-shadow: 0 10px 25px rgba(0,0,0,0.25); padding: 18px 20px; margin-bottom: 12px;">
+      <div style="font-size: 12px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; text-align: center;">
+        How to Play
+      </div>
+      <div style="font-size: 12px; line-height: 1.5; color: #d4d4d8;">
+        <div style="margin-bottom: 6px;"><strong>1. Guess the Word:</strong> Submit guesses matching the mystery word length.</div>
+        <div style="margin-bottom: 6px;"><strong>2. Unlock Clues:</strong> Each incorrect guess reveals the next definition clue.</div>
+        <div style="margin-bottom: 6px;"><strong>3. Use Hints:</strong> Reveal letter hints if you need assistance (-75 pts).</div>
+        <div><strong>4. Leaderboard:</strong> Solve the puzzle to reveal your domain rankings!</div>
       </div>
     </div>
 
     <!-- Footer -->
-    <div style="border-top: 1px solid #3f3f46; padding: 14px; text-align: center; font-size: 11px; color: #71717a; background-color: #18181b;">
-      Word Game Daily Puzzle &bull; <a href="${cleanPlayUrl}" style="color: #60a5fa; text-decoration: none;">Play Online</a>
+    <div style="padding: 8px 14px 16px; text-align: center; font-size: 11px; color: #09090b; font-weight: 600; opacity: 0.85;">
+      Word Game Daily Puzzle &bull; <a href="${cleanPlayUrl}" style="color: #EF476F; text-decoration: underline; font-weight: 700;">Play Online</a>
     </div>
   </div>
 </body>
@@ -571,9 +595,10 @@ app.get('/', async (c) => {
   const dynamicStateListHeight = calculateStateListHeight(puzzle)
   html = html.replace('height="380"', `height="${dynamicStateListHeight}"`)
 
-  // Pre-render Header Meta (Date and Domain)
+  // Pre-render Header Meta (Date, Domain, and Game Title)
   html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
   html = html.replace('company.com', domain)
+  html = html.replace('WORD GAME #1', `WORD GAME #${puzzle.id}`)
 
   // Pre-render Definition Counts (Always 1 of N for initial state)
   html = html.replace('1 of 5', `1 of ${puzzle.definitions.length}`)
