@@ -30,6 +30,18 @@ describe('Daily Puzzles Module', () => {
     }
   })
 
+  it('should ensure all definitions are concise (<= 120 characters)', () => {
+    for (const puzzle of PUZZLES) {
+      for (const def of puzzle.definitions) {
+        expect(
+          def.length,
+          `Definition too long (${def.length} chars) for "${puzzle.word}": "${def}"`
+        ).toBeLessThanOrEqual(120)
+        expect(def.length).toBeGreaterThanOrEqual(12)
+      }
+    }
+  })
+
   it('should not have any definition containing the target word or its stem/inflections', () => {
     for (const puzzle of PUZZLES) {
       for (const def of puzzle.definitions) {

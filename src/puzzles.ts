@@ -47,7 +47,7 @@ export const PUZZLES: DailyPuzzle[] = [
     "date": "2026-08-20",
     "word": "IMAGE",
     "definitions": [
-      "A characteristic of a person, group or company etc., style, manner of dress, how one is, or wishes to be, perceived by others.",
+      "A characteristic of a person, group or company etc., style, manner of dress, how one is, or wishes to be, perceived.",
       "To create a complete backup copy of a file system or other entity.",
       "A statue or idol.",
       "To reflect, mirror.",
@@ -72,7 +72,7 @@ export const PUZZLES: DailyPuzzle[] = [
     "definitions": [
       "A regular boyfriend or girlfriend.",
       "To row with pressure at a low stroke-rating, often 18 strokes per minute.",
-      "Constant in feeling, purpose, or pursuit; not fickle, changeable, or wavering; not easily moved or persuaded to alter a purpose; resolute.",
+      "Constant in feeling, purpose, or pursuit.",
       "To stabilize something; to prevent from shaking.",
       "A rest or support, as for the hand, a tool, or a piece of work."
     ]
@@ -82,11 +82,11 @@ export const PUZZLES: DailyPuzzle[] = [
     "date": "2026-08-23",
     "word": "TURTLE",
     "definitions": [
-      "A small element towards the end of a list of items to be bubble sorted, and thus tending to take a long time to be swapped into its correct position. Compare rabbit.",
+      "A small element towards the end of a list of items to be bubble sorted, and thus tending to take a long time to be.",
       "To build up a large defense force and strike only punctually, rather than going for an offensive strategy.",
-      "An Ancient Roman attack method, where the shields held by the soldiers hide them, not only left, right, front and back, but also from above.",
+      "An Ancient Roman attack method, where the shields held by the soldiers hide them, not only left, right, front and.",
       "To flip over onto the back or top; to turn upside down.",
-      "Any land or marine reptile of the order Testudines, characterised by a protective shell enclosing its body. See also tortoise."
+      "Any land or marine reptile of the order Testudines, characterised by a protective shell enclosing its body. See also."
     ]
   },
   {
@@ -153,7 +153,7 @@ export const PUZZLES: DailyPuzzle[] = [
     "date": "2026-08-29",
     "word": "MERIT",
     "definitions": [
-      "The sum of all the good deeds that a person does which determines the quality of the person's next state of existence and contributes to the person's growth towards enlightenment.",
+      "The sum of all the good deeds that a person does which determines the quality of the person's next state of.",
       "To be deserving or worthy.",
       "A mark or token of approbation or to recognize excellence.",
       "To deserve, to earn.",
@@ -263,7 +263,7 @@ export const PUZZLES: DailyPuzzle[] = [
       "A private room on a ship.",
       "A chalet or lodge, especially one that can hold large groups of people.",
       "To limit the scope of.",
-      "A small dwelling characteristic of the frontier, especially when built from logs with simple tools and not constructed by professional builders, but by those who meant to live in it."
+      "A small dwelling characteristic of the frontier, but by those who meant to live in it."
     ]
   },
   {
@@ -287,7 +287,7 @@ export const PUZZLES: DailyPuzzle[] = [
       "A scholastic essay.",
       "Having a title that is merely official, or given by courtesy or convention.",
       "To document; to memorialize.",
-      "A sheet material used for writing on or printing on (or as a non-waterproof container), usually made by draining cellulose fibres from a suspension in water."
+      "A sheet material used for writing on or printing on."
     ]
   },
   {
@@ -307,7 +307,7 @@ export const PUZZLES: DailyPuzzle[] = [
     "date": "2026-09-11",
     "word": "CHARM",
     "definitions": [
-      "A second-order measure of derivative price sensitivity, expressed as the instantaneous rate of change of delta with respect to time.",
+      "A second-order measure of derivative price sensitivity, expressed as the instantaneous rate of change of delta with.",
       "To subdue or overcome by some secret power, or by that which gives pleasure; to allay; to soothe.",
       "A small trinket on a bracelet or chain, etc., traditionally supposed to confer luck upon the wearer.",
       "To seduce, persuade or fascinate someone or something.",
@@ -322,7 +322,7 @@ export const PUZZLES: DailyPuzzle[] = [
       "To tailor clothes to make them fit.",
       "A raised area around an altar in a church; the sanctuary.",
       "To become different.",
-      "An identity or headmate of a person with dissociative identity disorder (previously known as multiple personality disorder).",
+      "An identity or headmate of a person with dissociative identity disorder .",
       "To change the form or structure of."
     ]
   },
@@ -332,7 +332,7 @@ export const PUZZLES: DailyPuzzle[] = [
     "word": "SCREEN",
     "definitions": [
       "An erection of white canvas or wood placed on the boundary opposite a batsman to make the ball more easily visible.",
-      "To examine patients or treat a sample in order to detect a chemical or a disease, or to assess susceptibility to a disease.",
+      "To examine patients or treat a sample in order to detect a chemical or a disease, or to assess susceptibility to a.",
       "Definitions related to standing in the path of an opposing player.",
       "To remove information, or censor intellectual material from viewing.",
       "A physical divider intended to block an area from view, or provide shelter from something dangerous."
@@ -416,7 +416,7 @@ export const PUZZLES: DailyPuzzle[] = [
     "definitions": [
       "A regulating principle.",
       "To decide judicially.",
-      "A straight line (continuous mark, as made by a pen or the like), especially one lying across a paper as a guide for writing.",
+      "A straight line , especially one lying across a paper as a guide for writing.",
       "To regulate, be in charge of, make decisions for, reign over.",
       "A regulation, law, guideline."
     ]
@@ -429,7 +429,7 @@ export const PUZZLES: DailyPuzzle[] = [
       "To breathe out; to draw out.",
       "To sup or swallow.",
       "To develop (film) in a (chemical) developing solution.",
-      "Any of various dishes commonly made by combining liquids, such as water or stock with other ingredients, such as meat and vegetables, that contribute flavor and texture."
+      "Any of various dishes commonly made by combining liquids, such as meat and vegetables, that contribute flavor and."
     ]
   },
   {
@@ -450,7 +450,7 @@ export const PUZZLES: DailyPuzzle[] = [
     "word": "SAFETY",
     "definitions": [
       "Preservation from escape; close custody.",
-      "An instance of a player being sacked or tackled in the end zone, or stepping out of the end zone and off the field, resulting in two points to the opposite team.",
+      "An instance of a player being sacked or tackled in the end zone, or stepping out of the end zone and off the field.",
       "To secure (a mechanical component, as in aviation) to keep it from becoming detached even under vibration.",
       "A mechanism on a weapon or dangerous equipment designed to prevent accidental firing."
     ]
@@ -499,7 +499,7 @@ export const PUZZLES: DailyPuzzle[] = [
       "To feed on, as pasture; to pasture on; to graze.",
       "To move about while sampling, such as with food or products on display.",
       "Fodder for cattle and other animals.",
-      "To scan, to casually look through in order to find items of interest, especially without knowledge of what to look for beforehand.",
+      "To scan, to casually look through in order to find items of interest.",
       "Young shoots and twigs."
     ]
   },
@@ -522,7 +522,7 @@ export const PUZZLES: DailyPuzzle[] = [
     "definitions": [
       "A particular lect or language variety.",
       "To categorise by assigning identifiers from a schedule, for example CPT coding for medical insurance purposes.",
-      "A body of law, sanctioned by legislation, in which the rules of law to be specifically applied by the courts are set forth in systematic form; a compilation of laws by public authority; a digest.",
+      "A body of law, sanctioned by legislation, in which the rules of law to be specifically applied by the courts are set.",
       "To write software programs.",
       "A short symbol, often with little relation to the item it represents."
     ]
@@ -641,7 +641,7 @@ export const PUZZLES: DailyPuzzle[] = [
       "To diffuse; to cause to be less concentrated or focused.",
       "Self-restraint in speech.",
       "To sort, sift, or isolate.",
-      "A device which separates a suspended, dissolved, or particulate matter from a fluid, solution, or other substance; any device that separates one substance from another."
+      "A device which separates a suspended, dissolved, or particulate matter from a fluid, solution, or other substance."
     ]
   },
   {
@@ -674,7 +674,7 @@ export const PUZZLES: DailyPuzzle[] = [
       "A kind of political self-help book, advising kings, princes, etc. on how to behave.",
       "A disk, website or other resource that contains replicated data.",
       "Of an event, activity, behaviour, etc, to be identical to, to be a copy of.",
-      "A smooth surface, usually made of glass with reflective material painted on the underside, that reflects light so as to give an image of what is in front of it."
+      "A smooth surface, that reflects light so as to give an image of what is in front of it."
     ]
   },
   {
@@ -707,10 +707,10 @@ export const PUZZLES: DailyPuzzle[] = [
     "word": "FARM",
     "definitions": [
       "Food; provisions; a meal.",
-      "To engage in grinding (repetitive activity) in a particular area or against specific enemies for a particular drop or item.",
+      "To engage in grinding in a particular area or against specific enemies for a particular drop or item.",
       "A group of coordinated servers.",
       "To lease or let for an equivalent, e.g. land for a rent; to yield the use of to proceeds.",
-      "A place where agricultural and similar activities take place, especially the growing of crops or the raising of livestock."
+      "A place where agricultural and similar activities take place."
     ]
   },
   {

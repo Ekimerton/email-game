@@ -25,6 +25,8 @@ const MAX_WORD_LENGTH = 8
 const MIN_DEFINITIONS = 4
 const MAX_DEFINITIONS = 5
 const MIN_POS_VARIETY = 2
+const MAX_DEFINITION_LENGTH = 120
+const MIN_DEFINITION_LENGTH = 12
 const RATE_LIMIT_MS = 120
 
 const args = process.argv.slice(2)
@@ -258,7 +260,7 @@ const INVALID_START_PATTERNS = [
 
 export function isInvalidDefinition(text: string): boolean {
   const t = text.trim()
-  if (t.length < 12) return true
+  if (t.length < MIN_DEFINITION_LENGTH || t.length > MAX_DEFINITION_LENGTH) return true
   return INVALID_START_PATTERNS.some(p => p.test(t))
 }
 
@@ -289,7 +291,7 @@ async function getRawMeanings(word: string): Promise<{ text: string; pos: string
 
         for (const def of meaning.definitions ?? []) {
           const text = def.definition?.trim()
-          if (text && text.length >= 10 && text.length <= 220) {
+          if (text && text.length >= MIN_DEFINITION_LENGTH && text.length <= MAX_DEFINITION_LENGTH) {
             const cleaned = cleanDefinitionText(text)
             if (!isInvalidDefinition(cleaned) && !definitionMentionsWordOrStem(cleaned, word)) {
               rawDefs.push({ text: cleaned, pos })
