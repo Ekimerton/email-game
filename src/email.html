@@ -97,12 +97,20 @@
             box-sizing: border-box;
         }
 
-        /* Meta Row: Org on Left, Date on Right */
+        /* Meta Row: Game # on Left, Date on Right */
         .game-meta-row {
             padding: 4px 4px 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .game-number-compact,
+        .header-date-compact {
+            font-size: 12px;
+            color: #09090b;
+            font-weight: 700;
+            opacity: 0.8;
         }
 
         .domain-badge-compact {
@@ -112,13 +120,7 @@
             border-radius: 6px;
             font-weight: 700;
             font-size: 11px;
-        }
-
-        .header-date-compact {
-            font-size: 12px;
-            color: #09090b;
-            font-weight: 700;
-            opacity: 0.8;
+            text-transform: lowercase;
         }
 
         /* Centered Header & Tagline */
@@ -442,6 +444,13 @@
             text-align: center;
         }
 
+        .leaderboard-card-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
         /* Leaderboard */
         .leaderboard-blur-content {
             opacity: 0.15;
@@ -550,9 +559,9 @@
 
 <body>
     <div class="email-wrapper">
-        <!-- Top Meta Row: Org on Left, Date on Right -->
+        <!-- Top Meta Row: Game # on Left, Date on Right -->
         <div class="game-meta-row">
-            <span class="domain-badge-compact">company.com</span>
+            <span class="game-number-compact">WORD GAME #1</span>
             <span class="header-date-compact">Aug 5, 2026</span>
         </div>
 
@@ -578,10 +587,8 @@
             </script>
         </amp-state>
 
-        <!-- 1. Main Game Card: WORD GAME #XX -->
+        <!-- 1. Main Game Card -->
         <div class="card">
-            <div class="card-title">WORD GAME #1</div>
-
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
                 <amp-list id="stateList" width="auto" height="250" layout="fixed-height"
@@ -689,8 +696,9 @@
 
         <!-- 2. Organization Leaderboard Card -->
         <div class="card">
-            <div class="card-title">
-                Organization Leaderboard
+            <div class="card-title leaderboard-card-title">
+                <span class="domain-badge-compact">company.com</span>
+                <span>Leaderboard</span>
             </div>
 
             <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height"

@@ -9,7 +9,11 @@ export const EMAIL_HTML = `<!doctype html>
     <script async custom-element="amp-list" src="https://cdn.ampproject.org/v0/amp-list-0.1.js"></script>
     <script async custom-template="amp-mustache" src="https://cdn.ampproject.org/v0/amp-mustache-0.2.js"></script>
 
-    <style amp4email-boilerplate>body{visibility:hidden}</style>
+    <style amp4email-boilerplate>
+        body {
+            visibility: hidden
+        }
+    </style>
     <style amp-custom>
         /* Josh Comeau's Modern CSS Reset (AMP4EMAIL Adapted) */
         * {
@@ -26,16 +30,29 @@ export const EMAIL_HTML = `<!doctype html>
             padding: 4px;
         }
 
-        img, picture, video, canvas, svg {
+        img,
+        picture,
+        video,
+        canvas,
+        svg {
             display: block;
             max-width: 100%;
         }
 
-        input, button, textarea, select {
+        input,
+        button,
+        textarea,
+        select {
             font: inherit;
         }
 
-        p, h1, h2, h3, h4, h5, h6 {
+        p,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
             overflow-wrap: break-word;
         }
 
@@ -65,8 +82,8 @@ export const EMAIL_HTML = `<!doctype html>
             padding: 0;
         }
 
-        amp-list > [placeholder],
-        amp-list > [role="list"],
+        amp-list>[placeholder],
+        amp-list>[role="list"],
         amp-list [role="listitem"] {
             display: block;
             position: relative;
@@ -80,12 +97,20 @@ export const EMAIL_HTML = `<!doctype html>
             box-sizing: border-box;
         }
 
-        /* Meta Row: Org on Left, Date on Right */
+        /* Meta Row: Game # on Left, Date on Right */
         .game-meta-row {
             padding: 4px 4px 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        .game-number-compact,
+        .header-date-compact {
+            font-size: 12px;
+            color: #09090b;
+            font-weight: 700;
+            opacity: 0.8;
         }
 
         .domain-badge-compact {
@@ -95,13 +120,7 @@ export const EMAIL_HTML = `<!doctype html>
             border-radius: 6px;
             font-weight: 700;
             font-size: 11px;
-        }
-
-        .header-date-compact {
-            font-size: 12px;
-            color: #09090b;
-            font-weight: 700;
-            opacity: 0.8;
+            text-transform: lowercase;
         }
 
         /* Centered Header & Tagline */
@@ -414,12 +433,6 @@ export const EMAIL_HTML = `<!doctype html>
             width: 100%;
         }
 
-        .btn-subscribe {
-            background: #27272a;
-            color: #ffffff;
-            width: 100%;
-        }
-
         /* Card Title */
         .card-title {
             font-size: 13px;
@@ -429,6 +442,13 @@ export const EMAIL_HTML = `<!doctype html>
             letter-spacing: 0.5px;
             margin-bottom: 12px;
             text-align: center;
+        }
+
+        .leaderboard-card-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         /* Leaderboard */
@@ -539,9 +559,9 @@ export const EMAIL_HTML = `<!doctype html>
 
 <body>
     <div class="email-wrapper">
-        <!-- Top Meta Row: Org on Left, Date on Right -->
+        <!-- Top Meta Row: Game # on Left, Date on Right -->
         <div class="game-meta-row">
-            <span class="domain-badge-compact">company.com</span>
+            <span class="game-number-compact">WORD GAME #1</span>
             <span class="header-date-compact">Aug 5, 2026</span>
         </div>
 
@@ -567,10 +587,8 @@ export const EMAIL_HTML = `<!doctype html>
             </script>
         </amp-state>
 
-        <!-- 1. Main Game Card: WORD GAME #XX -->
+        <!-- 1. Main Game Card -->
         <div class="card">
-            <div class="card-title">WORD GAME #1</div>
-
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
                 <amp-list id="stateList" width="auto" height="250" layout="fixed-height"
@@ -643,15 +661,16 @@ export const EMAIL_HTML = `<!doctype html>
 
                 <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
                 <div class="form-container">
-                    <form id="guess-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
+                    <form id="guess-form" method="POST"
+                        action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
                         on="submit-success:AMP.setState({ gameState: event.response, clueView: { activeClue: event.response.revealedCount } }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
                             submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
-                        
+
                         <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
 
                         <div class="input-group">
-                            <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD"
-                                required autocomplete="off">
+                            <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD" required
+                                autocomplete="off">
 
                             <div class="action-buttons">
                                 <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
@@ -665,8 +684,9 @@ export const EMAIL_HTML = `<!doctype html>
                     </form>
 
                     <!-- Hidden Form for Letter Hint Button -->
-                    <form id="hint-form" method="POST" action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER" hidden
-                        on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
+                    <form id="hint-form" method="POST"
+                        action-xhr="https://email-game.teamify.workers.dev/api/hint?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
+                        hidden on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
                             submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
                         <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
                     </form>
@@ -676,11 +696,13 @@ export const EMAIL_HTML = `<!doctype html>
 
         <!-- 2. Organization Leaderboard Card -->
         <div class="card">
-            <div class="card-title">
-                Organization Leaderboard
+            <div class="card-title leaderboard-card-title">
+                <span class="domain-badge-compact">company.com</span>
+                <span>Leaderboard</span>
             </div>
-            
-            <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
+
+            <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height"
+                src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                 <template type="amp-mustache">
                     <div class="leaderboard-container">
                         {{^hasWon}}
@@ -689,7 +711,8 @@ export const EMAIL_HTML = `<!doctype html>
                         </div>
                         {{/hasWon}}
 
-                        <div class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
+                        <div
+                            class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
                             {{#players}}
                             <div class="leaderboard-item">
                                 <span class="rank-number">#{{rank}}</span>
@@ -698,7 +721,8 @@ export const EMAIL_HTML = `<!doctype html>
                             </div>
                             {{/players}}
                             {{^players}}
-                            <div style="text-align: center; color: #64748b; padding: 8px;">No scores recorded for this domain yet today!</div>
+                            <div style="text-align: center; color: #64748b; padding: 8px;">No scores recorded for
+                                this domain yet today!</div>
                             {{/players}}
                         </div>
                     </div>
@@ -756,7 +780,8 @@ export const EMAIL_HTML = `<!doctype html>
         <!-- Footer -->
         <div class="footer">
             Word Game • Dynamic Interactive AMP for Email Game<br>
-            <a class="account-link" href="https://email-game.teamify.workers.dev/account?token=default-dev-token">Manage Account & Preferences</a>
+            <a class="account-link" href="https://email-game.teamify.workers.dev/account?token=default-dev-token">Manage
+                Account & Preferences</a>
         </div>
     </div>
 </body>

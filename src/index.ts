@@ -269,9 +269,9 @@ export function getFallbackHtml(options: {
 </head>
 <body style="margin: 0; padding: 0; background-color: #52C3E6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f4f4f5;">
   <div style="max-width: 500px; margin: 20px auto; padding: 0 10px;">
-    <!-- Top Meta Row: Org on Left, Date on Right -->
+    <!-- Top Meta Row: Game # on Left, Date on Right -->
     <div style="padding: 4px 4px 6px; display: flex; justify-content: space-between; align-items: center;">
-      <span style="background-color: #EF476F; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">${domain}</span>
+      <span style="font-size: 12px; color: #09090b; font-weight: 700; opacity: 0.8;">WORD GAME #${puzzle.id}</span>
       <span style="font-size: 12px; color: #09090b; font-weight: 700; opacity: 0.8;">${formatPrettyDate(puzzle.date)}</span>
     </div>
 
@@ -287,8 +287,9 @@ export function getFallbackHtml(options: {
     <div style="background-color: #27272a; border-radius: 12px; overflow: hidden; border: 1px solid #3f3f46; box-shadow: 0 10px 25px rgba(0,0,0,0.25); margin-bottom: 12px;">
       <!-- Main Content Body -->
       <div style="padding: 20px 20px 24px;">
-        <div style="font-size: 13px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; text-align: center;">
-          WORD GAME #${puzzle.id}
+        <div style="font-size: 13px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <span style="background-color: #EF476F; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; text-transform: lowercase;">${domain}</span>
+          <span>Leaderboard</span>
         </div>
         <!-- User Stats Card -->
         <div style="background-color: #18181b; border: 1px solid #3f3f46; border-radius: 8px; padding: 16px; margin-bottom: 20px; text-align: center;">
@@ -584,8 +585,8 @@ app.get('/', async (c) => {
 
   // Pre-render Header Meta (Date, Domain, and Game Title)
   html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
-  html = html.replace('company.com', domain)
-  html = html.replace('WORD GAME #1', `WORD GAME #${puzzle.id}`)
+  html = html.replaceAll('company.com', domain)
+  html = html.replaceAll('WORD GAME #1', `WORD GAME #${puzzle.id}`)
 
   // Pre-render Definition Counts (Always 1/N unlocked for initial state)
   html = html.replace('1/5 unlocked', `1/${puzzle.definitions.length} unlocked`)
@@ -593,9 +594,6 @@ app.get('/', async (c) => {
   // Pre-render Message Banner (Always initial prompt for initial state placeholder)
   const initialMsg = `Guess the ${puzzle.word.length}-letter word! Def #1 revealed.`
   html = html.replace('Guess the word!', initialMsg)
-
-  // Pre-render Leaderboard Section Title
-  html = html.replace('Organization Leaderboard', `${domain} Leaderboard`)
 
   // Pre-render definition clue tabs and active clue card for initial state placeholder
   const placeholderTabsHtml = puzzle.definitions.map((_, i) => {
