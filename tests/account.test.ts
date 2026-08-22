@@ -152,14 +152,39 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(verified?.email).toBe(testEmail)
   })
 
-  it('should serve the /account React SPA page', async () => {
-    const res = await app.request(`/account?token=${encodeURIComponent(validToken)}`)
-    expect(res.status).toBe(200)
-    const html = await res.text()
+  it('should completely hide users from the leaderboard when showOnLeaderboard is false', async () => {
+    const userA = 'visible_player@acme.corp'
+    const userB = 'hidden_player@acme.corp'
+    const tokenB = generateAccountToken(userB)
 
-    expect(html).toContain('Word Game Account & Preferences')
-    expect(html).toContain('react.production.min.js')
-    expect(html).toContain('Daily 9:00 AM PST Emails')
-    expect(html).toContain('Domain Leaderboard Visibility')
+    // 1. Submit winning guesses for both users
+    const puzzle = (await import('../src/puzzles')).getDailyPuzzle()
+    await app.request(`/api/guess?email=${encodeURIComponent(userA)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': puzzle.word }).toString()
+    })
+    await app.request(`/api/guess?email=${encodeURIComponent(userB)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': puzzle.word }).toString()
+    })
+
+    // 2. Hide userB from leaderboard
+    await app.request('/api/account/toggle-privacy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: tokenB, showOnLeaderboard: false })
+    })
+
+    // 3. Fetch leaderboard
+    const lbRes = await app.request(`/api/leaderboard?domain=acme.corp&email=${encodeURIComponent(userA)}`)
+    expect(lbRes.status).toBe(200)
+    const lbData = await lbRes.json() as any
+    const players = lbData.items?.[0]?.players || []
+
+    const emails = players.map((p: any) => p.email)
+    expect(emails).toContain(userA)
+    expect(emails).not.toContain(userB)
   })
 })

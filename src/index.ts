@@ -698,7 +698,7 @@ app.post('/api/account/toggle-privacy', async (c) => {
       showOnLeaderboard,
       message: showOnLeaderboard
         ? `🏆 Your email is now visible on the ${userProfile.domain} leaderboard!`
-        : `🔒 You are now listed as "Anonymous Player" on the leaderboard.`
+        : `🔒 You are now hidden from the ${userProfile.domain} leaderboard.`
     })
   } catch (error: any) {
     return c.json({ success: false, message: 'Failed to update privacy preference.' }, 500)
@@ -1028,7 +1028,7 @@ app.get('/account', async (c) => {
             </div>
             <div className="switch-container">
               <span className="switch-label">
-                {user.showOnLeaderboard ? '👁️ Visible on Leaderboard' : '🔒 Hidden (Anonymous)'}
+                {user.showOnLeaderboard ? '👁️ Visible on Leaderboard' : '🔒 Hidden from Leaderboard'}
               </span>
               <label className="switch">
                 <input
@@ -1303,20 +1303,22 @@ app.get('/api/leaderboard', async (c) => {
     const dateStr = c.req.query('date') || getDailyPuzzle().date
     const leaderboard = await getDomainLeaderboard(c.env?.GAME_STATE_KV, domain, dateStr)
 
-    // Format items array with full uncensored emails or Anonymous if privacy toggled
-    const items = await Promise.all(leaderboard.map(async (entry, index) => {
-      const userSettings = await getUserSettings(c.env?.GAME_STATE_KV, entry.email)
-      const displayEmail = userSettings.showOnLeaderboard
-        ? formatDisplayEmail(entry.email)
-        : 'Anonymous Player'
+    // Filter out users who chose to hide themselves from the leaderboard
+    const visibleEntriesWithSettings = await Promise.all(
+      leaderboard.map(async (entry) => {
+        const userSettings = await getUserSettings(c.env?.GAME_STATE_KV, entry.email)
+        return { entry, showOnLeaderboard: userSettings.showOnLeaderboard }
+      })
+    )
 
-      return {
+    const items = visibleEntriesWithSettings
+      .filter(item => item.showOnLeaderboard)
+      .map((item, index) => ({
         rank: index + 1,
-        displayEmail,
-        score: `${entry.score} pts (${entry.guessCount}g)`,
-        email: entry.email
-      }
-    }))
+        displayEmail: formatDisplayEmail(item.entry.email),
+        score: `${item.entry.score} pts (${item.entry.guessCount}g)`,
+        email: item.entry.email
+      }))
 
     const { state: userState } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateStr)
 
