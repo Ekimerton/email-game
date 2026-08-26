@@ -28,6 +28,15 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(data.message).toContain('Invalid or missing')
   })
 
+  it('should reject request with raw email parameter and no token with 401 Unauthorized', async () => {
+    const res = await app.request('/api/account?email=victim@company.com')
+    expect(res.status).toBe(401)
+
+    const data = await res.json() as any
+    expect(data.success).toBe(false)
+    expect(data.message).toContain('Invalid or missing')
+  })
+
   it('should reject request with forged or tampered token with 401 Unauthorized', async () => {
     const [payload, signature] = validToken.split('.')
     // Tamper with payload

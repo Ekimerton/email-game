@@ -628,21 +628,8 @@ app.get('/fallback', async (c) => {
 // Secure REST API for React SPA Account Preferences
 app.get('/api/account', async (c) => {
   const token = c.req.query('token') || c.req.header('Authorization')?.replace(/^Bearer\s+/i, '')
-  const emailParam = c.req.query('email')
   const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
-  let verified = verifyAccountToken(token, authSecret)
-
-  // If token is absent or invalid, allow email lookup in local dev or fallback
-  const reqUrl = new URL(c.req.url)
-  const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1' || c.req.query('dev') === 'true'
-  if (!verified && (isLocalHost || emailParam) && emailParam && typeof emailParam === 'string' && emailParam.includes('@')) {
-    const cleanEmail = emailParam.toLowerCase().trim()
-    verified = {
-      email: cleanEmail,
-      domain: extractDomain(cleanEmail),
-      iat: Date.now()
-    }
-  }
+  const verified = verifyAccountToken(token, authSecret)
 
   if (!verified) {
     return c.json({ success: false, message: 'Invalid or missing authentication token.' }, 401)
@@ -651,13 +638,12 @@ app.get('/api/account', async (c) => {
   const userProfile = await getUserSettings(c.env?.GAME_STATE_KV, verified.email)
   const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
   const isSubscribed = subscribers.some(s => s.email.toLowerCase() === verified.email.toLowerCase() && s.status === 'active')
-  const sessionToken = token || generateAccountToken(verified.email, authSecret)
 
   return c.json({
     success: true,
     email: userProfile.email,
     domain: userProfile.domain,
-    token: sessionToken,
+    token,
     isSubscribed,
     showOnLeaderboard: userProfile.showOnLeaderboard
   })
@@ -668,20 +654,8 @@ app.post('/api/account/toggle-subscription', async (c) => {
   try {
     const body = await c.req.json()
     const token = body?.token
-    const emailParam = body?.email
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
-    let verified = verifyAccountToken(token, authSecret)
-
-    const reqUrl = new URL(c.req.url)
-    const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1' || c.req.query('dev') === 'true'
-    if (!verified && (isLocalHost || emailParam) && emailParam && typeof emailParam === 'string' && emailParam.includes('@')) {
-      const cleanEmail = emailParam.toLowerCase().trim()
-      verified = {
-        email: cleanEmail,
-        domain: extractDomain(cleanEmail),
-        iat: Date.now()
-      }
-    }
+    const verified = verifyAccountToken(token, authSecret)
 
     if (!verified) {
       return c.json({ success: false, message: 'Invalid authentication token.' }, 401)
@@ -709,20 +683,8 @@ app.post('/api/account/toggle-privacy', async (c) => {
   try {
     const body = await c.req.json()
     const token = body?.token
-    const emailParam = body?.email
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
-    let verified = verifyAccountToken(token, authSecret)
-
-    const reqUrl = new URL(c.req.url)
-    const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1' || c.req.query('dev') === 'true'
-    if (!verified && (isLocalHost || emailParam) && emailParam && typeof emailParam === 'string' && emailParam.includes('@')) {
-      const cleanEmail = emailParam.toLowerCase().trim()
-      verified = {
-        email: cleanEmail,
-        domain: extractDomain(cleanEmail),
-        iat: Date.now()
-      }
-    }
+    const verified = verifyAccountToken(token, authSecret)
 
     if (!verified) {
       return c.json({ success: false, message: 'Invalid authentication token.' }, 401)
@@ -913,17 +875,19 @@ app.get('/account', async (c) => {
       const [loading, setLoading] = useState(true);
       const [user, setUser] = useState(null);
       const [toast, setToast] = useState('');
-      const [inputEmail, setInputEmail] = useState('');
       const [updatingSub, setUpdatingSub] = useState(false);
       const [updatingPriv, setUpdatingPriv] = useState(false);
 
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token') || '';
-      const email = urlParams.get('email') || '';
 
-      const fetchAccountData = (queryParam) => {
-        setLoading(true);
-        fetch('/api/account?' + queryParam)
+      useEffect(() => {
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        fetch('/api/account?token=' + encodeURIComponent(token))
           .then(res => {
             if (!res.ok) throw new Error('Unauthorized');
             return res.json();
@@ -933,7 +897,6 @@ app.get('/account', async (c) => {
               setUser(data);
             } else {
               setUser(null);
-              setToast(data.message || '⚠️ Account token not found');
             }
             setLoading(false);
           })
@@ -941,28 +904,11 @@ app.get('/account', async (c) => {
             setUser(null);
             setLoading(false);
           });
-      };
-
-      useEffect(() => {
-        if (token) {
-          fetchAccountData('token=' + encodeURIComponent(token));
-        } else if (email) {
-          fetchAccountData('email=' + encodeURIComponent(email));
-        } else {
-          setLoading(false);
-        }
       }, []);
 
       const showToast = (msg) => {
         setToast(msg);
         setTimeout(() => setToast(''), 3500);
-      };
-
-      const handleManualEmailSubmit = (e) => {
-        e.preventDefault();
-        if (inputEmail && inputEmail.includes('@')) {
-          fetchAccountData('email=' + encodeURIComponent(inputEmail.trim()));
-        }
       };
 
       const handleToggleSub = async (e) => {
@@ -972,7 +918,7 @@ app.get('/account', async (c) => {
           const res = await fetch('/api/account/toggle-subscription', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: user.token, email: user.email, subscribed: nextSub })
+            body: JSON.stringify({ token: user.token, subscribed: nextSub })
           });
           const data = await res.json();
           if (data.success) {
@@ -994,7 +940,7 @@ app.get('/account', async (c) => {
           const res = await fetch('/api/account/toggle-privacy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: user.token, email: user.email, showOnLeaderboard: nextPriv })
+            body: JSON.stringify({ token: user.token, showOnLeaderboard: nextPriv })
           });
           const data = await res.json();
           if (data.success) {
@@ -1021,38 +967,14 @@ app.get('/account', async (c) => {
       if (!user) {
         return (
           <div className="card-container" style={{ textAlign: 'center', padding: '36px 24px' }}>
-            <div style={{ fontSize: '36px', marginBottom: '12px' }}>⚙️</div>
-            <h2 style={{ color: '#818cf8', fontSize: '20px', marginBottom: '8px' }}>Manage Account & Preferences</h2>
-            <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: 1.5, marginBottom: '20px' }}>
-              Access your preferences using the link from your daily Word Game email, or enter your email below:
+            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🔒</div>
+            <h2 style={{ color: '#f87171', fontSize: '20px', marginBottom: '8px' }}>Invalid or Expired Link</h2>
+            <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: 1.5, marginBottom: '16px' }}>
+              This account link is invalid, tampered with, or expired.<br />
+              Please click the <strong>Manage Account & Preferences</strong> link directly from your daily Word Game email to access and manage your settings.
             </p>
-            <form onSubmit={handleManualEmailSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <input
-                type="email"
-                placeholder="your-email@company.com"
-                value={inputEmail}
-                onChange={(e) => setInputEmail(e.target.value)}
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: '8px',
-                  border: '1px solid #334155',
-                  background: '#0f172a',
-                  color: '#ffffff',
-                  fontSize: '14px',
-                  textAlign: 'center'
-                }}
-                required
-              />
-              <button
-                type="submit"
-                className="play-link-btn"
-                style={{ border: 'none', cursor: 'pointer', margin: 0, padding: '10px' }}
-              >
-                Access Preferences
-              </button>
-            </form>
-            <div style={{ marginTop: '20px' }}>
-              <a href="/" style={{ color: '#94a3b8', fontSize: '12px', textDecoration: 'underline' }}>▶ Play Today's Game</a>
+            <div style={{ marginTop: '16px' }}>
+              <a href="/" className="play-link-btn">▶ Play Today's Game</a>
             </div>
           </div>
         );
