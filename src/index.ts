@@ -223,10 +223,8 @@ export function getFallbackHtml(options: {
   playUrl: string
   accountUrl?: string
 }): string {
-  const { email, domain, daysPlayed, coworkerCount, playUrl } = options
+  const { email, playUrl } = options
   const puzzle = getDailyPuzzle()
-  const daysText = `${daysPlayed} day${daysPlayed === 1 ? '' : 's'}`
-  const coworkersText = coworkerCount === 1 ? '1 coworker' : `${coworkerCount} coworkers`
 
   // Use clean public URL without raw query string email parameters to pass Gmail security filters
   const cleanPlayUrl = playUrl.split('?')[0]
@@ -237,68 +235,27 @@ export function getFallbackHtml(options: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&display=swap">
   <title>Word Game #${puzzle.id} - Daily Word Puzzle</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #52C3E6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #18181b;">
-  <div style="max-width: 480px; margin: 0 auto; padding: 8px 4px 16px;">
-    <!-- Top Meta Row: Game # on Left, Date on Right -->
-    <div style="padding: 4px 4px 6px; display: flex; justify-content: space-between; align-items: center;">
-      <span style="font-size: 12px; color: #09090b; font-weight: 700; opacity: 0.8;">WORD GAME #${puzzle.id}</span>
-      <span style="font-size: 12px; color: #09090b; font-weight: 700; opacity: 0.8;">${formatPrettyDate(puzzle.date)}</span>
-    </div>
-
-    <!-- Centered Title & Tagline -->
-    <div style="text-align: center; padding: 2px 4px 12px;">
-      <h1 style="font-size: 24px; font-weight: 900; letter-spacing: 2px; color: #09090b; text-transform: uppercase; margin: 0 0 2px 0; line-height: 1.1;">WORD GAME</h1>
-      <p style="font-size: 12px; font-weight: 600; line-height: 1.3; color: #09090b; letter-spacing: 0.1px; margin: 0; opacity: 0.9;">
-        The daily word game you can play in your email!
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #18181b; min-height: 100vh;">
+  <div style="max-width: 480px; margin: 0 auto; padding: 20px 12px;">
+    <!-- Single Card: White background, gray border -->
+    <div style="background: #ffffff; border: 1px solid #e4e4e7; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); padding: 24px 20px; text-align: center;">
+      <h1 style="font-size: 24px; font-weight: 900; letter-spacing: 3.5px; font-family: 'Righteous', 'Arial Rounded MT Bold', 'Impact', sans-serif; color: #18181b; text-transform: uppercase; margin: 0 0 14px 0; line-height: 1.2;">WORD GAME</h1>
+      <p style="font-size: 14px; line-height: 1.6; color: #3f3f46; margin: 0 0 20px 0;">
+        <strong style="color: #18181b;">${email}</strong> is inviting you to play word game, the daily game you can play in your email. Click below to start playing.
       </p>
-    </div>
-
-    <!-- Single Game Card -->
-    <div style="background: #ffffff; border-radius: 12px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10); padding: 20px 18px 22px; margin: 0 auto 12px;">
-      <!-- Domain Header Badge -->
-      <div style="text-align: center; margin-bottom: 14px;">
-        <span style="background: #EF476F; color: #ffffff; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; text-transform: lowercase; display: inline-block;">${domain}</span>
-        <span style="font-size: 13px; font-weight: 800; color: #18181b; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 6px;">Leaderboard</span>
-      </div>
-
-      <!-- User Stats / Invitation Card -->
-      <div style="background: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; text-align: center;">
-        <p style="font-size: 13px; line-height: 1.5; color: #27272a; margin: 0;">
-          <strong style="color: #09090b;">${email}</strong> has played Word Game for <strong style="color: #2563eb;">${daysText}</strong>, and competes with <strong style="color: #059669;">${coworkersText}</strong> at <strong style="color: #09090b;">${domain}</strong>!
-        </p>
-      </div>
-
-      <!-- Puzzle Teaser Clue -->
-      <div style="background: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 8px; padding: 12px 14px; margin-bottom: 18px;">
-        <div style="font-size: 11px; font-weight: 700; color: #52525b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
-          Today's Clue #1 (${puzzle.word.length} letters)
-        </div>
-        <div style="font-size: 13px; color: #09090b; font-weight: 600; font-style: italic; line-height: 1.4;">
-          &ldquo;${puzzle.definitions[0]}&rdquo;
-        </div>
-      </div>
-
-      <!-- Call to Action Button -->
-      <div style="text-align: center; margin-bottom: 4px;">
-        <a href="${cleanPlayUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 15px; font-weight: 800; text-decoration: none; padding: 12px 26px; border-radius: 8px; letter-spacing: 0.3px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);">
-          ▶ Play Today's Word Game #${puzzle.id}
+      <div style="margin-bottom: 8px;">
+        <a href="${cleanPlayUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 8px; letter-spacing: 0.3px;">
+          Play Word Game
         </a>
-        <div style="font-size: 11px; color: #71717a; margin-top: 8px; line-height: 1.4;">
-          Solve today's puzzle &amp; climb the <strong>${domain}</strong> leaderboard online!
-        </div>
       </div>
-    </div>
-
-    <!-- Notice for non-Gmail / Yahoo Mail users -->
-    <div style="text-align: center; padding: 4px 10px 10px; font-size: 11px; line-height: 1.4; color: #09090b; opacity: 0.85;">
-      💡 <strong>Note for Outlook &amp; Apple Mail users:</strong> Interactive in-email gameplay is supported in <strong>Gmail</strong> and <strong>Yahoo Mail</strong>. On other email clients, click the button above to play directly in your browser!
     </div>
 
     <!-- Footer -->
-    <div style="padding: 4px 10px 16px; text-align: center; font-size: 11px; color: #09090b; opacity: 0.85; font-weight: 500;">
-      Word Game • Dynamic Daily Word Puzzle<br>
+    <div style="padding: 12px 10px 16px; text-align: center; font-size: 11px; color: #71717a; font-weight: 500;">
+      Word Game • The daily game you can play in your email<br>
       <a href="${accountUrl}" style="color: #EF476F; text-decoration: underline; font-weight: 700; margin-top: 6px; display: inline-block;">Manage Account &amp; Preferences</a>
     </div>
   </div>
