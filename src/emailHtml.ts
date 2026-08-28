@@ -28,7 +28,7 @@ export const EMAIL_HTML = `<!doctype html>
             background-color: #f4f4f5;
             color: #18181b;
             padding: 4px;
-            min-height: 100vh;
+            min-height: 100%;
         }
 
         img,
@@ -62,7 +62,7 @@ export const EMAIL_HTML = `<!doctype html>
             z-index: 1;
             margin: 0 auto;
             max-width: 480px;
-            padding: 4px 4px 16px;
+            padding: 4px 4px 120px;
         }
 
         .email-container,
