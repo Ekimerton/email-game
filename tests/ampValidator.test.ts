@@ -35,4 +35,22 @@ describe('AMP HTML Validation', () => {
 
     expect(result.status).toBe('PASS')
   })
+
+  it('should validate rendered GET / endpoint HTML as valid AMP4EMAIL', async () => {
+    const { app } = await import('../src/index')
+    const res = await app.request('/?email=test@company.com&forceHttps=true')
+    const renderedHtml = await res.text()
+
+    const validator = await amphtmlValidator.getInstance()
+    const result = validator.validateString(renderedHtml, 'AMP4EMAIL')
+
+    if (result.status !== 'PASS') {
+      const errorDetails = result.errors
+        .map(e => `[Line ${e.line}:${e.col}] ${e.message} ${e.specUrl || ''}`)
+        .join('\n')
+      expect.fail(`AMP Validation Failed for rendered GET / HTML:\n${errorDetails}`)
+    }
+
+    expect(result.status).toBe('PASS')
+  })
 })
