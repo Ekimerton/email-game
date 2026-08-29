@@ -66,7 +66,7 @@ const BASE_STATIC_STATE_LIST_HEIGHT = 136
 
 // Calculate dynamic total amp-list height for pre-render (stable bounded height for clue stepper view)
 function calculateStateListHeight(puzzle?: DailyPuzzle): number {
-  return 250
+  return 234
 }
 
 async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
@@ -256,7 +256,7 @@ export function getFallbackHtml(options: {
     <!-- Footer -->
     <div style="padding: 12px 10px 16px; text-align: center; font-size: 11px; color: #71717a; font-weight: 500;">
       Word Game • The daily game you can play in your email<br>
-      <a href="${accountUrl}" style="color: #EF476F; text-decoration: underline; font-weight: 700; margin-top: 6px; display: inline-block;">Manage Account &amp; Preferences</a>
+      <a href="${accountUrl}" style="color: #14532d; text-decoration: underline; font-weight: 700; margin-top: 6px; display: inline-block;">Manage Account &amp; Preferences</a>
     </div>
   </div>
 </body>
@@ -504,15 +504,16 @@ app.get('/', async (c) => {
 
   // Dynamically calculate and replace amp-list height on pre-render
   const dynamicStateListHeight = calculateStateListHeight(puzzle)
-  html = html.replace('height="250"', `height="${dynamicStateListHeight}"`)
+  html = html.replace('height="234"', `height="${dynamicStateListHeight}"`)
 
   // Pre-render Header Meta (Date, Domain, and Game Title)
   html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
   html = html.replaceAll('company.com', domain)
-  html = html.replaceAll('WORD GAME #1', `WORD GAME #${puzzle.id}`)
-
-  // Pre-render Definition Counts (Always 1/N unlocked for initial state)
-  html = html.replace('1/5 unlocked', `1/${puzzle.definitions.length} unlocked`)
+  html = html.replaceAll(/word game #1/gi, (match) => {
+    if (match === 'WORD GAME #1') return `WORD GAME #${puzzle.id}`
+    if (match === 'Word Game #1') return `Word Game #${puzzle.id}`
+    return `word game #${puzzle.id}`
+  })
 
   // Pre-render Message Banner (Always initial prompt for initial state placeholder)
   const initialMsg = `Guess the ${puzzle.word.length}-letter word! Def #1 revealed.`
@@ -522,7 +523,7 @@ app.get('/', async (c) => {
   const placeholderTabsHtml = puzzle.definitions.map((_, i) => {
     const isFirst = i === 0
     const activeClass = isFirst ? ' active unlocked' : ' locked'
-    return `<button type="button" class="clue-tab-btn${activeClass}">Clue ${i + 1}</button>`
+    return `<button type="button" class="clue-tab-btn${activeClass}">${i + 1}</button>`
   }).join('')
 
   const placeholderClueCardsHtml = puzzle.definitions.map((def, i) => {
@@ -534,7 +535,7 @@ app.get('/', async (c) => {
     return `<div class="clue-content"${hiddenAttr}><div class="${textClass}">${text}</div></div>`
   }).join('')
 
-  const placeholderDefsHtml = `<div class="clue-tabs-bar">${placeholderTabsHtml}</div><div class="active-clue-card">${placeholderClueCardsHtml}</div>`
+  const placeholderDefsHtml = `<div class="definitions-header"><span class="section-label">Definitions</span><div class="clue-tabs-bar">${placeholderTabsHtml}</div></div><div class="active-clue-card">${placeholderClueCardsHtml}</div>`
 
   html = html.replace('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
 

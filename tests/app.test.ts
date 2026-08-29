@@ -32,11 +32,8 @@ describe('Hono App & Layout Calculations', () => {
     expect(html).toContain('Manage Account &amp; Preferences')
   })
 
-  it('should include the daily word game email client intro banner and WORD GAME #XX card in EMAIL_HTML', () => {
-    expect(EMAIL_HTML).toContain('game-hero')
-    expect(EMAIL_HTML).toContain('game-meta-row')
-    expect(EMAIL_HTML).toContain('WORD GAME #1')
-    expect(EMAIL_HTML).toContain('The daily email game. Forward an invite to your friends!')
+  it('should include the daily word game header in h4 and ticket stub divider in EMAIL_HTML', () => {
+    expect(EMAIL_HTML).toContain('<h4 class="game-header">Word Game #1</h4>')
     expect(EMAIL_HTML).toContain('ticket-stub-divider')
     expect(EMAIL_HTML).toContain("Have someone you think would make a good addition to the leaderboard? Forward this email to them!")
   })
