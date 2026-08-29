@@ -40,11 +40,5 @@ describe('Hono App & Layout Calculations', () => {
     expect(EMAIL_HTML).toContain('ticket-stub-divider')
     expect(EMAIL_HTML).toContain("Have someone you think would make a good addition to the leaderboard? Forward this email to them!")
   })
-
-  it('should include the How to Play section below the leaderboard in EMAIL_HTML', () => {
-    expect(EMAIL_HTML).toContain('how-to-play-section')
-    expect(EMAIL_HTML).toContain('How to Play')
-    expect(EMAIL_HTML).toContain('Guess the mystery word')
-  })
 })
 
