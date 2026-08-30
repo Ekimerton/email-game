@@ -40,6 +40,7 @@ export interface GameState {
   date: string
   letterMask: string[]
   guessesHistory: GuessResult[]
+  guessedWords?: string[]
   guessCount: number
   hintsUsed: number
   score: number
@@ -403,6 +404,12 @@ async function getOrCreateGameState(
 
   const stored = await kvGet(kv, stateKey)
   if (stored) {
+    if (!stored.guessesHistory) {
+      stored.guessesHistory = []
+    }
+    if (!stored.guessedWords) {
+      stored.guessedWords = stored.guessesHistory.map((g: any) => g.guess)
+    }
     return { state: stored, puzzle, stateKey }
   }
 
@@ -411,6 +418,7 @@ async function getOrCreateGameState(
     date: puzzle.date,
     letterMask: createInitialMask(puzzle.word),
     guessesHistory: [],
+    guessedWords: [],
     guessCount: 0,
     hintsUsed: 0,
     score: 0,
@@ -1082,7 +1090,7 @@ function getRedactedText(text: string): string {
 }
 
 // Helper to build standardized state payload for AMP list
-function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
+function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?: string) {
   const activeRevealedCount = state.hasWon ? puzzle.definitions.length : state.revealedCount
   const definitions = puzzle.definitions.map((def, i) => {
     const isRevealed = i < activeRevealedCount
@@ -1097,6 +1105,8 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
     }
   })
 
+  const guessedWords = state.guessedWords || (state.guessesHistory || []).map(g => g.guess)
+
   const statePayload = {
     revealedCount: activeRevealedCount,
     totalDefinitions: puzzle.definitions.length,
@@ -1109,6 +1119,9 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle) {
     hasWon: state.hasWon,
     lastMessage: state.lastMessage,
     shareText: state.shareText,
+    guessedWords,
+    guessesHistory: state.guessesHistory || [],
+    ...(error ? { error } : {}),
   }
 
   return { items: [statePayload], ...statePayload }
@@ -1150,7 +1163,19 @@ app.post('/api/guess', async (c) => {
     if (!guess || guess.length !== puzzle.word.length) {
       state.lastMessage = `Please enter a ${puzzle.word.length}-letter word.`
       await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
-      return c.json(buildStatePayload(state, puzzle))
+      return c.json(buildStatePayload(state, puzzle, state.lastMessage))
+    }
+
+    const alreadyGuessed = (state.guessedWords || []).some(
+      (w) => w.toUpperCase() === guess
+    ) || (state.guessesHistory || []).some(
+      (g) => g.guess.toUpperCase() === guess
+    )
+
+    if (alreadyGuessed) {
+      state.lastMessage = `You already guessed "${guess}".`
+      await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
+      return c.json(buildStatePayload(state, puzzle, state.lastMessage))
     }
 
     const statuses = evaluateGuess(puzzle.word, guess)
@@ -1165,6 +1190,10 @@ app.post('/api/guess', async (c) => {
 
     state.guessCount += 1
     state.guessesHistory.push({ guess, statuses })
+    if (!state.guessedWords) {
+      state.guessedWords = []
+    }
+    state.guessedWords.push(guess)
     state.letterMask = newMask
 
     if (isCorrect) {
