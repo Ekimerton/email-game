@@ -132,10 +132,6 @@ export const EMAIL_HTML = `<!doctype html>
 
         /* Feedback Status Banner at Top */
         .message-banner {
-            background: #f4f4f5;
-            border: 1px solid #e4e4e7;
-            border-radius: 6px;
-            padding: 6px 10px;
             font-size: 13px;
             font-weight: 600;
             text-align: center;
@@ -144,6 +140,7 @@ export const EMAIL_HTML = `<!doctype html>
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             margin-top: 10px;
             margin-bottom: 0;
+            padding: 0;
         }
 
         /* Definition Clue Stepper & Active Card */
@@ -256,7 +253,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         /* Status & Mask Tiles */
         .synonyms-section {
-            margin-bottom: 8px;
+            margin-bottom: 16px;
         }
 
         .mask-grid {
@@ -494,7 +491,6 @@ export const EMAIL_HTML = `<!doctype html>
             justify-content: space-between;
             align-items: center;
             padding: 6px 8px;
-            border-bottom: 1px solid #f4f4f5;
             font-size: 12px;
         }
 
@@ -505,7 +501,7 @@ export const EMAIL_HTML = `<!doctype html>
         .rank-number {
             font-weight: 800;
             width: 20px;
-            color: #2563eb;
+            color: #14532d;
         }
 
         .player-email {
@@ -521,10 +517,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         /* Ticket Stub Divider */
         .ticket-stub-divider {
-            position: relative;
-            margin: 14px 0 10px;
-            display: flex;
-            align-items: center;
+            display: none;
         }
 
         .stub-notch {
@@ -532,20 +525,96 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .stub-dashed-line {
-            flex: 1;
-            height: 1.5px;
-            background: repeating-linear-gradient(90deg, #d4d4d8 0, #d4d4d8 4px, transparent 4px, transparent 8px);
-            margin: 0;
-            border: none;
+            display: none;
         }
 
-        .leaderboard-forward-cta {
-            padding: 0 6px 2px;
-            font-size: 11px;
-            font-weight: 500;
+        /* Horizontal Ticket Component */
+        .ticket-card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #F7B6CB;
+            border: none;
+            border-radius: 8px;
+            margin-top: 14px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .ticket-body {
+            padding: 10px 14px;
+            flex: 1;
+        }
+
+        .ticket-fine-text {
+            font-size: 10.5px;
+            font-weight: 600;
             line-height: 1.4;
-            color: #71717a;
+            color: #831843;
+        }
+
+        .ticket-perforation {
+            position: relative;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 1px;
+        }
+
+        .ticket-dashed-line {
+            height: 100%;
+            border-left: 1.5px dashed #be123c;
+        }
+
+        .ticket-notch {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #ffffff;
+            border: none;
+            border-radius: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            box-sizing: border-box;
+        }
+
+        .ticket-notch.notch-top {
+            top: -6px;
+        }
+
+        .ticket-notch.notch-bottom {
+            bottom: -6px;
+        }
+
+        .ticket-stub {
+            background: #F7B6CB;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
             text-align: center;
+        }
+
+        .stub-text {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #000000;
+            text-transform: uppercase;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .stub-subtext {
+            font-size: 8.5px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #9d174d;
+            margin-top: 2px;
         }
 
         /* How to Play */
@@ -592,7 +661,7 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .account-link {
-            color: #14532d;
+            color: #18181b;
             text-decoration: underline;
             margin-top: 4px;
             display: inline-block;
@@ -625,7 +694,7 @@ export const EMAIL_HTML = `<!doctype html>
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="234" layout="fixed-height"
+                <amp-list id="stateList" width="auto" height="180" layout="fixed-height"
                     src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
@@ -785,8 +854,21 @@ export const EMAIL_HTML = `<!doctype html>
                 <span class="stub-notch stub-notch-right"></span>
             </div>
 
-            <div class="leaderboard-forward-cta">
-                Have someone you think would make a good addition to the leaderboard? Forward this email to them!
+            <div class="ticket-card">
+                <div class="ticket-body">
+                    <div class="ticket-fine-text">
+                        Have someone you think would make a good addition to the leaderboard? Forward this email to them!
+                    </div>
+                </div>
+                <div class="ticket-perforation">
+                    <span class="ticket-notch notch-top"></span>
+                    <span class="ticket-dashed-line"></span>
+                    <span class="ticket-notch notch-bottom"></span>
+                </div>
+                <div class="ticket-stub">
+                    <div class="stub-text">ADMIT ONE</div>
+                    <div class="stub-subtext">Nº 04821</div>
+                </div>
             </div>
         </div>
 
