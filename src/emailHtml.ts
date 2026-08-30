@@ -555,17 +555,20 @@ export const EMAIL_HTML = `<!doctype html>
 
         .ticket-perforation {
             position: relative;
-            height: 48px;
+            align-self: stretch;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            width: 1px;
+            width: 0;
         }
 
         .ticket-dashed-line {
+            display: block;
+            width: 0;
             height: 100%;
-            border-left: 1.5px dashed #be123c;
+            border-left: 2px dashed #ffffff;
+            box-sizing: border-box;
         }
 
         .ticket-notch {
@@ -578,6 +581,7 @@ export const EMAIL_HTML = `<!doctype html>
             left: 50%;
             transform: translateX(-50%);
             box-sizing: border-box;
+            z-index: 2;
         }
 
         .ticket-notch.notch-top {
