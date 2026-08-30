@@ -857,7 +857,7 @@ export const EMAIL_HTML = `<!doctype html>
             <div class="ticket-card">
                 <div class="ticket-body">
                     <div class="ticket-fine-text">
-                        Have someone you think would make a good addition to the leaderboard? Forward this email to them!
+                        Have someone you think would like this game? Forward this email to them!
                     </div>
                 </div>
                 <div class="ticket-perforation">
