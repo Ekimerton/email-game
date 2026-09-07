@@ -197,4 +197,20 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(emails).toContain(userA)
     expect(emails).not.toContain(userB)
   })
+
+  it('should render the account preferences SPA page matching the AMP game aesthetic', async () => {
+    const res = await app.request('/account?token=' + encodeURIComponent(validToken))
+    expect(res.status).toBe(200)
+    const html = await res.text()
+
+    expect(html).toContain('<!doctype html>')
+    expect(html).toContain('WORD GAME')
+    expect(html).toContain('Account &amp; Preferences')
+    expect(html).toContain('background-color: #ffffff')
+    expect(html).toContain('background: #f4f4f5')
+    expect(html).toContain('#14532d')
+    expect(html).toContain('Game made with ❤️ by')
+    expect(html).toContain('https://ekimerton.github.io')
+    expect(html).toContain('Ekim')
+  })
 })

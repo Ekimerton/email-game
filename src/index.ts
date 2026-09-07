@@ -712,7 +712,7 @@ app.get('/account', async (c) => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Word Game Account & Preferences</title>
+  <title>Word Game Account &amp; Preferences</title>
   
   <!-- Load React & ReactDOM via CDN for lightweight high-performance SPA -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -723,10 +723,10 @@ app.get('/account', async (c) => {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
+      background-color: #ffffff;
+      color: #18181b;
       line-height: 1.5;
-      padding: 24px 16px;
+      padding: 24px 12px;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -735,132 +735,150 @@ app.get('/account', async (c) => {
     .card-container {
       width: 100%;
       max-width: 480px;
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);
+      background: #f4f4f5;
+      border: 1px solid #e4e4e7;
+      border-radius: 12px;
+      padding: 20px 18px;
+      box-sizing: border-box;
       position: relative;
     }
-    .header { text-align: center; margin-bottom: 24px; }
-    .title {
-      font-size: 32px;
-      font-weight: 900;
-      color: #818cf8;
-      letter-spacing: 3px;
+    .game-badge {
+      display: inline-block;
+      background-color: #14532d;
+      border-radius: 4px;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      padding: 4px 10px;
       text-transform: uppercase;
     }
-    .subtitle { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+    .header { margin-top: 12px; margin-bottom: 14px; text-align: left; }
+    .title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #18181b;
+      letter-spacing: -0.3px;
+    }
     .user-badge {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 6px;
-      background: #312e81;
-      color: #a5b4fc;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 6px 14px;
-      border-radius: 20px;
+      justify-content: space-between;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      padding: 8px 12px;
       margin-top: 12px;
-      border: 1px solid rgba(165, 180, 252, 0.2);
+      font-size: 13px;
+      font-weight: 600;
+      color: #18181b;
+    }
+    .domain-pill {
+      background: #14532d;
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: lowercase;
     }
     .setting-card {
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 16px;
-      transition: border-color 0.2s;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
     }
-    .setting-card:hover { border-color: #6366f1; }
     .setting-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
     }
-    .setting-title { font-size: 15px; font-weight: 800; color: #f1f5f9; }
-    .setting-desc { font-size: 12px; color: #94a3b8; line-height: 1.4; }
+    .setting-title { font-size: 14px; font-weight: 700; color: #18181b; }
+    .setting-desc { font-size: 12px; color: #71717a; line-height: 1.45; margin-top: 4px; }
     
-    /* Modern iOS Style Switch Toggle */
+    /* Modern iOS Style Switch Toggle with AMP Forest Green Theme */
     .switch-container {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #f4f4f5;
     }
-    .switch-label { font-size: 13px; font-weight: 700; color: #cbd5e1; }
+    .switch-label { font-size: 12px; font-weight: 700; }
     .switch {
       position: relative;
       display: inline-block;
-      width: 52px;
-      height: 28px;
+      width: 44px;
+      height: 24px;
     }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
       position: absolute;
       cursor: pointer;
       top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #334155;
-      transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 28px;
+      background-color: #d4d4d8;
+      transition: .25s ease;
+      border-radius: 24px;
     }
     .slider:before {
       position: absolute;
       content: "";
-      height: 22px;
-      width: 22px;
+      height: 18px;
+      width: 18px;
       left: 3px;
       bottom: 3px;
       background-color: white;
-      transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: .25s ease;
       border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
     }
-    input:checked + .slider { background-color: #10b981; }
-    input:checked + .slider:before { transform: translateX(24px); }
+    input:checked + .slider { background-color: #14532d; }
+    input:checked + .slider:before { transform: translateX(20px); }
     
     /* Toast Notification Banner */
     .toast {
       position: absolute;
-      top: -16px;
+      top: -14px;
       left: 50%;
       transform: translateX(-50%);
-      background: #065f46;
-      color: #a7f3d0;
-      border: 1px solid #10b981;
-      padding: 8px 16px;
-      border-radius: 20px;
+      background: #14532d;
+      color: #ffffff;
+      padding: 6px 14px;
+      border-radius: 6px;
       font-size: 12px;
       font-weight: 700;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 12px rgba(20, 83, 45, 0.25);
       white-space: nowrap;
-      animation: fadeIn 0.3s ease;
+      animation: fadeIn 0.25s ease;
+      z-index: 10;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
     .spinner {
       display: inline-block;
       width: 24px;
       height: 24px;
-      border: 3px solid rgba(255,255,255,0.3);
+      border: 3px solid #e4e4e7;
       border-radius: 50%;
-      border-top-color: #6366f1;
-      animation: spin 1s ease-in-out infinite;
+      border-top-color: #14532d;
+      animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .play-link-btn {
-      display: inline-block;
-      margin-top: 14px;
-      background: #2563eb;
-      color: #ffffff;
-      padding: 8px 16px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 700;
-      transition: background 0.2s;
+    .footer-text {
+      border-top: 1px solid #e4e4e7;
+      margin-top: 16px;
+      padding-top: 12px;
+      text-align: center;
+      font-size: 11px;
+      color: #71717a;
     }
-    .play-link-btn:hover { background: #1d4ed8; }
-    .footer-text { text-align: center; font-size: 11px; color: #64748b; margin-top: 20px; }
+    .footer-text a {
+      color: #14532d;
+      font-weight: 700;
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -955,56 +973,57 @@ app.get('/account', async (c) => {
 
       if (loading) {
         return (
-          <div className="card-container" style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <div className="card-container" style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div className="spinner"></div>
-            <p style={{ marginTop: '16px', color: '#94a3b8', fontSize: '14px' }}>Loading account preferences...</p>
+            <p style={{ marginTop: '14px', color: '#71717a', fontSize: '13px', fontWeight: 600 }}>Loading account preferences...</p>
           </div>
         );
       }
 
       if (!user) {
         return (
-          <div className="card-container" style={{ textAlign: 'center', padding: '36px 24px' }}>
-            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🔒</div>
-            <h2 style={{ color: '#f87171', fontSize: '20px', marginBottom: '8px' }}>Invalid or Expired Link</h2>
-            <p style={{ color: '#cbd5e1', fontSize: '13px', lineHeight: 1.5, marginBottom: '16px' }}>
-              This account link is invalid, tampered with, or expired.<br />
-              Please click the <strong>Manage Account & Preferences</strong> link directly from your daily Word Game email to access and manage your settings.
-            </p>
-            <div style={{ marginTop: '16px' }}>
-              <a href="/" className="play-link-btn">▶ Play Today's Game</a>
+          <div className="card-container" style={{ textAlign: 'left', padding: '20px 18px' }}>
+            <div style={{ margin: '0 0 12px' }}>
+              <span className="game-badge">WORD GAME</span>
+            </div>
+            <div style={{ padding: '4px 0 8px' }}>
+              <h2 style={{ color: '#b91c1c', fontSize: '16px', fontWeight: 800, marginBottom: '6px' }}>Invalid or Expired Link</h2>
+              <p style={{ color: '#52525b', fontSize: '13px', lineHeight: 1.5 }}>
+                This account link is invalid, tampered with, or expired.<br />
+                Please click the <strong>update your account preferences</strong> link directly from your daily Word Game email to access and manage your settings.
+              </p>
             </div>
           </div>
         );
       }
 
-      const playUrl = '/?email=' + encodeURIComponent(user.email);
-
       return (
         <div className="card-container">
           {toast && <div className="toast">{toast}</div>}
 
+          <div style={{ textAlign: 'left', margin: '0 0 12px' }}>
+            <span className="game-badge">WORD GAME</span>
+          </div>
+
           <div className="header">
-            <div className="title">Word Game</div>
-            <div className="subtitle">Interactive Account & Preferences</div>
+            <div className="title">Account &amp; Preferences</div>
             <div className="user-badge">
               <span>{user.email}</span>
-              <span>•</span>
-              <span>{user.domain}</span>
+              <span className="domain-pill">{user.domain}</span>
             </div>
           </div>
 
-          {/* Daily 9:00 AM PST Subscription Switch */}
+          {/* Daily Morning Subscription Switch */}
           <div className="setting-card">
             <div className="setting-header">
-              <span className="setting-title">📬 Daily 9:00 AM PST Emails</span>
+              <span className="setting-title">📬 Daily Morning Email</span>
             </div>
             <div className="setting-desc">
-              Get today's multi-definition word puzzle delivered directly to your inbox every morning at 9:00 AM PST.
+              Receive today's multi-definition word puzzle in your inbox each morning.
             </div>
             <div className="switch-container">
-              <span className="switch-label">
-                {user.isSubscribed ? '✅ Currently Subscribed' : '❌ Unsubscribed'}
+              <span className="switch-label" style={{ color: user.isSubscribed ? '#14532d' : '#71717a' }}>
+                {user.isSubscribed ? 'Subscribed' : 'Unsubscribed'}
               </span>
               <label className="switch">
                 <input
@@ -1024,11 +1043,11 @@ app.get('/account', async (c) => {
               <span className="setting-title">🏆 Domain Leaderboard Visibility</span>
             </div>
             <div className="setting-desc">
-              Feature your email on the <strong>{user.domain}</strong> daily leaderboard when you solve the puzzle.
+              Show your score on the <strong>{user.domain}</strong> leaderboard when you solve the puzzle.
             </div>
             <div className="switch-container">
-              <span className="switch-label">
-                {user.showOnLeaderboard ? '👁️ Visible on Leaderboard' : '🔒 Hidden from Leaderboard'}
+              <span className="switch-label" style={{ color: user.showOnLeaderboard ? '#14532d' : '#71717a' }}>
+                {user.showOnLeaderboard ? 'Visible on Leaderboard' : 'Hidden from Leaderboard'}
               </span>
               <label className="switch">
                 <input
@@ -1042,12 +1061,8 @@ app.get('/account', async (c) => {
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: '16px' }}>
-            <a href={playUrl} className="play-link-btn">▶ Return to Today's Game</a>
-          </div>
-
           <div className="footer-text">
-            Word Game • Secure Spoof-Proof Token Authentication
+            Game made with ❤️ by <a href="https://ekimerton.github.io" target="_blank" rel="noopener noreferrer">Ekim</a>
           </div>
         </div>
       );
