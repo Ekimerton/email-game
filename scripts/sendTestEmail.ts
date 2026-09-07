@@ -65,9 +65,9 @@ function parseArgs(args: string[]) {
 async function getEmailContent(email: string): Promise<{ ampHtml: string; fallbackHtml: string }> {
   try {
     const localRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(email)}&forceHttps=true`)
-    if (localRes.ok) {
+    const fallbackRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(email)}&forceHttps=true`)
+    if (localRes.ok && fallbackRes.ok) {
       const ampHtml = await localRes.text()
-      const fallbackRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(email)}`)
       const fallbackHtml = await fallbackRes.text()
       return { ampHtml, fallbackHtml }
     } else {
@@ -78,7 +78,7 @@ async function getEmailContent(email: string): Promise<{ ampHtml: string; fallba
     const { app } = await import('../src/index')
     const ampRes = await app.request(`/?email=${encodeURIComponent(email)}&forceHttps=true`)
     const ampHtml = await ampRes.text()
-    const fbRes = await app.request(`/fallback?email=${encodeURIComponent(email)}`)
+    const fbRes = await app.request(`/fallback?email=${encodeURIComponent(email)}&forceHttps=true`)
     const fallbackHtml = await fbRes.text()
     return { ampHtml, fallbackHtml }
   }

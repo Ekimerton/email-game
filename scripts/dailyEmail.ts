@@ -57,9 +57,9 @@ async function getSubscribers(): Promise<string[]> {
 async function getEmailContent(email: string): Promise<{ ampHtml: string; fallbackHtml: string }> {
   try {
     const ampRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(email)}&forceHttps=true`)
-    if (!ampRes.ok) throw new Error('Dev server not running')
+    const fbRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(email)}&forceHttps=true`)
+    if (!ampRes.ok || !fbRes.ok) throw new Error('Dev server not running or returned error')
     const ampHtml = await ampRes.text()
-    const fbRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(email)}`)
     const fallbackHtml = await fbRes.text()
     return { ampHtml, fallbackHtml }
   } catch {
@@ -67,7 +67,7 @@ async function getEmailContent(email: string): Promise<{ ampHtml: string; fallba
     const { app } = await import('../src/index')
     const ampRes = await app.request(`/?email=${encodeURIComponent(email)}&forceHttps=true`)
     const ampHtml = await ampRes.text()
-    const fbRes = await app.request(`/fallback?email=${encodeURIComponent(email)}`)
+    const fbRes = await app.request(`/fallback?email=${encodeURIComponent(email)}&forceHttps=true`)
     const fallbackHtml = await fbRes.text()
     return { ampHtml, fallbackHtml }
   }

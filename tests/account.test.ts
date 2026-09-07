@@ -131,10 +131,11 @@ describe('Spoof-Proof Account & Preferences API', () => {
       domain: 'example.com',
       daysPlayed: 3,
       coworkerCount: 5,
+      playerCount: 10,
       playUrl: 'https://email-game.teamify.workers.dev',
     })
 
-    expect(html).toContain('Manage Account &amp; Preferences')
+    expect(html).toContain('update your account preferences')
     expect(html).toContain('/account?token=')
     
     // Extract token from fallback HTML and verify validity

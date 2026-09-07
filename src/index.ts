@@ -216,20 +216,39 @@ async function getCoworkerCount(
   return coworkerEmails.size
 }
 
+async function getPlayerCount(kv: KVNamespace | undefined): Promise<number> {
+  const subscribers = await getSubscribers(kv)
+  return subscribers.filter(subscriber => subscriber.status === 'active').length
+}
+
+const COMMON_EMAIL_DOMAINS = new Set([
+  'aol.com', 'att.net', 'comcast.net', 'gmail.com', 'googlemail.com', 'hotmail.com',
+  'icloud.com', 'live.com', 'mac.com', 'mail.com', 'me.com', 'msn.com', 'outlook.com',
+  'proton.me', 'protonmail.com', 'verizon.net', 'yahoo.com',
+])
+
 export function getFallbackHtml(options: {
   email: string
   domain: string
   daysPlayed: number
   coworkerCount: number
+  playerCount?: number
   playUrl: string
   accountUrl?: string
 }): string {
-  const { email, playUrl } = options
+  const { email, domain, coworkerCount, playerCount = 0, playUrl } = options
   const puzzle = getDailyPuzzle()
 
   // Use clean public URL without raw query string email parameters to pass Gmail security filters
   const cleanPlayUrl = playUrl.split('?')[0]
   const accountUrl = options.accountUrl || getAccountUrl(email, cleanPlayUrl)
+  const safeEmail = escapeHtml(email)
+  const safeDomain = escapeHtml(domain)
+  const safePlayUrl = escapeHtml(cleanPlayUrl)
+  const safeAccountUrl = escapeHtml(accountUrl)
+  const communityMessage = COMMON_EMAIL_DOMAINS.has(domain.toLowerCase())
+    ? `Join ${playerCount} players playing the game today.`
+    : `Join ${coworkerCount} coworkers playing in the ${safeDomain} org.`
 
   return `<!doctype html>
 <html lang="en">
@@ -239,29 +258,40 @@ export function getFallbackHtml(options: {
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&display=swap">
   <title>Word Game #${puzzle.id} - Daily Word Puzzle</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #18181b; min-height: 100vh;">
-  <div style="max-width: 480px; margin: 0 auto; padding: 20px 12px;">
-    <!-- Single Card: White background, gray border -->
-    <div style="background: #ffffff; border: 1px solid #e4e4e7; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); padding: 24px 20px; text-align: center;">
-      <h1 style="font-size: 24px; font-weight: 900; letter-spacing: 3.5px; font-family: 'Righteous', 'Arial Rounded MT Bold', 'Impact', sans-serif; color: #18181b; text-transform: uppercase; margin: 0 0 14px 0; line-height: 1.2;">WORD GAME</h1>
-      <p style="font-size: 14px; line-height: 1.6; color: #3f3f46; margin: 0 0 20px 0;">
-        <strong style="color: #18181b;">${email}</strong> is inviting you to play word game, the daily game you can play in your email. Click below to start playing.
-      </p>
-      <div style="margin-bottom: 8px;">
-        <a href="${cleanPlayUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 8px; letter-spacing: 0.3px;">
-          Play Word Game
-        </a>
+<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #18181b;">
+  <div style="max-width: 480px; margin: 0 auto; padding: 12px 8px;">
+    <div style="background-color: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 12px; padding: 16px 16px; box-sizing: border-box;">
+      <div style="text-align: left; margin: 0 0 12px;">
+        <span style="display: inline-block; background-color: #14532d; border-radius: 4px; color: #ffffff; font-size: 14px; font-weight: 800; letter-spacing: -0.5px; padding: 4px 10px;">WORD GAME</span>
       </div>
-    </div>
 
-    <!-- Footer -->
-    <div style="padding: 12px 10px 16px; text-align: center; font-size: 11px; color: #71717a; font-weight: 500;">
-      Word Game • The daily game you can play in your email<br>
-      <a href="${accountUrl}" style="color: #14532d; text-decoration: underline; font-weight: 700; margin-top: 6px; display: inline-block;">Manage Account &amp; Preferences</a>
+      <div style="padding: 4px 0 16px; text-align: left;">
+        <p style="font-size: 15px; font-weight: 600; line-height: 1.55; color: #27272a; margin: 0;">
+          <strong style="color: #18181b;">${safeEmail}</strong> is inviting you to play Word Game, the daily word game in your inbox. ${communityMessage}
+        </p>
+        <a href="${safePlayUrl}" style="display: block; color: #14532d; font-size: 14px; font-weight: 800; margin-top: 16px; text-align: center; text-decoration: underline;">Sign up to play →</a>
+      </div>
+
+      <div style="border-top: 1px solid #e4e4e7;"></div>
+      <div style="padding: 14px 0 2px; text-align: left; font-size: 12px; line-height: 1.5; color: #71717a;">
+        <strong style="color: #52525b;">Seeing this while trying to load the game?</strong><br>
+        <p style="margin: 6px 0 0;">Your email client might not be supported. This game uses AMP email, which is supported by Gmail, Yahoo Mail, AOL Mail, FairEmail, and Mail.ru.</p>
+        <p style="margin: 4px 0 0;">You can <a href="${safeAccountUrl}" style="color: #14532d; font-weight: 700; text-decoration: underline;">update your account preferences</a>.</p>
+      </div>
     </div>
   </div>
 </body>
 </html>`
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[character] || character))
 }
 
 // Evaluate Wordle-style letter matches
@@ -565,6 +595,7 @@ app.get('/fallback', async (c) => {
   const domain = extractDomain(userEmail)
   const profile = await recordUserActivity(c.env?.GAME_STATE_KV, userEmail, puzzle.date)
   const coworkerCount = await getCoworkerCount(c.env?.GAME_STATE_KV, domain, userEmail)
+  const playerCount = await getPlayerCount(c.env?.GAME_STATE_KV)
 
   const reqUrl = new URL(c.req.url)
   const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
@@ -584,6 +615,7 @@ app.get('/fallback', async (c) => {
     domain,
     daysPlayed: profile.daysPlayed || 1,
     coworkerCount,
+    playerCount,
     playUrl,
     accountUrl,
   })

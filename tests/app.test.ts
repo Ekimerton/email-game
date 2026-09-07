@@ -11,25 +11,54 @@ describe('Hono App & Layout Calculations', () => {
     expect(puzzle.definitions.length).toBeGreaterThan(0)
   })
 
-  it('should render straightforward fallback HTML with invitation message and play link in a single card', () => {
+  it('should render the fallback invitation and compatibility help in a game-style card', () => {
     const html = getFallbackHtml({
       email: 'testuser@nvidia.engineering',
       domain: 'nvidia.engineering',
       daysPlayed: 5,
       coworkerCount: 12,
+      playerCount: 30,
       playUrl: 'https://email-game.teamify.workers.dev/?email=testuser%40nvidia.engineering',
     })
 
     expect(html).toContain('<!doctype html>')
     expect(html).toContain('WORD GAME')
     expect(html).toContain('testuser@nvidia.engineering')
-    expect(html).toContain('is inviting you to play word game, the daily game you can play in your email. Click below to start playing.')
-    expect(html).toContain('Play Word Game')
+    expect(html).toContain('is inviting you to play Word Game, the daily word game in your inbox.')
+    expect(html).toContain('Join 12 coworkers playing in the nvidia.engineering org.')
+    expect(html).toContain('Sign up to play →')
+    expect(html).toContain('Seeing this while trying to load the game?')
+    expect(html).toContain('Your email client might not be supported.')
+    expect(html).toContain('This game uses AMP email, which is supported by Gmail, Yahoo Mail, AOL Mail, FairEmail, and Mail.ru.')
+    expect(html).toContain('update your account preferences')
     expect(html).toContain('https://email-game.teamify.workers.dev')
+    expect(html).toContain('background-color: #ffffff')
     expect(html).toContain('background-color: #f4f4f5')
-    expect(html).toContain('background: #ffffff')
     expect(html).toContain('border: 1px solid #e4e4e7')
-    expect(html).toContain('Manage Account &amp; Preferences')
+    expect(html).toContain('border-top: 1px solid #e4e4e7')
+    expect(html).toContain('update your account preferences')
+  })
+
+  it('should show the player count for invitations from common email providers', () => {
+    const html = getFallbackHtml({
+      email: 'you@gmail.com',
+      domain: 'gmail.com',
+      daysPlayed: 1,
+      coworkerCount: 0,
+      playerCount: 30,
+      playUrl: 'https://email-game.teamify.workers.dev/',
+    })
+
+    expect(html).toContain('Join 30 players playing the game today.')
+    expect(html).not.toContain('coworkers playing')
+  })
+
+  it('should use the public HTTPS origin for fallback links when forceHttps is enabled', async () => {
+    const response = await app.request('/fallback?email=player@example.com&forceHttps=true')
+    const html = await response.text()
+
+    expect(html).toContain('https://email-game.teamify.workers.dev/')
+    expect(html).not.toContain('http://localhost')
   })
 
   it('should include the daily word game header in h4 and ticket stub divider in EMAIL_HTML', () => {
@@ -111,5 +140,3 @@ describe('Duplicate Guess Feedback & State Handling', () => {
     expect(secondGuessData.lastMessage).toContain(`"${dummyWrongGuess2}" is incorrect`)
   })
 })
-
-
