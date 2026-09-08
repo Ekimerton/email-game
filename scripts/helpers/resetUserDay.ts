@@ -23,7 +23,7 @@
 
 import 'dotenv/config'
 import { execSync } from 'node:child_process'
-import { getDailyPuzzle } from '../../src/puzzles'
+import { getDailyPuzzle } from '../../src/puzzleLogic'
 
 interface ResetResult {
   success: boolean

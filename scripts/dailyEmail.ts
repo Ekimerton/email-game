@@ -15,7 +15,7 @@
 
 import 'dotenv/config'
 import nodemailer from 'nodemailer'
-import { getDailyPuzzle, formatPrettyDate } from '../src/puzzles'
+import { getDailyPuzzle, formatPrettyDate } from '../src/puzzleLogic'
 
 const args = process.argv.slice(2)
 const isDryRun = args.includes('--dry-run')

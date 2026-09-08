@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { getDailyPuzzle } from '../src/puzzles'
-import { app, getFallbackHtml } from '../src/index'
+import { getDailyPuzzle } from '../src/puzzleLogic'
+import { app, getFallbackHtml, calculateScore, isPuzzleSynonym } from '../src/index'
 import { EMAIL_HTML } from '../src/emailHtml'
 
 describe('Hono App & Layout Calculations', () => {
@@ -140,3 +140,98 @@ describe('Duplicate Guess Feedback & State Handling', () => {
     expect(secondGuessData.lastMessage).toContain(`"${dummyWrongGuess2}" is incorrect`)
   })
 })
+
+describe('Synonym Guess Scoring & Feedback System', () => {
+  it('should calculate scores accurately with -25 penalty for synonyms instead of -100', () => {
+    // 1st guess solve: no penalty
+    expect(calculateScore(1, 0, 0, true)).toBe(1000)
+
+    // 2 guesses: 1 regular wrong (-100)
+    expect(calculateScore(2, 0, 0, true)).toBe(900)
+
+    // 2 guesses: 1 synonym wrong (-25 instead of -100)
+    expect(calculateScore(2, 0, 1, true)).toBe(975)
+
+    // 3 guesses: 1 regular wrong (-100), 1 synonym (-25) -> 875
+    expect(calculateScore(3, 0, 1, true)).toBe(875)
+
+    // 3 guesses: 2 synonyms (-50) -> 950
+    expect(calculateScore(3, 0, 2, true)).toBe(950)
+
+    // 3 guesses: 2 synonyms (-50), 1 hint (-150) -> 800
+    expect(calculateScore(3, 1, 2, true)).toBe(800)
+
+    // Lower bound floor at 100
+    expect(calculateScore(20, 10, 0, true)).toBe(100)
+  })
+
+  it('should apply -150 point penalty when revealing letter hint via /api/hint', async () => {
+    const testEmail = 'hint-test@company.com'
+    const puzzleDate = '2026-08-05'
+
+    const hintRes = await app.request(`/api/hint?email=${encodeURIComponent(testEmail)}&date=${puzzleDate}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    })
+    expect(hintRes.status).toBe(200)
+    const hintData = await hintRes.json() as any
+    expect(hintData.hintsUsed).toBe(1)
+    expect(hintData.score).toBe(850) // 1000 - 150 = 850
+    expect(hintData.lastMessage).toBe('Revealed letter #1: "F"! -150 points')
+  })
+
+  it('should detect puzzle synonyms case-insensitively', () => {
+    const mockPuzzle = {
+      id: '99',
+      date: '2026-09-01',
+      word: 'LOAD',
+      definitions: ['def 1'],
+      synonyms: ['cargo', 'burden', 'freight']
+    }
+
+    expect(isPuzzleSynonym(mockPuzzle, 'cargo')).toBe(true)
+    expect(isPuzzleSynonym(mockPuzzle, 'CARGO')).toBe(true)
+    expect(isPuzzleSynonym(mockPuzzle, 'burden')).toBe(true)
+    expect(isPuzzleSynonym(mockPuzzle, 'random')).toBe(false)
+  })
+
+  it('should give -25 penalty feedback when a synonym is guessed in /api/guess and apply only -25 upon winning', async () => {
+    const testEmail = `synonym_player_${Date.now()}@example.com`
+    // Use date 2026-08-17 which is LOAD with synonym "CHARGE" and "ONUS"
+    const puzzleDate = '2026-08-17'
+    const puzzle = getDailyPuzzle(puzzleDate)
+    expect(puzzle.word).toBe('LOAD')
+    expect(puzzle.synonyms).toBeDefined()
+    expect(puzzle.synonyms!.length).toBeGreaterThan(0)
+
+    const knownSynonym = puzzle.synonyms![0] // e.g. "charge"
+
+    // 1. Submit the synonym guess
+    const synGuessRes = await app.request(`/api/guess?email=${encodeURIComponent(testEmail)}&date=${puzzleDate}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': knownSynonym }).toString(),
+    })
+    expect(synGuessRes.status).toBe(200)
+    const synData = await synGuessRes.json() as any
+    expect(synData.guessCount).toBe(1)
+    expect(synData.score).toBe(975)
+    expect(synData.lastMessage).toContain('is a synonym!')
+    expect(synData.lastMessage).toContain('-25 pts')
+
+    // 2. Submit the winning guess
+    const winGuessRes = await app.request(`/api/guess?email=${encodeURIComponent(testEmail)}&date=${puzzleDate}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': puzzle.word }).toString(),
+    })
+    expect(winGuessRes.status).toBe(200)
+    const winData = await winGuessRes.json() as any
+    expect(winData.hasWon).toBe(true)
+    expect(winData.guessCount).toBe(2)
+    // Score must be 975 (1000 - 25), NOT 900 (1000 - 100)
+    expect(winData.score).toBe(975)
+    expect(winData.lastMessage).toContain('Solved "LOAD" in 2 guesses! 975 pts')
+  })
+})
+

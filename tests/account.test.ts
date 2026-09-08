@@ -168,7 +168,7 @@ describe('Spoof-Proof Account & Preferences API', () => {
     const tokenB = generateAccountToken(userB)
 
     // 1. Submit winning guesses for both users
-    const puzzle = (await import('../src/puzzles')).getDailyPuzzle()
+    const puzzle = (await import('../src/puzzleLogic')).getDailyPuzzle()
     await app.request(`/api/guess?email=${encodeURIComponent(userA)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

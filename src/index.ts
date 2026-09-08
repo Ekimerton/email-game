@@ -1,8 +1,10 @@
 import { Hono } from 'hono'
 import { OAuth2Client } from 'google-auth-library'
-import { getDailyPuzzle, DailyPuzzle, formatPrettyDate } from './puzzles'
+import { DailyPuzzle } from './puzzles'
+import { getDailyPuzzle, formatPrettyDate } from './puzzleLogic'
 import { EMAIL_HTML } from './emailHtml'
 import { generateAccountToken, verifyAccountToken, getAccountUrl, extractEmailDomain } from './auth'
+import { GAME_MESSAGES } from './gameMessages'
 
 export type LetterStatus = 'correct' | 'present' | 'absent'
 
@@ -48,6 +50,7 @@ export interface GameState {
   lastMessage: string
   shareText: string
   revealedCount: number
+  synonymGuessesCount?: number
 }
 
 type Bindings = {
@@ -379,7 +382,7 @@ function evaluateGuess(target: string, guess: string): LetterStatus[] {
   }
 
   for (let i = 0; i < len; i++) {
-    if (guessArr[i] === targetArr[i]) {
+    if (guessArr[i] && guessArr[i] === targetArr[i]) {
       result[i] = 'correct'
       targetCounts[guessArr[i]]--
     }
@@ -388,7 +391,7 @@ function evaluateGuess(target: string, guess: string): LetterStatus[] {
   for (let i = 0; i < len; i++) {
     if (result[i] !== 'correct') {
       const char = guessArr[i]
-      if (targetCounts[char] && targetCounts[char] > 0) {
+      if (char && targetCounts[char] && targetCounts[char] > 0) {
         result[i] = 'present'
         targetCounts[char]--
       }
@@ -403,9 +406,29 @@ function createInitialMask(targetWord: string): string[] {
   return new Array(targetWord.length).fill('_')
 }
 
-// Calculate score based on performance
-function calculateScore(guessCount: number, hintsUsed: number): number {
-  const penalty = Math.max(0, (guessCount - 1) * 100) + hintsUsed * 75
+// Helper to check if a guess matches any known synonym of the puzzle
+export function isPuzzleSynonym(puzzle: DailyPuzzle, guess: string): boolean {
+  if (!guess || !puzzle) return false
+  const g = guess.trim().toUpperCase()
+  if (Array.isArray(puzzle.synonyms)) {
+    if (puzzle.synonyms.some((s) => typeof s === 'string' && s.trim().toUpperCase() === g)) {
+      return true
+    }
+  }
+  return false
+}
+
+// Calculate score based on performance (synonyms only penalize 25 pts instead of 100, letter hints penalize 150 pts)
+export function calculateScore(
+  guessCount: number,
+  hintsUsed: number,
+  synonymGuessesCount: number = 0,
+  hasWon: boolean = true
+): number {
+  const wrongGuesses = hasWon ? Math.max(0, guessCount - 1) : guessCount
+  const wrongSynonyms = Math.min(wrongGuesses, synonymGuessesCount)
+  const regularWrong = Math.max(0, wrongGuesses - wrongSynonyms)
+  const penalty = (regularWrong * 100) + (wrongSynonyms * 25) + (hintsUsed * 150)
   return Math.max(100, 1000 - penalty)
 }
 
@@ -511,6 +534,9 @@ async function getOrCreateGameState(
     if (!stored.guessedWords) {
       stored.guessedWords = stored.guessesHistory.map((g: any) => g.guess)
     }
+    if (stored.synonymGuessesCount === undefined) {
+      stored.synonymGuessesCount = 0
+    }
     return { state: stored, puzzle, stateKey }
   }
 
@@ -524,9 +550,10 @@ async function getOrCreateGameState(
     hintsUsed: 0,
     score: 0,
     hasWon: false,
-    lastMessage: `Guess the ${puzzle.word.length}-letter word! Def #1 revealed.`,
+    lastMessage: GAME_MESSAGES.initialPrompt(puzzle.word.length),
     shareText: '',
     revealedCount: 1,
+    synonymGuessesCount: 0,
   }
 
   return { state: initialState, puzzle, stateKey }
@@ -625,7 +652,7 @@ app.get('/', async (c) => {
   })
 
   // Pre-render Message Banner (Always initial prompt for initial state placeholder)
-  const initialMsg = `Guess the ${puzzle.word.length}-letter word! Def #1 revealed.`
+  const initialMsg = GAME_MESSAGES.initialPrompt(puzzle.word.length)
   html = html.replace('Guess the word!', initialMsg)
 
   // Pre-render definition clue tabs and active clue card for initial state placeholder
@@ -1327,8 +1354,10 @@ app.post('/api/guess', async (c) => {
       return c.json(buildStatePayload(state, puzzle))
     }
 
-    if (!guess || guess.length !== puzzle.word.length) {
-      state.lastMessage = `Please enter a ${puzzle.word.length}-letter word.`
+    const isSynonym = isPuzzleSynonym(puzzle, guess)
+
+    if (!guess || (guess.length !== puzzle.word.length && !isSynonym)) {
+      state.lastMessage = GAME_MESSAGES.invalidLength(puzzle.word.length)
       await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
       return c.json(buildStatePayload(state, puzzle, state.lastMessage))
     }
@@ -1340,7 +1369,7 @@ app.post('/api/guess', async (c) => {
     )
 
     if (alreadyGuessed) {
-      state.lastMessage = `You already guessed "${guess}".`
+      state.lastMessage = GAME_MESSAGES.alreadyGuessed(guess)
       await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
       return c.json(buildStatePayload(state, puzzle, state.lastMessage))
     }
@@ -1356,6 +1385,9 @@ app.post('/api/guess', async (c) => {
     }
 
     state.guessCount += 1
+    if (isSynonym) {
+      state.synonymGuessesCount = (state.synonymGuessesCount || 0) + 1
+    }
     state.guessesHistory.push({ guess, statuses })
     if (!state.guessedWords) {
       state.guessedWords = []
@@ -1366,9 +1398,14 @@ app.post('/api/guess', async (c) => {
     if (isCorrect) {
       state.hasWon = true
       state.revealedCount = puzzle.definitions.length
-      state.score = calculateScore(state.guessCount, state.hintsUsed)
+      state.score = calculateScore(
+        state.guessCount,
+        state.hintsUsed,
+        state.synonymGuessesCount || 0,
+        true
+      )
       state.letterMask = puzzle.word.split('')
-      state.lastMessage = `Solved "${puzzle.word}" in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''}! Score: ${state.score} pts`
+      state.lastMessage = GAME_MESSAGES.puzzleSolved(puzzle.word, state.guessCount, state.score)
 
       const leaderboardEntry: LeaderboardEntry = {
         email: userEmail,
@@ -1394,7 +1431,17 @@ app.post('/api/guess', async (c) => {
       if (state.revealedCount < puzzle.definitions.length) {
         state.revealedCount += 1
       }
-      state.lastMessage = `"${guess}" is incorrect. Def #${state.revealedCount} revealed!`
+      state.score = calculateScore(
+        state.guessCount,
+        state.hintsUsed,
+        state.synonymGuessesCount || 0,
+        false
+      )
+      if (isSynonym) {
+        state.lastMessage = GAME_MESSAGES.synonymGuess(guess)
+      } else {
+        state.lastMessage = GAME_MESSAGES.incorrectGuess(guess)
+      }
     }
 
     await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
@@ -1431,7 +1478,7 @@ app.post('/api/hint', async (c) => {
     }
 
     if (unrevealedIndices.length === 0) {
-      state.lastMessage = 'All letters have already been revealed!'
+      state.lastMessage = GAME_MESSAGES.allLettersRevealed
       return c.json(buildStatePayload(state, puzzle))
     }
 
@@ -1441,7 +1488,13 @@ app.post('/api/hint', async (c) => {
 
     state.hintsUsed += 1
     state.letterMask = updatedMask
-    state.lastMessage = `Letter #${targetIdx + 1} is "${puzzle.word[targetIdx]}"!`
+    state.score = calculateScore(
+      state.guessCount,
+      state.hintsUsed,
+      state.synonymGuessesCount || 0,
+      state.hasWon
+    )
+    state.lastMessage = GAME_MESSAGES.hintRevealed(targetIdx + 1, puzzle.word[targetIdx])
 
     await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
     return c.json(buildStatePayload(state, puzzle))

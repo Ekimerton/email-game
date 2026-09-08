@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { app, resetUserDayState } from '../src/index'
-import { getDailyPuzzle } from '../src/puzzles'
+import { getDailyPuzzle } from '../src/puzzleLogic'
 
 describe('Reset User Day Helper & Endpoint', () => {
   it('should reset user game state back to initial state after guesses have been made', async () => {

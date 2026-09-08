@@ -6,7 +6,7 @@ An interactive daily word-guessing game built with **AMP for Email** and **Hono*
 
 1. **Daily Target Word**: Everyone gets the same daily word puzzle based on the date.
 2. **Synonym Progression**: Start with 1 revealed synonym. Every incorrect guess reveals the next synonym clue!
-3. **Letter Hints & Masks**: See letter position masks (`V _ _ R _ N _`) and request letter hints (-75 pts).
+3. **Letter Hints & Masks**: See letter position masks (`V _ _ R _ N _`) and request letter hints (-150 pts).
 4. **Org Leaderboard**: Scores are recorded for each user's email domain (e.g. `@acme.com`). Compete with colleagues in your organization!
 5. **Score Sharing**: On winning, get a pre-formatted score card to copy and share.
 
@@ -45,7 +45,7 @@ curl -X POST "http://localhost:8787/api/guess?email=alice@acme.com" \
   -H "Content-Type: application/x-www-form-urlencoded"
 ```
 
-### 3. Request a Letter Hint (-75 pts penalty)
+### 3. Request a Letter Hint (-150 pts penalty)
 ```bash
 curl -X POST "http://localhost:8787/api/hint?email=alice@acme.com"
 ```
@@ -77,8 +77,9 @@ curl "http://localhost:8787/api/leaderboard?domain=acme.com"
 ## 🎯 Daily Puzzles & Scoring System
 
 - **Base Score**: 1,000 Points
-- **Guess Penalty**: -100 Points per additional guess
-- **Letter Hint Penalty**: -75 Points per letter revealed
+- **Guess Penalty**: -100 Points per additional regular guess
+- **Synonym Guess Penalty**: -25 Points per synonym guess (bonus for guessing a valid synonym)
+- **Letter Hint Penalty**: -150 Points per letter revealed
 - **Minimum Score**: 100 Points upon solving
 
 ---
