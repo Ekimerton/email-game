@@ -3,8 +3,11 @@ import { getDailyPuzzle, PUZZLES, formatPrettyDate, getTodayDateString } from '.
 import {
   definitionMentionsWordOrStem,
   areDefinitionsTooSimilar,
-  getWordStemsAndVariants
-} from '../scripts/generatePuzzles'
+  getWordStemsAndVariants,
+  isSynonymValid,
+  filterSynonyms,
+  fetchSynonymsForWord
+} from '../scripts/helpers/generatePuzzles'
 
 describe('Daily Puzzles Module', () => {
   it('should contain at least 50 valid puzzles in predefined list', () => {
@@ -128,3 +131,75 @@ describe('Puzzle Generation Leak & Similarity Detection Unit Tests', () => {
     expect(areDefinitionsTooSimilar(defDistinct1, defDistinct2)).toBe(false)
   })
 })
+
+describe('Synonym Validation and Filtering Unit Tests', () => {
+  it('should accept valid clean synonyms', () => {
+    expect(isSynonymValid('injury', 'WOUND')).toBe(true)
+    expect(isSynonymValid('hurt', 'WOUND')).toBe(true)
+    expect(isSynonymValid('damage', 'WOUND')).toBe(true)
+    expect(isSynonymValid('profit', 'GAIN')).toBe(true)
+    expect(isSynonymValid('advance', 'GAIN')).toBe(true)
+    expect(isSynonymValid('quiet', 'SILENT')).toBe(true)
+    expect(isSynonymValid('speechless', 'SILENT')).toBe(true)
+  })
+
+  it('should reject exact match with target word', () => {
+    expect(isSynonymValid('wound', 'WOUND')).toBe(false)
+    expect(isSynonymValid('WOUND', 'WOUND')).toBe(false)
+    expect(isSynonymValid('gain', 'GAIN')).toBe(false)
+  })
+
+  it('should reject inflections and stem derivations of target word', () => {
+    expect(isSynonymValid('wounds', 'WOUND')).toBe(false)
+    expect(isSynonymValid('wounding', 'WOUND')).toBe(false)
+    expect(isSynonymValid('wounded', 'WOUND')).toBe(false)
+    expect(isSynonymValid('gains', 'GAIN')).toBe(false)
+    expect(isSynonymValid('gaining', 'GAIN')).toBe(false)
+    expect(isSynonymValid('gained', 'GAIN')).toBe(false)
+    expect(isSynonymValid('gainful', 'GAIN')).toBe(false)
+    expect(isSynonymValid('regain', 'GAIN')).toBe(false)
+    expect(isSynonymValid('silence', 'SILENT')).toBe(false)
+    expect(isSynonymValid('silently', 'SILENT')).toBe(false)
+    expect(isSynonymValid('bloodying', 'BLOODY')).toBe(false)
+  })
+
+  it('should reject invalid formats (multi-word phrases, non-alphabetic characters, out of range lengths)', () => {
+    expect(isSynonymValid('cut open', 'WOUND')).toBe(false)
+    expect(isSynonymValid('hit-and-run', 'WOUND')).toBe(false)
+    expect(isSynonymValid('wound123', 'WOUND')).toBe(false)
+    expect(isSynonymValid('w', 'WOUND')).toBe(false)
+    expect(isSynonymValid('ab', 'WOUND')).toBe(false)
+    expect(isSynonymValid('a'.repeat(25), 'WOUND')).toBe(false)
+    expect(isSynonymValid('', 'WOUND')).toBe(false)
+  })
+
+  it('should filter, deduplicate, normalize and limit raw synonyms', () => {
+    const raw = [
+      'injury',
+      'INJURY',
+      'hurt',
+      'wounding',
+      'wound',
+      'laceration',
+      'trauma',
+      'cut',
+      'bruise',
+      'lesion',
+      'damage',
+      'harm'
+    ]
+
+    const filtered = filterSynonyms(raw, 'WOUND', 5)
+    expect(filtered).toEqual(['injury', 'hurt', 'laceration', 'trauma', 'cut'])
+    expect(filtered.length).toBe(5)
+    expect(filtered.includes('wounding')).toBe(false)
+    expect(filtered.includes('wound')).toBe(false)
+  })
+
+  it('should handle zero or few synonyms gracefully as secondary clues', () => {
+    expect(filterSynonyms([], 'WORD')).toEqual([])
+    expect(filterSynonyms(['word', 'words', 'wording'], 'WORD')).toEqual([])
+    expect(filterSynonyms(['single'], 'WORD')).toEqual(['single'])
+  })
+})
+

@@ -3,6 +3,7 @@ export interface DailyPuzzle {
   date: string
   word: string
   definitions: string[]
+  synonyms?: string[]
 }
 
 export const PUZZLES: DailyPuzzle[] = [
@@ -16,6 +17,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A certain number of articles or quantity of material that can be transported or processed at one time.",
       "To place in or on a conveyance or a place of storage.",
       "A burden; a weight to be carried."
+    ],
+    "synonyms": [
+      "charge",
+      "onus",
+      "encumbrance",
+      "laden",
+      "incumbrance",
+      "freight",
+      "consignment",
+      "stow"
     ]
   },
   {
@@ -28,6 +39,13 @@ export const PUZZLES: DailyPuzzle[] = [
       "The equivalent of a conversion in rugby.",
       "To transform or change (something) into another form, substance, state, or product.",
       "A person who is now in favour of something that he or she previously opposed or disliked."
+    ],
+    "synonyms": [
+      "change",
+      "turn",
+      "exchange",
+      "commute",
+      "convince"
     ]
   },
   {
@@ -40,6 +58,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "The act of taking possession, as of property, or of office.",
       "To delight and fill with wonder.",
       "The action of entering, or going in."
+    ],
+    "synonyms": [
+      "charm",
+      "beguile",
+      "bewitch",
+      "capture",
+      "captivate",
+      "enamor",
+      "catch",
+      "entryway"
     ]
   },
   {
@@ -52,6 +80,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A statue or idol.",
       "To reflect, mirror.",
       "An optical or other representation of a real object; a graphic; a picture."
+    ],
+    "synonyms": [
+      "paradigm",
+      "epitome",
+      "fancy",
+      "project",
+      "persona",
+      "see",
+      "effigy",
+      "figure"
     ]
   },
   {
@@ -63,7 +101,8 @@ export const PUZZLES: DailyPuzzle[] = [
       "A series of vehicles travelling in sequence.",
       "To pass on or transfer (information).",
       "A new set of hounds."
-    ]
+    ],
+    "synonyms": []
   },
   {
     "id": "6",
@@ -75,6 +114,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "Constant in feeling, purpose, or pursuit.",
       "To stabilize something; to prevent from shaking.",
       "A rest or support, as for the hand, a tool, or a piece of work."
+    ],
+    "synonyms": [
+      "secure",
+      "unwavering",
+      "calm",
+      "level",
+      "firm",
+      "constant",
+      "even",
+      "regular"
     ]
   },
   {
@@ -87,7 +136,8 @@ export const PUZZLES: DailyPuzzle[] = [
       "An Ancient Roman attack method, where the shields held by the soldiers hide them, not only left, right, front and.",
       "To flip over onto the back or top; to turn upside down.",
       "Any land or marine reptile of the order Testudines, characterised by a protective shell enclosing its body. See also."
-    ]
+    ],
+    "synonyms": []
   },
   {
     "id": "8",
@@ -99,6 +149,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "Balance of money returned from the sum paid after deducting the price of a purchase.",
       "To make something into something else.",
       "The process of becoming different."
+    ],
+    "synonyms": [
+      "shift",
+      "alter",
+      "convert",
+      "variety",
+      "transfer",
+      "alteration",
+      "commute",
+      "switch"
     ]
   },
   {
@@ -111,6 +171,9 @@ export const PUZZLES: DailyPuzzle[] = [
       "Any record or writing; a collective memory.",
       "To furnish with folios.",
       "One of the many pieces of paper bound together within a book or similar document."
+    ],
+    "synonyms": [
+      "varlet"
     ]
   },
   {
@@ -122,6 +185,12 @@ export const PUZZLES: DailyPuzzle[] = [
       "The spectators of an event, collectively.",
       "The uppermost seating area projecting from the rear or side walls of a theater, concert hall, or auditorium.",
       "An institution, building, or room for the exhibition and conservation of works of art."
+    ],
+    "synonyms": [
+      "drift",
+      "veranda",
+      "verandah",
+      "heading"
     ]
   },
   {
@@ -134,6 +203,10 @@ export const PUZZLES: DailyPuzzle[] = [
       "The people who decide on the verdict; the judiciary.",
       "To remove a player from play.",
       "A long seat with or without a back, found for example in parks and schools."
+    ],
+    "synonyms": [
+      "judiciary",
+      "terrace"
     ]
   },
   {
@@ -146,6 +219,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "Race; lineage, pedigree.",
       "To hold tightly, to clasp.",
       "The blood-vessel in the yolk of an egg."
+    ],
+    "synonyms": [
+      "line",
+      "form",
+      "reach",
+      "stock",
+      "distort",
+      "tense",
+      "variety",
+      "air"
     ]
   },
   {
@@ -158,6 +241,12 @@ export const PUZZLES: DailyPuzzle[] = [
       "A mark or token of approbation or to recognize excellence.",
       "To deserve, to earn.",
       "A claim to commendation or a reward."
+    ],
+    "synonyms": [
+      "rate",
+      "deserve",
+      "deservingness",
+      "virtue"
     ]
   },
   {
@@ -169,6 +258,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A talent or natural ability.",
       "To give away, to concede easily.",
       "Something given to another voluntarily, without charge."
+    ],
+    "synonyms": [
+      "present",
+      "give",
+      "endow",
+      "empower",
+      "endowment",
+      "endue",
+      "talent",
+      "indue"
     ]
   },
   {
@@ -181,6 +280,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A variety of a colour/color, in particular one obtained by adding black.",
       "To alter slightly.",
       "Darkness where light, particularly sunlight, is blocked."
+    ],
+    "synonyms": [
+      "wraith",
+      "specter",
+      "nuance",
+      "spectre",
+      "tincture",
+      "tone",
+      "subtlety",
+      "refinement"
     ]
   },
   {
@@ -193,6 +302,9 @@ export const PUZZLES: DailyPuzzle[] = [
       "A tool; a utensil or implement.",
       "To contrive; to put into action.",
       "A large construction used in warfare, such as a battering ram, catapult etc."
+    ],
+    "synonyms": [
+      "locomotive"
     ]
   },
   {
@@ -205,6 +317,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "To give warning to.",
       "Attentive; awake; on guard.",
       "A notification of higher importance than an advisory."
+    ],
+    "synonyms": [
+      "conscious",
+      "intelligent",
+      "vigilant",
+      "alarm",
+      "fly",
+      "alive",
+      "perched",
+      "awake"
     ]
   },
   {
@@ -217,6 +339,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A fireplace; a fire or other cooking apparatus; now specifically, a large cooking stove with many hotplates.",
       "To travel over (an area, etc); to roam, wander.",
       "A line or series of mountains, buildings, etc."
+    ],
+    "synonyms": [
+      "order",
+      "cast",
+      "ambit",
+      "drift",
+      "ramble",
+      "vagabond",
+      "scope",
+      "reach"
     ]
   },
   {
@@ -228,6 +360,15 @@ export const PUZZLES: DailyPuzzle[] = [
       "A return to health or well-being; a recovery.",
       "To give back an echo.",
       "The recoil of an object bouncing off another."
+    ],
+    "synonyms": [
+      "recoil",
+      "spring",
+      "rally",
+      "bounce",
+      "backlash",
+      "repercussion",
+      "ricochet"
     ]
   },
   {
@@ -240,7 +381,8 @@ export const PUZZLES: DailyPuzzle[] = [
       "Characterized by strong drum-beats and distorted guitars.",
       "To make a road using crushed rock, stones etc.",
       "Chemical elements or alloys, and the mines where their ores come from."
-    ]
+    ],
+    "synonyms": []
   },
   {
     "id": "21",
@@ -252,6 +394,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A spirit believed to speak through a medium.",
       "To steer or navigate, especially a ship or as a pilot.",
       "Any marking or object that catches the eye to provide quick reference."
+    ],
+    "synonyms": [
+      "conduct",
+      "lead",
+      "direct",
+      "head",
+      "point",
+      "pass",
+      "run",
+      "maneuver"
     ]
   },
   {
@@ -264,7 +416,8 @@ export const PUZZLES: DailyPuzzle[] = [
       "A chalet or lodge, especially one that can hold large groups of people.",
       "To limit the scope of.",
       "A small dwelling characteristic of the frontier, but by those who meant to live in it."
-    ]
+    ],
+    "synonyms": []
   },
   {
     "id": "23",
@@ -276,6 +429,11 @@ export const PUZZLES: DailyPuzzle[] = [
       "A roll or list.",
       "To place in an archive in a logical place and order.",
       "A collection of papers collated and archived together."
+    ],
+    "synonyms": [
+      "charge",
+      "register",
+      "lodge"
     ]
   },
   {
@@ -288,6 +446,11 @@ export const PUZZLES: DailyPuzzle[] = [
       "Having a title that is merely official, or given by courtesy or convention.",
       "To document; to memorialize.",
       "A sheet material used for writing on or printing on."
+    ],
+    "synonyms": [
+      "composition",
+      "report",
+      "theme"
     ]
   },
   {
@@ -300,7 +463,8 @@ export const PUZZLES: DailyPuzzle[] = [
       "Cold; hard; unfeeling.",
       "To become interlaced with fat; (of fat) to interlace through meat.",
       "A rock of crystalline limestone."
-    ]
+    ],
+    "synonyms": []
   },
   {
     "id": "26",
@@ -312,6 +476,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A small trinket on a bracelet or chain, etc., traditionally supposed to confer luck upon the wearer.",
       "To seduce, persuade or fascinate someone or something.",
       "An object, act or words believed to have magic power (usually carries a positive connotation)."
+    ],
+    "synonyms": [
+      "influence",
+      "beguile",
+      "entrance",
+      "bewitch",
+      "appeal",
+      "capture",
+      "captivate",
+      "enamor"
     ]
   },
   {
@@ -324,6 +498,14 @@ export const PUZZLES: DailyPuzzle[] = [
       "To become different.",
       "An identity or headmate of a person with dissociative identity disorder .",
       "To change the form or structure of."
+    ],
+    "synonyms": [
+      "change",
+      "interpolate",
+      "falsify",
+      "neuter",
+      "vary",
+      "spay"
     ]
   },
   {
@@ -336,6 +518,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "Definitions related to standing in the path of an opposing player.",
       "To remove information, or censor intellectual material from viewing.",
       "A physical divider intended to block an area from view, or provide shelter from something dangerous."
+    ],
+    "synonyms": [
+      "cover",
+      "shield",
+      "sieve",
+      "test",
+      "concealment",
+      "sort",
+      "blind",
+      "covert"
     ]
   },
   {
@@ -348,6 +540,13 @@ export const PUZZLES: DailyPuzzle[] = [
       "A writing paper size measuring 30 × 22 inches, or printing paper measuring 32 × 22 inches.",
       "Related to an empire, emperor, or empress.",
       "A bottle of wine (usually Bordeaux) containing 6 liters of fluid, eight times the volume of a standard bottle."
+    ],
+    "synonyms": [
+      "noble",
+      "regal",
+      "majestic",
+      "purple",
+      "royal"
     ]
   },
   {
@@ -360,6 +559,11 @@ export const PUZZLES: DailyPuzzle[] = [
       "Any paradise; any blissful place or experience.",
       "To transport to the abode of God, the gods, or the blessed.",
       "The sky, specifically:."
+    ],
+    "synonyms": [
+      "eden",
+      "nirvana",
+      "paradise"
     ]
   },
   {
@@ -372,6 +576,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "An expanse of land.",
       "To stretch out, open out (a material etc.) so that it more fully covers a given area of space.",
       "A layout, pattern or design of cards arranged for a reading."
+    ],
+    "synonyms": [
+      "disseminate",
+      "propagate",
+      "open",
+      "disperse",
+      "extended",
+      "diffuse",
+      "gap",
+      "broadcast"
     ]
   },
   {
@@ -383,6 +597,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "The arrival of something in a sudden or unexpected manner; chance; accident.",
       "To happen, take place.",
       "Destiny, especially favorable."
+    ],
+    "synonyms": [
+      "chance",
+      "portion",
+      "lot",
+      "luck",
+      "circumstances",
+      "destiny",
+      "fate",
+      "hazard"
     ]
   },
   {
@@ -395,6 +619,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "Any point of sail in which the wind comes from the side of a vessel, excluding close-hauled.",
       "To strike or touch with a missile.",
       "The act of stretching or extending; extension."
+    ],
+    "synonyms": [
+      "strain",
+      "attain",
+      "ambit",
+      "touch",
+      "give",
+      "strive",
+      "range",
+      "scope"
     ]
   },
   {
@@ -407,6 +641,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "Strong in the face of fear; courageous.",
       "To encounter with courage and fortitude, to defy, to provoke.",
       "A Native American warrior."
+    ],
+    "synonyms": [
+      "audacious",
+      "intrepid",
+      "spirited",
+      "endure",
+      "gay",
+      "desperate",
+      "bold",
+      "venture"
     ]
   },
   {
@@ -419,6 +663,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A straight line , especially one lying across a paper as a guide for writing.",
       "To regulate, be in charge of, make decisions for, reign over.",
       "A regulation, law, guideline."
+    ],
+    "synonyms": [
+      "principle",
+      "convention",
+      "prevail",
+      "pattern",
+      "dominate",
+      "decree",
+      "harness",
+      "reign"
     ]
   },
   {
@@ -430,7 +684,8 @@ export const PUZZLES: DailyPuzzle[] = [
       "To sup or swallow.",
       "To develop (film) in a (chemical) developing solution.",
       "Any of various dishes commonly made by combining liquids, such as meat and vegetables, that contribute flavor and."
-    ]
+    ],
+    "synonyms": []
   },
   {
     "id": "37",
@@ -442,6 +697,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "Any piece of wood, metal, or other substance used to stop or fill a hole.",
       "To blatantly mention a particular product or service as if advertising it.",
       "A pronged connecting device which fits into a mating socket, especially an electrical one."
+    ],
+    "synonyms": [
+      "secure",
+      "hack",
+      "jade",
+      "quid",
+      "wad",
+      "ballyhoo",
+      "punch",
+      "hype"
     ]
   },
   {
@@ -453,6 +718,14 @@ export const PUZZLES: DailyPuzzle[] = [
       "An instance of a player being sacked or tackled in the end zone, or stepping out of the end zone and off the field.",
       "To secure (a mechanical component, as in aviation) to keep it from becoming detached even under vibration.",
       "A mechanism on a weapon or dangerous equipment designed to prevent accidental firing."
+    ],
+    "synonyms": [
+      "refuge",
+      "prophylactic",
+      "bingle",
+      "rubber",
+      "condom",
+      "guard"
     ]
   },
   {
@@ -465,6 +738,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "The distance travelled by the ball when struck, until it hits the ground.",
       "To lift (something) and take it to another place; to transport (something) by lifting.",
       "The benefit or cost of owning an asset over time."
+    ],
+    "synonyms": [
+      "convey",
+      "conduct",
+      "hold",
+      "express",
+      "run",
+      "channel",
+      "stock",
+      "execute"
     ]
   },
   {
@@ -477,6 +760,13 @@ export const PUZZLES: DailyPuzzle[] = [
       "The final runner in a relay race.",
       "To connect an object, especially a ship or a boat, to a fixed point.",
       "A tool used to moor a vessel to the bottom of a sea or river to resist movement."
+    ],
+    "synonyms": [
+      "ground",
+      "linchpin",
+      "lynchpin",
+      "backbone",
+      "mainstay"
     ]
   },
   {
@@ -489,6 +779,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A time at which something begins; outset.",
       "To compensate for, by applying a change in the opposite direction.",
       "Anything that acts as counterbalance; a compensating equivalent."
+    ],
+    "synonyms": [
+      "start",
+      "commencement",
+      "outgrowth",
+      "runner",
+      "first",
+      "counterbalance",
+      "beginning",
+      "outset"
     ]
   },
   {
@@ -501,6 +801,13 @@ export const PUZZLES: DailyPuzzle[] = [
       "Fodder for cattle and other animals.",
       "To scan, to casually look through in order to find items of interest.",
       "Young shoots and twigs."
+    ],
+    "synonyms": [
+      "range",
+      "graze",
+      "crop",
+      "pasture",
+      "shop"
     ]
   },
   {
@@ -513,6 +820,9 @@ export const PUZZLES: DailyPuzzle[] = [
       "To bear comfortably or patiently; to be reconciled to; to brook.",
       "A compilation of statutes or decisions analytically arranged; a summary of laws.",
       "To distribute or arrange methodically; to work over and classify; to reduce to portions for ready use or application."
+    ],
+    "synonyms": [
+      "compilation"
     ]
   },
   {
@@ -525,6 +835,14 @@ export const PUZZLES: DailyPuzzle[] = [
       "A body of law, sanctioned by legislation, in which the rules of law to be specifically applied by the courts are set.",
       "To write software programs.",
       "A short symbol, often with little relation to the item it represents."
+    ],
+    "synonyms": [
+      "cipher",
+      "cypher",
+      "inscribe",
+      "encrypt",
+      "codification",
+      "encipher"
     ]
   },
   {
@@ -537,6 +855,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "In or at a great value.",
       "Very elevated; extending or being far above a base; tall; lofty.",
       "A point of success or achievement; a time when things are at their best."
+    ],
+    "synonyms": [
+      "eminent",
+      "mellow",
+      "sharp",
+      "elated",
+      "shrill",
+      "heavy",
+      "great",
+      "lofty"
     ]
   },
   {
@@ -549,6 +877,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "Skillful guidance or management; leadership.",
       "To lead, or guide; to escort.",
       "The act or method of controlling or directing."
+    ],
+    "synonyms": [
+      "convey",
+      "demeanor",
+      "lead",
+      "direct",
+      "channel",
+      "carry",
+      "deportment",
+      "take"
     ]
   },
   {
@@ -560,6 +898,14 @@ export const PUZZLES: DailyPuzzle[] = [
       "Any component that consumes but does not produce energy, or is incapable of power gain.",
       "Being subjected to an action without producing a reaction.",
       "A customer who is satisfied with a product or service, but not keen enough to promote it by word of mouth."
+    ],
+    "synonyms": [
+      "supine",
+      "peaceful",
+      "inactive",
+      "resistless",
+      "nonviolent",
+      "unresisting"
     ]
   },
   {
@@ -572,6 +918,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A forcible stream of gas or liquid from an orifice, for example from a bellows, the mouth, etc.",
       "To make a loud noise.",
       "A violent gust of wind."
+    ],
+    "synonyms": [
+      "bang",
+      "shell",
+      "fire",
+      "clap",
+      "blare",
+      "smash",
+      "attack",
+      "flak"
     ]
   },
   {
@@ -584,6 +940,10 @@ export const PUZZLES: DailyPuzzle[] = [
       "A pressurized container; an atomizer.",
       "To project many small items dispersively.",
       "A fine, gentle, dispersed mist of liquid."
+    ],
+    "synonyms": [
+      "atomizer",
+      "atomiser"
     ]
   },
   {
@@ -595,6 +955,15 @@ export const PUZZLES: DailyPuzzle[] = [
       "A situation in which a defensive player actively takes possession of the ball or puck from the opponent's team.",
       "To take illegally, or without the owner's permission, something owned by someone else.",
       "A piece of merchandise available at a very attractive price."
+    ],
+    "synonyms": [
+      "slip",
+      "creep",
+      "sneak",
+      "bargain",
+      "pussyfoot",
+      "buy",
+      "mouse"
     ]
   },
   {
@@ -607,6 +976,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "Average priced; standard-deal.",
       "To reduce the excessiveness of (something).",
       "One who holds an intermediate position between extremes, as in politics."
+    ],
+    "synonyms": [
+      "indifferent",
+      "control",
+      "lead",
+      "restrained",
+      "hold",
+      "temper",
+      "mild",
+      "fair"
     ]
   },
   {
@@ -619,6 +998,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A goal or objective.",
       "To aim for as an audience or demographic.",
       "A butt or mark to shoot at, as for practice, or to test the accuracy of a firearm, or the force of a projectile."
+    ],
+    "synonyms": [
+      "objective",
+      "mark",
+      "butt",
+      "direct",
+      "quarry",
+      "point",
+      "object",
+      "prey"
     ]
   },
   {
@@ -630,6 +1019,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "To overcome one's reluctance and endure a (previously specified) situation.",
       "Damage to the appearance and/or strength of an item caused by use over time.",
       "To have or carry on one's person habitually, consistently; or, to maintain in a particular fashion or manner."
+    ],
+    "synonyms": [
+      "break",
+      "endure",
+      "vesture",
+      "apparel",
+      "jade",
+      "don",
+      "fatigue",
+      "assume"
     ]
   },
   {
@@ -642,6 +1041,13 @@ export const PUZZLES: DailyPuzzle[] = [
       "Self-restraint in speech.",
       "To sort, sift, or isolate.",
       "A device which separates a suspended, dissolved, or particulate matter from a fluid, solution, or other substance."
+    ],
+    "synonyms": [
+      "strain",
+      "permeate",
+      "dribble",
+      "percolate",
+      "trickle"
     ]
   },
   {
@@ -653,7 +1059,8 @@ export const PUZZLES: DailyPuzzle[] = [
       "Made up of several races or ethnicities, or (more broadly) of several cultural or ideological factions.",
       "A wide assortment; a varied multitude.",
       "Any prismatic refraction of light showing a spectrum of colours."
-    ]
+    ],
+    "synonyms": []
   },
   {
     "id": "56",
@@ -664,6 +1071,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A magnificent and imposing ceremonial performed in honor of a victor.",
       "To prevail over rivals, challenges, or difficulties.",
       "A conclusive success following an effort, conflict, or confrontation of obstacles; victory; conquest."
+    ],
+    "synonyms": [
+      "prevail",
+      "wallow",
+      "rejoice",
+      "gloat",
+      "exult",
+      "victory",
+      "crow",
+      "jubilate"
     ]
   },
   {
@@ -675,7 +1092,8 @@ export const PUZZLES: DailyPuzzle[] = [
       "A disk, website or other resource that contains replicated data.",
       "Of an event, activity, behaviour, etc, to be identical to, to be a copy of.",
       "A smooth surface, that reflects light so as to give an image of what is in front of it."
-    ]
+    ],
+    "synonyms": []
   },
   {
     "id": "58",
@@ -687,6 +1105,14 @@ export const PUZZLES: DailyPuzzle[] = [
       "Fakeness, or a person who is fake or arrogant, or believes that they are better than the rest of the population.",
       "Capable of being moulded; malleable, flexible, pliant.",
       "Credit or debit cards used in place of cash to buy goods and services."
+    ],
+    "synonyms": [
+      "pliant",
+      "integrative",
+      "elastic",
+      "impressionable",
+      "fictile",
+      "moldable"
     ]
   },
   {
@@ -699,6 +1125,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A narrow body of water between two land masses.",
       "To direct or guide along a desired course.",
       "The physical confine of a river or slough, consisting of a bed and banks."
+    ],
+    "synonyms": [
+      "convey",
+      "conduct",
+      "line",
+      "carry",
+      "source",
+      "sound",
+      "transfer",
+      "conduit"
     ]
   },
   {
@@ -711,6 +1147,11 @@ export const PUZZLES: DailyPuzzle[] = [
       "A group of coordinated servers.",
       "To lease or let for an equivalent, e.g. land for a rent; to yield the use of to proceeds.",
       "A place where agricultural and similar activities take place."
+    ],
+    "synonyms": [
+      "produce",
+      "raise",
+      "grow"
     ]
   },
   {
@@ -723,6 +1164,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "A rope, cord, string, or thread, of any thickness.",
       "To place persons or things along the side of for security or defense; to strengthen by adding; to fortify.",
       "A path through two or more points; a continuous mark, including as made by a pen; any path, curved or straight."
+    ],
+    "synonyms": [
+      "trace",
+      "strain",
+      "draw",
+      "furrow",
+      "demarcation",
+      "channel",
+      "stock",
+      "air"
     ]
   },
   {
@@ -735,6 +1186,16 @@ export const PUZZLES: DailyPuzzle[] = [
       "The maximum amplitude of a vehicle's forward/backward oscillation.",
       "To slack off a line.",
       "A sudden transient rush, flood or increase."
+    ],
+    "synonyms": [
+      "heave",
+      "rush",
+      "spate",
+      "soar",
+      "tide",
+      "scend",
+      "zoom",
+      "billow"
     ]
   },
   {
@@ -746,6 +1207,14 @@ export const PUZZLES: DailyPuzzle[] = [
       "The ongoing pursuit of a craft or profession, particularly in medicine or the fine arts.",
       "To perform or observe in a habitual fashion.",
       "Repetition of an activity to improve a skill."
+    ],
+    "synonyms": [
+      "apply",
+      "use",
+      "pattern",
+      "exercise",
+      "drill",
+      "rehearse"
     ]
   },
   {
@@ -758,6 +1227,11 @@ export const PUZZLES: DailyPuzzle[] = [
       "A visible impression on a surface.",
       "To publish in a book, newspaper, etc.",
       "Clear handwriting, especially, writing without connected letters as in cursive."
+    ],
+    "synonyms": [
+      "impress",
+      "written",
+      "publish"
     ]
   }
 ]

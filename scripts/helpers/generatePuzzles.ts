@@ -11,19 +11,22 @@
  *   - Stems, roots, substrings, and inflections of the target word are strictly prohibited from definition texts
  *   - Multi-sense & Part-of-Speech variety: definitions must span at least 2 parts of speech / distinct senses
  *   - Non-redundant clues: content-word stemmed Jaccard & overlap deduplication filters out similar definitions
+ *   - Note: Synonyms are secondary; candidates are never filtered out or discarded due to having few or no synonyms.
  *
  * Usage:
- *   npx tsx scripts/generatePuzzles.ts --target=50 --seed=1337 --out=puzzles_generated.json
+ *   npx tsx scripts/helpers/generatePuzzles.ts --target=50 --seed=1337 --out=puzzles_generated.json
  */
 
 import { writeFileSync } from 'fs'
 
 const WORD_LIST_URL = 'https://www.mit.edu/~ecprice/wordlist.10000'
 const DICT_API = 'https://api.dictionaryapi.dev/api/v2/entries/en'
+const DATAMUSE_API = 'https://api.datamuse.com/words'
 const MIN_WORD_LENGTH = 4
 const MAX_WORD_LENGTH = 8
 const MIN_DEFINITIONS = 4
 const MAX_DEFINITIONS = 5
+const MAX_SYNONYMS = 8
 const MIN_POS_VARIETY = 2
 const MAX_DEFINITION_LENGTH = 120
 const MIN_DEFINITION_LENGTH = 12
@@ -265,55 +268,185 @@ export function isInvalidDefinition(text: string): boolean {
 }
 
 // ── Types ───────────────────────────────────────────────────────────────────
+export interface PuzzleDefinition {
+  num: number
+  text: string
+  pos: string
+  synonyms?: string[]
+}
+
 export interface PuzzleCandidate {
   word: string
-  definitions: { num: number; text: string; pos: string }[]
+  synonyms: string[]
+  definitions: PuzzleDefinition[]
+}
+
+export interface RawDefinition {
+  text: string
+  pos: string
+  synonyms?: string[]
+}
+
+export interface WordApiResponse {
+  definitions: RawDefinition[]
+  synonyms: string[]
 }
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-// ── Fetch & Parse Definitions from Dictionary API ───────────────────────────
-async function getRawMeanings(word: string): Promise<{ text: string; pos: string }[] | null> {
+// ── Synonym Validation and Filtering ─────────────────────────────────────────
+export function isSynonymValid(synonym: string, word: string): boolean {
+  if (!synonym || typeof synonym !== 'string') return false
+  const s = synonym.trim().toLowerCase()
+  const target = word.trim().toLowerCase()
+
+  if (!s || s === target) return false
+
+  // Must be single word with alphabetic characters only
+  if (!/^[a-z]+$/i.test(s)) return false
+
+  // Length constraints
+  if (s.length < 3 || s.length > 20) return false
+
+  // Prevent leak of target word, its stems or inflections
+  const targetStems = getWordStemsAndVariants(target)
+  if (targetStems.has(s)) return false
+
+  for (const stem of targetStems) {
+    if (stem.length >= 3 && s.includes(stem)) return false
+  }
+
+  // Prevent synonym stem leaking the target
+  const synStems = getWordStemsAndVariants(s)
+  if (synStems.has(target)) return false
+
+  for (const stem of synStems) {
+    if (stem.length >= 3 && target.includes(stem)) return false
+  }
+
+  return true
+}
+
+export function filterSynonyms(rawSynonyms: string[], word: string, maxCount: number = MAX_SYNONYMS): string[] {
+  const result: string[] = []
+  const seen = new Set<string>()
+
+  for (const syn of rawSynonyms) {
+    if (!syn || typeof syn !== 'string') continue
+    const cleaned = syn.trim().toLowerCase()
+    if (!seen.has(cleaned) && isSynonymValid(cleaned, word)) {
+      seen.add(cleaned)
+      result.push(cleaned)
+      if (result.length >= maxCount) break
+    }
+  }
+
+  return result
+}
+
+// ── Fetch Synonyms from Datamuse API ──────────────────────────────────────────
+export async function fetchDatamuseSynonyms(word: string): Promise<string[]> {
   try {
-    const res = await fetch(`${DICT_API}/${encodeURIComponent(word)}`)
+    const res = await fetch(`${DATAMUSE_API}?rel_syn=${encodeURIComponent(word)}`, {
+      signal: AbortSignal.timeout(3500)
+    })
+    if (!res.ok) return []
+    const data = await res.json() as { word: string; score?: number }[]
+    if (!Array.isArray(data)) return []
+    return data.map(item => item.word).filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
+// ── Unified Synonym Fetcher ──────────────────────────────────────────────────
+export async function fetchSynonymsForWord(
+  word: string,
+  maxCount: number = MAX_SYNONYMS
+): Promise<string[]> {
+  const [dictData, datamuseSyns] = await Promise.all([
+    getRawWordData(word).catch(() => null),
+    fetchDatamuseSynonyms(word).catch(() => [])
+  ])
+
+  const dictSynonyms = dictData?.synonyms ?? []
+  return filterSynonyms([...dictSynonyms, ...datamuseSyns], word, maxCount)
+}
+
+// ── Fetch & Parse Definitions and Synonyms from Dictionary API ───────────────
+export async function getRawWordData(word: string): Promise<WordApiResponse | null> {
+  try {
+    const res = await fetch(`${DICT_API}/${encodeURIComponent(word)}`, {
+      signal: AbortSignal.timeout(3500)
+    })
     if (!res.ok) return null
 
     const data = await res.json() as any[]
     if (!Array.isArray(data) || data.length === 0) return null
 
-    const rawDefs: { text: string; pos: string }[] = []
+    const rawDefs: RawDefinition[] = []
+    const dictSynonyms: string[] = []
+
     for (const entry of data) {
+      if (Array.isArray(entry.synonyms)) {
+        dictSynonyms.push(...entry.synonyms)
+      }
+
       for (const meaning of entry.meanings ?? []) {
         const pos = (meaning.partOfSpeech as string || 'noun').toLowerCase()
+        if (Array.isArray(meaning.synonyms)) {
+          dictSynonyms.push(...meaning.synonyms)
+        }
+
         if (pos === 'proper noun' || pos === 'interjection' || pos === 'symbol') continue
 
         for (const def of meaning.definitions ?? []) {
           const text = def.definition?.trim()
+          const defSyns = Array.isArray(def.synonyms) ? def.synonyms : []
+          if (defSyns.length > 0) {
+            dictSynonyms.push(...defSyns)
+          }
+
           if (text && text.length >= MIN_DEFINITION_LENGTH && text.length <= MAX_DEFINITION_LENGTH) {
             const cleaned = cleanDefinitionText(text)
             if (!isInvalidDefinition(cleaned) && !definitionMentionsWordOrStem(cleaned, word)) {
-              rawDefs.push({ text: cleaned, pos })
+              const filteredDefSyns = filterSynonyms(defSyns, word, 5)
+              rawDefs.push({
+                text: cleaned,
+                pos,
+                ...(filteredDefSyns.length > 0 ? { synonyms: filteredDefSyns } : {})
+              })
             }
           }
         }
       }
     }
 
-    return rawDefs.length > 0 ? rawDefs : null
+    if (rawDefs.length === 0) return null
+
+    return {
+      definitions: rawDefs,
+      synonyms: dictSynonyms
+    }
   } catch {
     return null
   }
 }
 
+export async function getRawMeanings(word: string): Promise<RawDefinition[] | null> {
+  const wordData = await getRawWordData(word)
+  return wordData ? wordData.definitions : null
+}
+
 // ── Select Balanced, Diverse Definitions ────────────────────────────────────
 export function selectDiverseDefinitions(
-  rawDefs: { text: string; pos: string }[],
+  rawDefs: RawDefinition[],
   word: string
-): { text: string; pos: string }[] | null {
+): RawDefinition[] | null {
   // 1. Group by Part of Speech
-  const byPos = new Map<string, { text: string; pos: string }[]>()
+  const byPos = new Map<string, RawDefinition[]>()
   for (const def of rawDefs) {
     if (!byPos.has(def.pos)) byPos.set(def.pos, [])
     byPos.get(def.pos)!.push(def)
@@ -322,7 +455,7 @@ export function selectDiverseDefinitions(
   if (byPos.size < MIN_POS_VARIETY) return null
 
   // 2. Select candidates across PoS, ensuring no mutual similarity
-  const selected: { text: string; pos: string }[] = []
+  const selected: RawDefinition[] = []
   const posKeys = Array.from(byPos.keys())
   let addedAny = true
 
@@ -388,17 +521,26 @@ async function main() {
       `\r[scanned ${processed}] ${word.padEnd(20)} → ${candidates.length}/${TARGET} candidates`
     )
 
-    const rawDefs = await getRawMeanings(word)
+    const rawData = await getRawWordData(word)
     await sleep(RATE_LIMIT_MS)
 
-    if (!rawDefs || rawDefs.length < MIN_DEFINITIONS) continue
+    if (!rawData || rawData.definitions.length < MIN_DEFINITIONS) continue
 
-    const selectedDefs = selectDiverseDefinitions(rawDefs, word)
+    const selectedDefs = selectDiverseDefinitions(rawData.definitions, word)
     if (!selectedDefs || selectedDefs.length < MIN_DEFINITIONS) continue
+
+    // Fetch complementary synonyms (secondary clue: candidates are never filtered out if they have few or no synonyms)
+    const mergedSynonyms = await fetchSynonymsForWord(word, MAX_SYNONYMS)
 
     candidates.push({
       word: word.toUpperCase(),
-      definitions: selectedDefs.map((d, i) => ({ num: i + 1, text: d.text, pos: d.pos }))
+      synonyms: mergedSynonyms,
+      definitions: selectedDefs.map((d, i) => ({
+        num: i + 1,
+        text: d.text,
+        pos: d.pos,
+        ...(d.synonyms && d.synonyms.length > 0 ? { synonyms: d.synonyms } : {})
+      }))
     })
   }
 
@@ -407,8 +549,12 @@ async function main() {
 
   for (const c of candidates) {
     console.log(`\n${c.word}`)
+    if (c.synonyms && c.synonyms.length > 0) {
+      console.log(`  Synonyms: ${c.synonyms.join(', ')}`)
+    }
     for (const d of c.definitions) {
-      console.log(`  ${d.num}. [${d.pos}] ${d.text}`)
+      const synInfo = d.synonyms && d.synonyms.length > 0 ? ` (synonyms: ${d.synonyms.join(', ')})` : ''
+      console.log(`  ${d.num}. [${d.pos}] ${d.text}${synInfo}`)
     }
   }
 

@@ -11,7 +11,9 @@
     "create-kv": "wrangler kv namespace create GAME_STATE_KV",
     "test-send": "tsx scripts/sendTestEmail.ts",
     "test-send:me": "tsx scripts/sendTestEmail.ts --to=ekim0252@gmail.com",
-    "reset-user-day": "tsx scripts/helpers/resetUserDay.ts"
+    "reset-user-day": "tsx scripts/helpers/resetUserDay.ts",
+    "generate-puzzles": "tsx scripts/helpers/generatePuzzles.ts",
+    "backfill-synonyms": "tsx scripts/helpers/backfillSynonyms.ts"
   },
   "dependencies": {
     "dotenv": "^16.5.0",
