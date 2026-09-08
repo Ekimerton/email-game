@@ -343,8 +343,8 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .btn-hint {
-            background: transparent;
-            color: #71717a;
+            background: #e4e4e7;
+            color: #27272a;
             border-color: #d4d4d8;
         }
 
@@ -774,7 +774,7 @@ export const EMAIL_HTML = `<!doctype html>
 
                             <div class="action-buttons">
                                 <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
-                                    Letter Hint (-150 pt)
+                                    Letter Hint
                                 </button>
                                 <button type="submit" class="btn btn-primary">
                                     Submit Guess
