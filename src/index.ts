@@ -96,6 +96,77 @@ async function kvPut(kv: KVNamespace | undefined, key: string, value: any): Prom
   }
 }
 
+export async function kvDelete(kv: KVNamespace | undefined, key: string): Promise<void> {
+  MEMORY_STORE.delete(key)
+  if (kv) {
+    try {
+      await kv.delete(key)
+    } catch (err) {
+      console.warn(`[KV Error] Failed deleting ${key} from KV:`, err)
+    }
+  }
+}
+
+// Reset user game state, leaderboard entry, and played dates for a specific date
+export async function resetUserDayState(
+  kv: KVNamespace | undefined,
+  email: string,
+  dateStr: string
+): Promise<{
+  success: boolean
+  email: string
+  date: string
+  message: string
+  details: {
+    gameStateDeleted: boolean
+    removedFromLeaderboard: boolean
+    removedFromPlayedDates: boolean
+  }
+}> {
+  const cleanEmail = email.toLowerCase().trim()
+  const domain = extractDomain(cleanEmail)
+  const stateKey = `game:${dateStr}:${cleanEmail}`
+
+  // 1. Delete Game State
+  await kvDelete(kv, stateKey)
+
+  // 2. Remove from Domain Leaderboard for this date if present
+  let removedFromLeaderboard = false
+  const leaderboardKey = `leaderboard:${domain}:${dateStr}`
+  const existingLeaderboard = await getDomainLeaderboard(kv, domain, dateStr)
+  if (existingLeaderboard && existingLeaderboard.length > 0) {
+    const filteredLeaderboard = existingLeaderboard.filter(
+      (entry) => entry.email.toLowerCase().trim() !== cleanEmail
+    )
+    if (filteredLeaderboard.length !== existingLeaderboard.length) {
+      await kvPut(kv, leaderboardKey, filteredLeaderboard)
+      removedFromLeaderboard = true
+    }
+  }
+
+  // 3. Remove date from user's playedDates profile if present
+  let removedFromPlayedDates = false
+  const userSettings = await getUserSettings(kv, cleanEmail)
+  if (userSettings.playedDates && userSettings.playedDates.includes(dateStr)) {
+    userSettings.playedDates = userSettings.playedDates.filter((d) => d !== dateStr)
+    userSettings.daysPlayed = userSettings.playedDates.length
+    await updateUserSettings(kv, userSettings)
+    removedFromPlayedDates = true
+  }
+
+  return {
+    success: true,
+    email: cleanEmail,
+    date: dateStr,
+    message: `Successfully reset save state for ${cleanEmail} on ${dateStr}`,
+    details: {
+      gameStateDeleted: true,
+      removedFromLeaderboard,
+      removedFromPlayedDates,
+    },
+  }
+}
+
 // Helper to extract domain from email
 function extractDomain(email: string): string {
   return extractEmailDomain(email)
@@ -1130,6 +1201,55 @@ app.get('/api/sub-status', async (c) => {
     return c.json({ items: [fallback], ...fallback })
   }
 })
+
+// Admin endpoint to reset a user's save state for a given day
+const handleResetUserDay = async (c: any) => {
+  try {
+    const authHeader = c.req.header('Authorization')
+    const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+    if (adminSecret && authHeader !== `Bearer ${adminSecret}`) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+
+    let email = c.req.query('email')
+    let date = c.req.query('date')
+
+    if (c.req.method === 'POST') {
+      try {
+        const body = await c.req.json().catch(() => ({}))
+        if (body && typeof body === 'object') {
+          email = body.email || email
+          date = body.date || date
+        }
+      } catch (_) {
+        try {
+          const form = await c.req.parseBody().catch(() => ({}))
+          if (form) {
+            email = (form['email'] as string) || email
+            date = (form['date'] as string) || date
+          }
+        } catch (_) {}
+      }
+    }
+
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return c.json({ success: false, error: 'A valid email parameter is required' }, 400)
+    }
+
+    if (!date) {
+      date = getDailyPuzzle().date
+    }
+
+    const result = await resetUserDayState(c.env?.GAME_STATE_KV, email, date)
+    return c.json(result)
+  } catch (error: any) {
+    console.error('Error resetting user day state:', error)
+    return c.json({ success: false, error: error.message || 'Failed to reset user day state' }, 500)
+  }
+}
+
+app.post('/api/admin/reset-user-day', handleResetUserDay)
+app.get('/api/admin/reset-user-day', handleResetUserDay)
 
 function getRedactedText(text: string): string {
   if (!text) return '••••••••••••••••••••'
