@@ -184,14 +184,14 @@ export const EMAIL_HTML = `<!doctype html>
             color: #52525b;
             line-height: 1.3;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            margin-top: 4px;
-            margin-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 6px;
             padding: 0;
         }
 
         /* Definition Clue Stepper & Active Card */
         .definitions-section {
-            margin-bottom: 12px;
+            margin-bottom: 22px;
         }
 
         .definitions-header,
@@ -279,7 +279,7 @@ export const EMAIL_HTML = `<!doctype html>
             padding: 8px 14px;
             min-height: 72px;
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
         }
 
@@ -364,7 +364,7 @@ export const EMAIL_HTML = `<!doctype html>
         .wordle-input-wrapper {
             position: relative;
             margin-top: -38px;
-            margin-bottom: 12px;
+            margin-bottom: 7px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -407,9 +407,9 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .btn-primary {
-            background: #18181b;
-            color: #ffffff;
-            border-color: #18181b;
+            background: #C4F7CA;
+            color: #000000;
+            border-color: #000000;
         }
 
         .btn-hint {
@@ -830,7 +830,7 @@ export const EMAIL_HTML = `<!doctype html>
                 </amp-list>
 
                 <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
-                <div class="form-container" [hidden]="gameState.hasWon">
+                <div class="form-container">
                     <form id="guess-form" method="POST"
                         action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
                         on="submit-success:AMP.setState({ gameState: event.response, clueView: { activeClue: event.response.revealedCount }, typed: { word: '' } }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
@@ -955,4 +955,4 @@ export const EMAIL_HTML = `<!doctype html>
     </div>
 </body>
 
-</html>`
+</html>`;
