@@ -76,7 +76,7 @@ async function getEmailContent(email: string): Promise<{ ampHtml: string; fallba
 async function main() {
   const puzzle = getDailyPuzzle()
   const today = puzzle.date
-  const subject = `Word Game #${puzzle.id} — ${puzzle.word.charAt(0) + puzzle.word.slice(1).toLowerCase()} — ${formatPrettyDate(today)}`
+  const subject = `Inboxed #${puzzle.id} — ${puzzle.word.charAt(0) + puzzle.word.slice(1).toLowerCase()} — ${formatPrettyDate(today)}`
 
   console.log(`\n📅 Daily Email — ${today}`)
   console.log(`📝 Puzzle #${puzzle.id}: ${puzzle.word}`)
@@ -117,7 +117,7 @@ async function main() {
         from: SENDER_EMAIL,
         to: email,
         subject,
-        text: `Play today's Word Game puzzle: ${PUBLIC_URL}`,
+        text: `Play today's Inboxed puzzle: ${PUBLIC_URL}`,
         html: fallbackHtml,
         alternatives: [
           {

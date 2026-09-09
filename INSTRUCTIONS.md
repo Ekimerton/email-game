@@ -1,4 +1,4 @@
-# Relatle - Daily Synonym Word Game (AMP for Email)
+# Inboxed - Daily Synonym Word Game (AMP for Email)
 
 An interactive daily word-guessing game built with **AMP for Email** and **Hono** running on Cloudflare Workers.
 

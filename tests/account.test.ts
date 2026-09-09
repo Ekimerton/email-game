@@ -204,7 +204,7 @@ describe('Spoof-Proof Account & Preferences API', () => {
     const html = await res.text()
 
     expect(html).toContain('<!doctype html>')
-    expect(html).toContain('WORD GAME')
+    expect(html).toContain('INBOXED')
     expect(html).toContain('Account &amp; Preferences')
     expect(html).toContain('background-color: #ffffff')
     expect(html).toContain('background: #f4f4f5')

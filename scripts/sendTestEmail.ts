@@ -97,7 +97,7 @@ async function sendTestEmail() {
   const publicHttpsUrl = (process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.workers.dev').replace(/\/$/, '')
 
   const puzzle = getDailyPuzzle()
-  const subject = `Word Game #${puzzle.id} - Today's Multi-Definition Puzzle (${formatPrettyDate(puzzle.date)})`
+  const subject = `Inboxed #${puzzle.id} - Today's Multi-Definition Puzzle (${formatPrettyDate(puzzle.date)})`
 
   console.log('Preparing test AMP Email via Mailgun SMTP...')
   console.log(`  Sender (From): ${senderEmail}`)
@@ -146,7 +146,7 @@ async function sendTestEmail() {
         from: senderEmail,
         to: targetEmail,
         subject,
-        text: `Play today's Word Game puzzle: ${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}`,
+        text: `Play today's Inboxed puzzle: ${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}`,
         html: fallbackHtml,
         alternatives: [
           {

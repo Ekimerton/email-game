@@ -330,18 +330,27 @@ export function getFallbackHtml(options: {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&display=swap">
-  <title>Word Game #${puzzle.id} - Daily Word Puzzle</title>
+  <title>Inboxed #${puzzle.id} - Daily Word Puzzle</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #18181b;">
   <div style="max-width: 480px; margin: 0 auto; padding: 12px 8px;">
     <div style="background-color: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 12px; padding: 16px 16px; box-sizing: border-box;">
-      <div style="text-align: left; margin: 0 0 12px;">
-        <span style="display: inline-block; background-color: #14532d; border-radius: 4px; color: #ffffff; font-size: 14px; font-weight: 800; letter-spacing: -0.5px; padding: 4px 10px;">WORD GAME</span>
+      <div style="text-align: center; margin: 0 0 16px; display: flex; justify-content: center; align-items: center; gap: 8px;" aria-label="INBOXED #${puzzle.id}">
+        <div style="display: inline-flex; padding: 4px 0;">
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #93c5fd; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">I</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #fca5a5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">N</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #93c5fd; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">B</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #fca5a5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">O</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #93c5fd; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">X</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #fca5a5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">E</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #93c5fd; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">D</span>
+        </div>
+        <span style="display: inline-block; color: #000000; font-size: 18px; font-weight: 800; line-height: 28px; letter-spacing: -0.5px;">#${puzzle.id}</span>
       </div>
 
       <div style="padding: 4px 0 16px; text-align: left;">
         <p style="font-size: 15px; font-weight: 600; line-height: 1.55; color: #27272a; margin: 0;">
-          <strong style="color: #18181b;">${safeEmail}</strong> is inviting you to play Word Game, the daily word game in your inbox. ${communityMessage}
+          <strong style="color: #18181b;">${safeEmail}</strong> is inviting you to play Inboxed, the daily word game in your inbox. ${communityMessage}
         </p>
         <a href="${safePlayUrl}" style="display: block; color: #14532d; font-size: 14px; font-weight: 800; margin-top: 16px; text-align: center; text-decoration: underline;">Sign up to play →</a>
       </div>
@@ -645,11 +654,19 @@ app.get('/', async (c) => {
   // Pre-render Header Meta (Date, Domain, and Game Title)
   html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
   html = html.replaceAll('company.com', domain)
-  html = html.replaceAll(/word game #1/gi, (match) => {
-    if (match === 'WORD GAME #1') return `WORD GAME #${puzzle.id}`
-    if (match === 'Word Game #1') return `Word Game #${puzzle.id}`
-    return `word game #${puzzle.id}`
-  })
+  html = html
+    .replaceAll(/<span class="logo-badge">#\d+<\/span>/g, `<span class="logo-badge">#${puzzle.id}</span>`)
+    .replaceAll('aria-label="Inboxed #1"', `aria-label="Inboxed #${puzzle.id}"`)
+    .replaceAll(/inboxed #1/gi, (match) => {
+      if (match === 'INBOXED #1') return `INBOXED #${puzzle.id}`
+      if (match === 'Inboxed #1') return `Inboxed #${puzzle.id}`
+      return `inboxed #${puzzle.id}`
+    })
+    .replaceAll(/word game #1/gi, (match) => {
+      if (match === 'WORD GAME #1') return `INBOXED #${puzzle.id}`
+      if (match === 'Word Game #1') return `Inboxed #${puzzle.id}`
+      return `Inboxed #${puzzle.id}`
+    })
 
   // Pre-render Message Banner (Always initial prompt for initial state placeholder)
   const initialMsg = GAME_MESSAGES.initialPrompt(puzzle.word.length)
@@ -810,7 +827,7 @@ app.get('/account', async (c) => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Word Game Account &amp; Preferences</title>
+  <title>Inboxed Account &amp; Preferences</title>
   
   <!-- Load React & ReactDOM via CDN for lightweight high-performance SPA -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -1082,13 +1099,13 @@ app.get('/account', async (c) => {
         return (
           <div className="card-container" style={{ textAlign: 'left', padding: '20px 18px' }}>
             <div style={{ margin: '0 0 12px' }}>
-              <span className="game-badge">WORD GAME</span>
+              <span className="game-badge">INBOXED</span>
             </div>
             <div style={{ padding: '4px 0 8px' }}>
               <h2 style={{ color: '#b91c1c', fontSize: '16px', fontWeight: 800, marginBottom: '6px' }}>Invalid or Expired Link</h2>
               <p style={{ color: '#52525b', fontSize: '13px', lineHeight: 1.5 }}>
                 This account link is invalid, tampered with, or expired.<br />
-                Please click the <strong>update your account preferences</strong> link directly from your daily Word Game email to access and manage your settings.
+                Please click the <strong>update your account preferences</strong> link directly from your daily Inboxed email to access and manage your settings.
               </p>
             </div>
           </div>
@@ -1100,7 +1117,7 @@ app.get('/account', async (c) => {
           {toast && <div className="toast">{toast}</div>}
 
           <div style={{ textAlign: 'left', margin: '0 0 12px' }}>
-            <span className="game-badge">WORD GAME</span>
+            <span className="game-badge">INBOXED</span>
           </div>
 
           <div className="header">
@@ -1425,7 +1442,7 @@ app.post('/api/guess', async (c) => {
 
       const rank = updatedLeaderboard.findIndex((e) => e.email === userEmail) + 1
 
-      state.shareText = `Word Game #${puzzle.id} (${formatPrettyDate(puzzle.date)})\nSolved in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
+      state.shareText = `Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)})\nSolved in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
         }!\nScore: ${state.score} pts | Org Rank: #${rank} (${domain})\n\nPlay at: https://relatle.dev`
     } else {
       if (state.revealedCount < puzzle.definitions.length) {
@@ -1555,6 +1572,6 @@ export default {
     const subscribers = await getSubscribers(env.GAME_STATE_KV)
     const activeSubscribers = subscribers.filter(s => s.status === 'active')
 
-    console.log(`[Cron Dispatch] Ready to dispatch Word Game #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${activeSubscribers.length} active subscribers.`)
+    console.log(`[Cron Dispatch] Ready to dispatch Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${activeSubscribers.length} active subscribers.`)
   }
 }

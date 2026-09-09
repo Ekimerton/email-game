@@ -40,7 +40,7 @@ interface ResetResult {
 
 function printHelp() {
   console.log(`
-🎮 Word Game - Reset User Day Helper
+🎮 Inboxed - Reset User Day Helper
 
 Resets a user's save state, clears their leaderboard entry for that day,
 and removes the date from their played-dates record.

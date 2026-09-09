@@ -78,19 +78,65 @@ export const EMAIL_HTML = `<!doctype html>
             margin: 18px 0;
         }
 
-        /* Top Header in h4 */
+        /* Top Logo Header */
         .game-header {
-            display: inline-block;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 6px 0;
+            text-align: center;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            background-color: #14532d;
-            color: #ffffff;
+        }
+
+        .logo-tiles {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 0;
+        }
+
+        .logo-tile {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            color: #000000;
+            font-size: 15px;
+            font-weight: 800;
             border-radius: 4px;
-            padding: 4px 10px;
-            margin: 0 0 10px 0;
-            text-align: left;
+            border: 1.5px solid #000000;
+            line-height: 28px;
+            text-align: center;
+            box-sizing: border-box;
+            margin-right: -4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+            position: relative;
+        }
+
+        .logo-tile:last-child {
+            margin-right: 0;
+        }
+
+        .logo-tile:nth-child(odd),
+        .logo-tile.tile-blue {
+            background-color: #93c5fd;
+            transform: rotate(-10deg);
+        }
+
+        .logo-tile:nth-child(even),
+        .logo-tile.tile-red {
+            background-color: #fca5a5;
+            transform: rotate(10deg);
+        }
+
+        .logo-badge {
+            display: inline-block;
+            color: #000000;
+            font-size: 18px;
+            font-weight: 800;
+            line-height: 28px;
+            letter-spacing: -0.5px;
         }
 
         /* AMP List Layout Reset */
@@ -621,39 +667,22 @@ export const EMAIL_HTML = `<!doctype html>
             margin-top: 2px;
         }
 
-        /* How to Play */
-        .how-to-play-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .how-to-play-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            font-size: 11px;
+        /* Mini Tutorial (Clean inline single-line layout under logo) */
+        .mini-tutorial {
+            max-height: 40px;
+            box-sizing: border-box;
+            margin: 0 0 12px 0;
+            padding: 0;
+            text-align: center;
+            font-size: 10.5px;
             line-height: 1.4;
-            color: #3f3f46;
+            color: #52525b;
+            overflow: hidden;
         }
 
-        .how-to-play-step {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 18px;
-            height: 18px;
-            background: #e4e4e7;
+        .mini-tutorial strong {
             color: #18181b;
-            font-weight: 800;
-            font-size: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-
-        .how-to-play-text strong {
-            color: #18181b;
+            font-weight: 700;
         }
 
         .footer {
@@ -676,7 +705,23 @@ export const EMAIL_HTML = `<!doctype html>
 
 <body>
     <div class="email-wrapper">
-        <h4 class="game-header">Word Game #1</h4>
+        <h4 class="game-header" aria-label="Inboxed #1">
+            <span class="logo-tiles">
+                <span class="logo-tile rotate-neg tile-blue">I</span>
+                <span class="logo-tile rotate-pos tile-red">N</span>
+                <span class="logo-tile rotate-neg tile-blue">B</span>
+                <span class="logo-tile rotate-pos tile-red">O</span>
+                <span class="logo-tile rotate-neg tile-blue">X</span>
+                <span class="logo-tile rotate-pos tile-red">E</span>
+                <span class="logo-tile rotate-neg tile-blue">D</span>
+            </span>
+            <span class="logo-badge">#1</span>
+        </h4>
+
+        <!-- Mini Tutorial / Instructions under Logo -->
+        <div class="mini-tutorial">
+            Guess the word &bull; Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within the email
+        </div>
 
         <!-- Dynamic State Store for interactive binding & hiding form on win -->
         <amp-state id="gameState">

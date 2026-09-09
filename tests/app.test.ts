@@ -22,9 +22,9 @@ describe('Hono App & Layout Calculations', () => {
     })
 
     expect(html).toContain('<!doctype html>')
-    expect(html).toContain('WORD GAME')
+    expect(html).toContain('INBOXED')
     expect(html).toContain('testuser@nvidia.engineering')
-    expect(html).toContain('is inviting you to play Word Game, the daily word game in your inbox.')
+    expect(html).toContain('is inviting you to play Inboxed, the daily word game in your inbox.')
     expect(html).toContain('Join 12 coworkers playing in the nvidia.engineering org.')
     expect(html).toContain('Sign up to play →')
     expect(html).toContain('Seeing this while trying to load the game?')
@@ -62,9 +62,19 @@ describe('Hono App & Layout Calculations', () => {
   })
 
   it('should include the daily word game header in h4 and ticket stub divider in EMAIL_HTML', () => {
-    expect(EMAIL_HTML).toContain('<h4 class="game-header">Word Game #1</h4>')
+    expect(EMAIL_HTML).toContain('<h4 class="game-header" aria-label="Inboxed #1">')
+    expect(EMAIL_HTML).toContain('class="logo-tiles"')
+    expect(EMAIL_HTML).toContain('logo-tile rotate-pos')
+    expect(EMAIL_HTML).toContain('logo-tile rotate-neg')
+    expect(EMAIL_HTML).toContain('class="logo-badge">#1</span>')
     expect(EMAIL_HTML).toContain('ticket-stub-divider')
     expect(EMAIL_HTML).toContain("Have someone you think would like this game? Forward this email to them!")
+  })
+
+  it('should include the mini tutorial within 40px height limit in EMAIL_HTML', () => {
+    expect(EMAIL_HTML).toContain('mini-tutorial')
+    expect(EMAIL_HTML).toContain('Guess the word &bull; Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within the email')
+    expect(EMAIL_HTML).toContain('max-height: 40px;')
   })
 })
 
