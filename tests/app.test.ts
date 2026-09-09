@@ -75,6 +75,14 @@ describe('Hono App & Layout Calculations', () => {
     expect(EMAIL_HTML).toContain('Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within your email')
     expect(EMAIL_HTML).toContain('max-height: 40px;')
   })
+
+  it('should bound guess input to puzzle word length via maxlength', async () => {
+    const puzzle = getDailyPuzzle()
+    const response = await app.request('/?email=test@example.com')
+    const html = await response.text()
+    expect(html).toContain(`maxlength="${puzzle.word.length}"`)
+    expect(html).toContain(`[maxlength]="gameState.wordLength || ${puzzle.word.length}"`)
+  })
 })
 
 describe('Duplicate Guess Feedback & State Handling', () => {

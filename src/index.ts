@@ -70,7 +70,7 @@ const BASE_STATIC_STATE_LIST_HEIGHT = 136
 
 // Calculate dynamic total amp-list height for pre-render (stable bounded height for clue stepper view)
 function calculateStateListHeight(puzzle?: DailyPuzzle): number {
-  return 178
+  return 170
 }
 
 async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
@@ -648,7 +648,13 @@ app.get('/', async (c) => {
 
   // Dynamically calculate and replace amp-list height on pre-render
   const dynamicStateListHeight = calculateStateListHeight(puzzle)
-  html = html.replace('height="178"', `height="${dynamicStateListHeight}"`)
+  html = html.replace('height="170"', `height="${dynamicStateListHeight}"`)
+
+  // Pre-render puzzle wordLength and input maxlength
+  html = html
+    .replaceAll('"wordLength": 7', `"wordLength": ${puzzle.word.length}`)
+    .replaceAll('maxlength="7"', `maxlength="${puzzle.word.length}"`)
+    .replaceAll('gameState.wordLength || 7', `gameState.wordLength || ${puzzle.word.length}`)
 
   // Pre-render Header Meta (Date, Domain, and Game Title)
   html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
@@ -1324,6 +1330,7 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?: string
     revealedCount: activeRevealedCount,
     totalDefinitions: puzzle.definitions.length,
     definitions,
+    wordLength: puzzle.word.length,
     letterMask: state.letterMask,
     formattedLetterMask: state.letterMask.map((char, index) => {
       const isRevealed = char !== '_' && char !== ''

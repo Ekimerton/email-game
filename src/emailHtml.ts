@@ -65,17 +65,22 @@ export const EMAIL_HTML = `<!doctype html>
             padding: 0;
         }
 
-        .game-section,
+        .game-section {
+            position: relative;
+            margin: 0 auto 16px auto;
+            max-width: 480px;
+        }
+
         .leaderboard-section {
             position: relative;
-            margin: 0 auto;
+            margin: 8px auto 0 auto;
             max-width: 480px;
         }
 
         .section-divider {
             border: none;
             border-top: 1px solid #e4e4e7;
-            margin: 18px 0;
+            margin: 0;
         }
 
         /* Top Logo Header */
@@ -85,6 +90,7 @@ export const EMAIL_HTML = `<!doctype html>
             align-items: center;
             gap: 8px;
             margin: 0 0 6px 0;
+            padding-bottom: 8px;
             text-align: center;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
@@ -322,18 +328,18 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .mask-tile {
-            width: 36px;
-            height: 38px;
-            min-width: 36px;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
             border-radius: 6px;
             padding: 0;
             background: #ffffff;
             border: 2px solid #d4d4d8;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 800;
             color: #18181b;
             text-transform: uppercase;
-            line-height: 34px;
+            line-height: 28px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -363,7 +369,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         .wordle-input-wrapper {
             position: relative;
-            margin-top: -38px;
+            margin-top: -32px;
             margin-bottom: 7px;
             display: flex;
             justify-content: center;
@@ -374,7 +380,7 @@ export const EMAIL_HTML = `<!doctype html>
         .hidden-guess-input {
             width: 320px;
             max-width: 100%;
-            height: 38px;
+            height: 32px;
             margin: 0 auto;
             background: transparent;
             border: none;
@@ -696,10 +702,10 @@ export const EMAIL_HTML = `<!doctype html>
             max-height: 40px;
             box-sizing: border-box;
             margin: 0;
-            padding: 0;
+            padding: 4px 0;
             text-align: center;
             font-size: 10.5px;
-            line-height: 1.4;
+            line-height: 1.3;
             color: #52525b;
             overflow: hidden;
         }
@@ -741,16 +747,12 @@ export const EMAIL_HTML = `<!doctype html>
             </span>
         </h4>
 
-        <!-- Mini Tutorial / Instructions under Logo -->
-        <div class="mini-tutorial">
-            Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within your email
-        </div>
-
         <!-- Dynamic State Store for interactive binding & hiding form on win -->
         <amp-state id="gameState">
             <script type="application/json">
                 {
-                    "hasWon": false
+                    "hasWon": false,
+                    "wordLength": 7
                 }
             </script>
         </amp-state>
@@ -775,7 +777,7 @@ export const EMAIL_HTML = `<!doctype html>
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="178" layout="fixed-height"
+                <amp-list id="stateList" width="auto" height="170" layout="fixed-height"
                     src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
@@ -841,7 +843,8 @@ export const EMAIL_HTML = `<!doctype html>
                         <div class="wordle-input-wrapper">
                             <input type="text" id="guess-input" name="user-guess" class="hidden-guess-input"
                                 placeholder=" " autocomplete="off" required aria-label="Enter word guess"
-                                on="input-throttled:AMP.setState({ typed: { word: event.value.toUpperCase() } })">
+                                maxlength="7" [maxlength]="gameState.wordLength || 7"
+                                on="input-throttled:AMP.setState({ typed: { word: event.value.toUpperCase().slice(0, gameState.wordLength || 7) } })">
                         </div>
 
                         <div class="action-buttons">
@@ -867,10 +870,15 @@ export const EMAIL_HTML = `<!doctype html>
 
         <hr class="section-divider">
 
+        <!-- Mini Tutorial / Instructions -->
+        <div class="mini-tutorial">
+            Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within your email
+        </div>
+
+        <hr class="section-divider">
+
         <!-- 2. Organization Leaderboard -->
         <div class="leaderboard-section">
-            <div class="card-title leaderboard-card-title">Organization Leaderboard</div>
-
             <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height"
                 src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                 <template type="amp-mustache">
