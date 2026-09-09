@@ -70,7 +70,7 @@ const BASE_STATIC_STATE_LIST_HEIGHT = 136
 
 // Calculate dynamic total amp-list height for pre-render (stable bounded height for clue stepper view)
 function calculateStateListHeight(puzzle?: DailyPuzzle): number {
-  return 204
+  return 178
 }
 
 async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
@@ -648,7 +648,7 @@ app.get('/', async (c) => {
 
   // Dynamically calculate and replace amp-list height on pre-render
   const dynamicStateListHeight = calculateStateListHeight(puzzle)
-  html = html.replace('height="204"', `height="${dynamicStateListHeight}"`)
+  html = html.replace('height="178"', `height="${dynamicStateListHeight}"`)
 
   // Pre-render Header Meta (Date, Domain, and Game Title)
   html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
@@ -691,9 +691,12 @@ app.get('/', async (c) => {
 
   html = html.replace('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
 
-  // Pre-render letter mask tiles (all '_') for initial state placeholder
-  const placeholderMaskHtml = Array.from({ length: puzzle.word.length }, () => {
-    return `<div class="mask-tile">_</div>`
+  // Pre-render letter mask tiles for initial state placeholder
+  const placeholderMaskHtml = state.letterMask.map((char, index) => {
+    const isRevealed = char !== '_' && char !== ''
+    const displayedChar = isRevealed ? char : ''
+    const revClass = isRevealed ? ' tile-revealed' : ''
+    return `<span class="mask-tile${revClass}" [class]="'mask-tile ' + ((typed.word || '').slice(${index}, ${index + 1}) ? 'tile-typed' : '${isRevealed ? 'tile-revealed' : ''}')" [text]="(typed.word || '').slice(${index}, ${index + 1}) || '${displayedChar}'">${displayedChar}</span>`
   }).join('')
 
   html = html.replace('__PLACEHOLDER_MASK_TILES__', placeholderMaskHtml)
@@ -1322,7 +1325,15 @@ function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?: string
     totalDefinitions: puzzle.definitions.length,
     definitions,
     letterMask: state.letterMask,
-    formattedLetterMask: state.letterMask.map(char => ({ char })),
+    formattedLetterMask: state.letterMask.map((char, index) => {
+      const isRevealed = char !== '_' && char !== ''
+      return {
+        char: isRevealed ? char : '',
+        isRevealed,
+        index,
+        indexNext: index + 1,
+      }
+    }),
     guessCount: state.guessCount,
     hintsUsed: state.hintsUsed,
     score: state.score,

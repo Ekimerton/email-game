@@ -178,20 +178,20 @@
 
         /* Feedback Status Banner at Top */
         .message-banner {
-            font-size: 13px;
-            font-weight: 400;
+            font-size: 12.5px;
+            font-weight: 500;
             text-align: center;
             color: #52525b;
             line-height: 1.3;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            margin-top: 10px;
-            margin-bottom: 0;
+            margin-top: 4px;
+            margin-bottom: 10px;
             padding: 0;
         }
 
         /* Definition Clue Stepper & Active Card */
         .definitions-section {
-            margin-bottom: 32px;
+            margin-bottom: 12px;
         }
 
         .definitions-header,
@@ -276,8 +276,8 @@
         }
 
         .active-clue-card {
-            padding: 10px 14px;
-            min-height: 84px;
+            padding: 8px 14px;
+            min-height: 72px;
             display: flex;
             align-items: flex-end;
             justify-content: center;
@@ -306,10 +306,11 @@
             text-align: center;
         }
 
-        /* Status & Mask Tiles */
+        /* Status & Wordle Mask Tiles */
         .revealed-letters-section,
         .synonyms-section {
-            margin-bottom: 12px;
+            margin-bottom: 0;
+            position: relative;
         }
 
         .mask-grid {
@@ -317,61 +318,73 @@
             gap: 6px;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
         }
 
         .mask-tile {
-            width: 32px;
-            height: 32px;
-            min-width: 32px;
+            width: 36px;
+            height: 38px;
+            min-width: 36px;
             border-radius: 6px;
             padding: 0;
             background: #ffffff;
-            border: 1.5px solid #d4d4d8;
-            font-size: 16px;
-            font-weight: 700;
+            border: 2px solid #d4d4d8;
+            font-size: 18px;
+            font-weight: 800;
             color: #18181b;
             text-transform: uppercase;
-            line-height: 29px;
+            line-height: 34px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
-            font-family: inherit;
+            font-family: ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco, Consolas, monospace;
+        }
+
+        .mask-tile.tile-revealed {
+            background: #f4f4f5;
+            border-color: #a1a1aa;
+            color: #52525b;
+        }
+
+        .mask-tile.tile-typed {
+            background: #ffffff;
+            border-color: #18181b;
+            color: #18181b;
+            font-weight: 900;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         /* Input Form Section */
         .form-container {
             margin-bottom: 0;
+            position: relative;
         }
 
-        .input-group {
+        .wordle-input-wrapper {
+            position: relative;
+            margin-top: -38px;
+            margin-bottom: 12px;
             display: flex;
-            flex-direction: column;
-            gap: 6px;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
         }
 
-        .guess-input {
-            width: 100%;
-            max-width: 280px;
+        .hidden-guess-input {
+            width: 320px;
+            max-width: 100%;
+            height: 38px;
             margin: 0 auto;
-            background: #ffffff;
-            border: 1.5px solid #d4d4d8;
-            border-radius: 6px;
-            padding: 5px 8px;
-            font-size: 14px;
-            font-weight: 700;
-            color: #18181b;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-align: center;
-            box-sizing: border-box;
-        }
-
-        .guess-input:focus,
-        .guess-input:active {
+            background: transparent;
+            border: none;
             outline: none;
-            border-color: #18181b;
-            box-shadow: none;
+            opacity: 0.001;
+            color: transparent;
+            caret-color: transparent;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
         }
 
         .action-buttons {
@@ -749,11 +762,20 @@
             </script>
         </amp-state>
 
+        <!-- Live Typed Word State for Real-Time Wordle Tile Rendering -->
+        <amp-state id="typed">
+            <script type="application/json">
+                {
+                    "word": ""
+                }
+            </script>
+        </amp-state>
+
         <!-- 1. Main Game -->
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="204" layout="fixed-height"
+                <amp-list id="stateList" width="auto" height="178" layout="fixed-height"
                     src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
@@ -779,15 +801,17 @@
                                 </div>
                             </div>
 
-                            <div class="revealed-letters-section">
-                                <div class="mask-grid">
-                                    {{#letterMask}}
-                                    <div class="mask-tile">{{.}}</div>
-                                    {{/letterMask}}
-                                </div>
-                            </div>
-
                             <div class="message-banner {{#hasWon}}message-banner-win{{/hasWon}}">{{lastMessage}}</div>
+
+                            <div class="revealed-letters-section">
+                                <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                    {{#formattedLetterMask}}
+                                    <span class="mask-tile {{#isRevealed}}tile-revealed{{/isRevealed}}"
+                                        [class]="'mask-tile ' + ((typed.word || '').slice({{index}}, {{indexNext}}) ? 'tile-typed' : ('{{#isRevealed}}tile-revealed{{/isRevealed}}'))"
+                                        [text]="(typed.word || '').slice({{index}}, {{indexNext}}) || '{{char}}'">{{char}}</span>
+                                    {{/formattedLetterMask}}
+                                </label>
+                            </div>
                         </div>
                     </template>
                     <div placeholder>
@@ -795,37 +819,38 @@
                             <div class="definitions-section">
                                 __PLACEHOLDER_DEFS__
                             </div>
-                            <div class="revealed-letters-section">
-                                <div class="mask-grid">
-                                    __PLACEHOLDER_MASK_TILES__
-                                </div>
-                            </div>
                             <div class="message-banner">Guess the word!</div>
+                            <div class="revealed-letters-section">
+                                <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                    __PLACEHOLDER_MASK_TILES__
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </amp-list>
 
                 <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
-                <div class="form-container">
+                <div class="form-container" [hidden]="gameState.hasWon">
                     <form id="guess-form" method="POST"
                         action-xhr="https://email-game.teamify.workers.dev/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
-                        on="submit-success:AMP.setState({ gameState: event.response, clueView: { activeClue: event.response.revealedCount } }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
+                        on="submit-success:AMP.setState({ gameState: event.response, clueView: { activeClue: event.response.revealedCount }, typed: { word: '' } }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
                             submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
 
                         <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
 
-                        <div class="input-group">
-                            <input type="text" name="user-guess" class="guess-input" placeholder="GUESS WORD" required
-                                autocomplete="off">
+                        <div class="wordle-input-wrapper">
+                            <input type="text" id="guess-input" name="user-guess" class="hidden-guess-input"
+                                placeholder=" " autocomplete="off" required aria-label="Enter word guess"
+                                on="input-throttled:AMP.setState({ typed: { word: event.value.toUpperCase() } })">
+                        </div>
 
-                            <div class="action-buttons">
-                                <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
-                                    Letter Hint
-                                </button>
-                                <button type="submit" class="btn btn-primary">
-                                    Submit Guess
-                                </button>
-                            </div>
+                        <div class="action-buttons">
+                            <button type="button" class="btn btn-hint" on="tap:hint-form.submit">
+                                Letter Hint
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                Submit Guess
+                            </button>
                         </div>
                     </form>
 
