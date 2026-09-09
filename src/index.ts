@@ -70,7 +70,7 @@ const BASE_STATIC_STATE_LIST_HEIGHT = 136
 
 // Calculate dynamic total amp-list height for pre-render (stable bounded height for clue stepper view)
 function calculateStateListHeight(puzzle?: DailyPuzzle): number {
-  return 180
+  return 204
 }
 
 async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
@@ -335,17 +335,16 @@ export function getFallbackHtml(options: {
 <body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #18181b;">
   <div style="max-width: 480px; margin: 0 auto; padding: 12px 8px;">
     <div style="background-color: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 12px; padding: 16px 16px; box-sizing: border-box;">
-      <div style="text-align: center; margin: 0 0 16px; display: flex; justify-content: center; align-items: center; gap: 8px;" aria-label="INBOXED #${puzzle.id}">
+      <div style="text-align: center; margin: 0 0 24px; display: flex; justify-content: center; align-items: center; gap: 8px;" aria-label="INBOXED #${puzzle.id}">
         <div style="display: inline-flex; padding: 4px 0;">
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #93c5fd; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">I</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #fca5a5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">N</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #93c5fd; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">B</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #fca5a5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">O</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #93c5fd; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">X</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #fca5a5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">E</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #93c5fd; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">D</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #D8FFC5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">I</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #C4F7CA; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">N</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #D8FFC5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">B</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #C4F7CA; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">O</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #D8FFC5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">X</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #C4F7CA; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">E</span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #D8FFC5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">D</span>
         </div>
-        <span style="display: inline-block; color: #000000; font-size: 18px; font-weight: 800; line-height: 28px; letter-spacing: -0.5px;">#${puzzle.id}</span>
       </div>
 
       <div style="padding: 4px 0 16px; text-align: left;">
@@ -649,7 +648,7 @@ app.get('/', async (c) => {
 
   // Dynamically calculate and replace amp-list height on pre-render
   const dynamicStateListHeight = calculateStateListHeight(puzzle)
-  html = html.replace('height="180"', `height="${dynamicStateListHeight}"`)
+  html = html.replace('height="204"', `height="${dynamicStateListHeight}"`)
 
   // Pre-render Header Meta (Date, Domain, and Game Title)
   html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
@@ -688,7 +687,7 @@ app.get('/', async (c) => {
     return `<div class="clue-content"${hiddenAttr}><div class="${textClass}">${text}</div></div>`
   }).join('')
 
-  const placeholderDefsHtml = `<div class="definitions-header"><span class="section-label">Definitions</span><div class="clue-tabs-bar">${placeholderTabsHtml}</div></div><div class="active-clue-card">${placeholderClueCardsHtml}</div>`
+  const placeholderDefsHtml = `<div class="active-clue-card">${placeholderClueCardsHtml}</div><div class="clue-tabs-bar">${placeholderTabsHtml}</div>`
 
   html = html.replace('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
 

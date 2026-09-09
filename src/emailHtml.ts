@@ -62,7 +62,7 @@ export const EMAIL_HTML = `<!doctype html>
             z-index: 1;
             margin: 0 auto;
             max-width: 480px;
-            padding: 0 0 40px 0;
+            padding: 0;
         }
 
         .game-section,
@@ -120,13 +120,13 @@ export const EMAIL_HTML = `<!doctype html>
 
         .logo-tile:nth-child(odd),
         .logo-tile.tile-blue {
-            background-color: #93c5fd;
+            background-color: #D8FFC5;
             transform: rotate(-10deg);
         }
 
         .logo-tile:nth-child(even),
         .logo-tile.tile-red {
-            background-color: #fca5a5;
+            background-color: #C4F7CA;
             transform: rotate(10deg);
         }
 
@@ -179,9 +179,9 @@ export const EMAIL_HTML = `<!doctype html>
         /* Feedback Status Banner at Top */
         .message-banner {
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 400;
             text-align: center;
-            color: #18181b;
+            color: #52525b;
             line-height: 1.3;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
             margin-top: 10px;
@@ -191,7 +191,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         /* Definition Clue Stepper & Active Card */
         .definitions-section {
-            margin-bottom: 8px;
+            margin-bottom: 32px;
         }
 
         .definitions-header,
@@ -224,6 +224,7 @@ export const EMAIL_HTML = `<!doctype html>
             display: flex;
             gap: 5px;
             align-items: center;
+            justify-content: center;
         }
 
         .clue-tab-btn {
@@ -259,34 +260,41 @@ export const EMAIL_HTML = `<!doctype html>
             border-color: #e4e4e7;
         }
 
-        .clue-tab-btn.active,
+        .clue-tab-btn.active {
+            background: #C4F7CA;
+            color: #000000;
+            border-color: #000000;
+            opacity: 1;
+        }
+
         .clue-tab-btn.locked.active {
-            background: #18181b;
-            color: #ffffff;
-            border-color: #18181b;
+            background: #f4f4f5;
+            color: #cacacf;
+            color: rgba(161, 161, 170, 0.5);
+            border-color: #000000;
             opacity: 1;
         }
 
         .active-clue-card {
-            background: #f4f4f5;
-            border: 1px solid #e4e4e7;
-            border-radius: 8px;
             padding: 10px 14px;
             min-height: 84px;
             display: flex;
-            align-items: center;
+            align-items: flex-end;
+            justify-content: center;
         }
 
         .clue-content {
             width: 100%;
+            text-align: center;
         }
 
         .clue-text {
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 500;
             color: #09090b;
             line-height: 1.4;
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            text-align: center;
         }
 
         .clue-text.blurred {
@@ -295,32 +303,35 @@ export const EMAIL_HTML = `<!doctype html>
             font-family: ui-monospace, SFMono-Regular, monospace;
             font-size: 12px;
             font-weight: 500;
+            text-align: center;
         }
 
         /* Status & Mask Tiles */
+        .revealed-letters-section,
         .synonyms-section {
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .mask-grid {
             display: flex;
-            gap: 5px;
+            gap: 6px;
             align-items: center;
+            justify-content: center;
         }
 
         .mask-tile {
-            width: 22px;
-            height: 22px;
-            min-width: 22px;
-            border-radius: 5px;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border-radius: 6px;
             padding: 0;
             background: #ffffff;
-            border: 1px solid #d4d4d8;
-            font-size: 11px;
+            border: 1.5px solid #d4d4d8;
+            font-size: 16px;
             font-weight: 700;
             color: #18181b;
             text-transform: uppercase;
-            line-height: 20px;
+            line-height: 29px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -671,7 +682,7 @@ export const EMAIL_HTML = `<!doctype html>
         .mini-tutorial {
             max-height: 40px;
             box-sizing: border-box;
-            margin: 0 0 12px 0;
+            margin: 0;
             padding: 0;
             text-align: center;
             font-size: 10.5px;
@@ -705,7 +716,7 @@ export const EMAIL_HTML = `<!doctype html>
 
 <body>
     <div class="email-wrapper">
-        <h4 class="game-header" aria-label="Inboxed #1">
+        <h4 class="game-header" aria-label="Inboxed">
             <span class="logo-tiles">
                 <span class="logo-tile rotate-neg tile-blue">I</span>
                 <span class="logo-tile rotate-pos tile-red">N</span>
@@ -715,12 +726,11 @@ export const EMAIL_HTML = `<!doctype html>
                 <span class="logo-tile rotate-pos tile-red">E</span>
                 <span class="logo-tile rotate-neg tile-blue">D</span>
             </span>
-            <span class="logo-badge">#1</span>
         </h4>
 
         <!-- Mini Tutorial / Instructions under Logo -->
         <div class="mini-tutorial">
-            Guess the word &bull; Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within the email
+            Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within your email
         </div>
 
         <!-- Dynamic State Store for interactive binding & hiding form on win -->
@@ -743,24 +753,11 @@ export const EMAIL_HTML = `<!doctype html>
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="180" layout="fixed-height"
+                <amp-list id="stateList" width="auto" height="204" layout="fixed-height"
                     src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
                             <div class="definitions-section">
-                                <div class="definitions-header">
-                                    <span class="section-label">Definitions</span>
-                                    <div class="clue-tabs-bar">
-                                        {{#definitions}}
-                                        <button type="button"
-                                            class="clue-tab-btn {{#isRevealed}}unlocked{{/isRevealed}}{{^isRevealed}}locked{{/isRevealed}} {{#isLatest}}active{{/isLatest}}"
-                                            [class]="'clue-tab-btn ' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? 'unlocked' : 'locked') + ((clueView.activeClue || {{revealedCount}}) == {{num}} ? ' active' : '')"
-                                            on="tap:AMP.setState({ clueView: { activeClue: {{num}} } })">
-                                            {{num}}
-                                        </button>
-                                        {{/definitions}}
-                                    </div>
-                                </div>
                                 <div class="active-clue-card">
                                     {{#definitions}}
                                     <div class="clue-content"
@@ -770,16 +767,23 @@ export const EMAIL_HTML = `<!doctype html>
                                     </div>
                                     {{/definitions}}
                                 </div>
+                                <div class="clue-tabs-bar">
+                                    {{#definitions}}
+                                    <button type="button"
+                                        class="clue-tab-btn {{#isRevealed}}unlocked{{/isRevealed}}{{^isRevealed}}locked{{/isRevealed}} {{#isLatest}}active{{/isLatest}}"
+                                        [class]="'clue-tab-btn ' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? 'unlocked' : 'locked') + ((clueView.activeClue || {{revealedCount}}) == {{num}} ? ' active' : '')"
+                                        on="tap:AMP.setState({ clueView: { activeClue: {{num}} } })">
+                                        {{num}}
+                                    </button>
+                                    {{/definitions}}
+                                </div>
                             </div>
 
-                            <div class="synonyms-section">
-                                <div class="letters-header">
-                                    <span class="section-label">Revealed Letters</span>
-                                    <div class="mask-grid">
-                                        {{#letterMask}}
-                                        <div class="mask-tile">{{.}}</div>
-                                        {{/letterMask}}
-                                    </div>
+                            <div class="revealed-letters-section">
+                                <div class="mask-grid">
+                                    {{#letterMask}}
+                                    <div class="mask-tile">{{.}}</div>
+                                    {{/letterMask}}
                                 </div>
                             </div>
 
@@ -791,12 +795,9 @@ export const EMAIL_HTML = `<!doctype html>
                             <div class="definitions-section">
                                 __PLACEHOLDER_DEFS__
                             </div>
-                            <div class="synonyms-section">
-                                <div class="letters-header">
-                                    <span class="section-label">Revealed Letters</span>
-                                    <div class="mask-grid">
-                                        __PLACEHOLDER_MASK_TILES__
-                                    </div>
+                            <div class="revealed-letters-section">
+                                <div class="mask-grid">
+                                    __PLACEHOLDER_MASK_TILES__
                                 </div>
                             </div>
                             <div class="message-banner">Guess the word!</div>

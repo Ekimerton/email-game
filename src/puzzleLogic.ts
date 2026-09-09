@@ -1,6 +1,6 @@
-import { PUZZLES, DailyPuzzle } from './puzzles'
+import { PUZZLES, type DailyPuzzle } from './puzzles'
 
-export { PUZZLES, DailyPuzzle }
+export { PUZZLES, type DailyPuzzle }
 
 export function getTodayDateString(timeZone: string = 'America/New_York'): string {
   const formatter = new Intl.DateTimeFormat('en-CA', {

@@ -62,18 +62,17 @@ describe('Hono App & Layout Calculations', () => {
   })
 
   it('should include the daily word game header in h4 and ticket stub divider in EMAIL_HTML', () => {
-    expect(EMAIL_HTML).toContain('<h4 class="game-header" aria-label="Inboxed #1">')
+    expect(EMAIL_HTML).toContain('<h4 class="game-header" aria-label="Inboxed">')
     expect(EMAIL_HTML).toContain('class="logo-tiles"')
     expect(EMAIL_HTML).toContain('logo-tile rotate-pos')
     expect(EMAIL_HTML).toContain('logo-tile rotate-neg')
-    expect(EMAIL_HTML).toContain('class="logo-badge">#1</span>')
     expect(EMAIL_HTML).toContain('ticket-stub-divider')
     expect(EMAIL_HTML).toContain("Have someone you think would like this game? Forward this email to them!")
   })
 
   it('should include the mini tutorial within 40px height limit in EMAIL_HTML', () => {
     expect(EMAIL_HTML).toContain('mini-tutorial')
-    expect(EMAIL_HTML).toContain('Guess the word &bull; Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within the email')
+    expect(EMAIL_HTML).toContain('Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within your email')
     expect(EMAIL_HTML).toContain('max-height: 40px;')
   })
 })
