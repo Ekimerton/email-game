@@ -70,7 +70,7 @@ const BASE_STATIC_STATE_LIST_HEIGHT = 136
 
 // Calculate dynamic total amp-list height for pre-render (stable bounded height for clue stepper view)
 function calculateStateListHeight(puzzle?: DailyPuzzle): number {
-  return 170
+  return 172
 }
 
 async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
@@ -648,7 +648,7 @@ app.get('/', async (c) => {
 
   // Dynamically calculate and replace amp-list height on pre-render
   const dynamicStateListHeight = calculateStateListHeight(puzzle)
-  html = html.replace('height="170"', `height="${dynamicStateListHeight}"`)
+  html = html.replace('height="172"', `height="${dynamicStateListHeight}"`)
 
   // Pre-render puzzle wordLength and input maxlength
   html = html

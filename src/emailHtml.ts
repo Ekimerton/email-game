@@ -321,7 +321,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         .mask-grid {
             display: flex;
-            gap: 6px;
+            gap: 4px;
             align-items: center;
             justify-content: center;
             cursor: pointer;
@@ -331,15 +331,15 @@ export const EMAIL_HTML = `<!doctype html>
             width: 32px;
             height: 32px;
             min-width: 32px;
-            border-radius: 6px;
+            border-radius: 4px;
             padding: 0;
             background: #ffffff;
-            border: 2px solid #d4d4d8;
+            border: 1.5px solid #d4d4d8;
             font-size: 16px;
             font-weight: 800;
             color: #18181b;
             text-transform: uppercase;
-            line-height: 28px;
+            line-height: 32px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -348,17 +348,64 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .mask-tile.tile-revealed {
-            background: #f4f4f5;
-            border-color: #a1a1aa;
+            background: #ffffff;
+            border-color: #000000;
             color: #52525b;
         }
 
         .mask-tile.tile-typed {
             background: #ffffff;
-            border-color: #18181b;
+            border-color: #000000;
             color: #18181b;
             font-weight: 900;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Green Focus Stars flanking input when focused */
+        .focus-star {
+            position: relative;
+            height: 32px;
+            width: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s ease;
+        }
+
+        .focus-star-left {
+            margin-right: 4px;
+        }
+
+        .focus-star-right {
+            margin-left: 4px;
+        }
+
+        .star-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #000000;
+            font-size: 22px;
+            line-height: 1;
+            z-index: 1;
+        }
+
+        .star-fg {
+            position: relative;
+            color: #D8FFC5;
+            font-size: 13px;
+            line-height: 1;
+            z-index: 2;
+        }
+
+        .game-body:focus-within .focus-star,
+        .focus-star.is-active {
+            opacity: 1;
+            visibility: visible;
         }
 
         /* Input Form Section */
@@ -378,7 +425,7 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .hidden-guess-input {
-            width: 320px;
+            width: 360px;
             max-width: 100%;
             height: 32px;
             margin: 0 auto;
@@ -577,7 +624,7 @@ export const EMAIL_HTML = `<!doctype html>
         .rank-number {
             font-weight: 800;
             width: 20px;
-            color: #14532d;
+            color: #30AFFF;
         }
 
         .player-email {
@@ -609,7 +656,7 @@ export const EMAIL_HTML = `<!doctype html>
             position: relative;
             display: flex;
             align-items: center;
-            background: #F7B6CB;
+            background: #FCE7F3;
             border: none;
             border-radius: 8px;
             margin-top: 14px;
@@ -669,7 +716,7 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .ticket-stub {
-            background: #F7B6CB;
+            background: #FCE7F3;
             padding: 10px 14px;
             display: flex;
             flex-direction: column;
@@ -773,11 +820,12 @@ export const EMAIL_HTML = `<!doctype html>
             </script>
         </amp-state>
 
+
         <!-- 1. Main Game -->
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="170" layout="fixed-height"
+                <amp-list id="stateList" width="auto" height="172" layout="fixed-height"
                     src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
@@ -807,11 +855,13 @@ export const EMAIL_HTML = `<!doctype html>
 
                             <div class="revealed-letters-section">
                                 <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                    <span class="focus-star focus-star-left" [class]="'focus-star focus-star-left' + ((typed.word || '').length > 0 ? ' is-active' : '')"><span class="star-bg">★</span><span class="star-fg">★</span></span>
                                     {{#formattedLetterMask}}
                                     <span class="mask-tile {{#isRevealed}}tile-revealed{{/isRevealed}}"
                                         [class]="'mask-tile ' + ((typed.word || '').slice({{index}}, {{indexNext}}) ? 'tile-typed' : ('{{#isRevealed}}tile-revealed{{/isRevealed}}'))"
                                         [text]="(typed.word || '').slice({{index}}, {{indexNext}}) || '{{char}}'">{{char}}</span>
                                     {{/formattedLetterMask}}
+                                    <span class="focus-star focus-star-right" [class]="'focus-star focus-star-right' + ((typed.word || '').length > 0 ? ' is-active' : '')"><span class="star-bg">★</span><span class="star-fg">★</span></span>
                                 </label>
                             </div>
                         </div>
@@ -824,7 +874,9 @@ export const EMAIL_HTML = `<!doctype html>
                             <div class="message-banner">Guess the word!</div>
                             <div class="revealed-letters-section">
                                 <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                    <span class="focus-star focus-star-left" [class]="'focus-star focus-star-left' + ((typed.word || '').length > 0 ? ' is-active' : '')"><span class="star-bg">★</span><span class="star-fg">★</span></span>
                                     __PLACEHOLDER_MASK_TILES__
+                                    <span class="focus-star focus-star-right" [class]="'focus-star focus-star-right' + ((typed.word || '').length > 0 ? ' is-active' : '')"><span class="star-bg">★</span><span class="star-fg">★</span></span>
                                 </label>
                             </div>
                         </div>

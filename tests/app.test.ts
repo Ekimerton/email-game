@@ -83,6 +83,19 @@ describe('Hono App & Layout Calculations', () => {
     expect(html).toContain(`maxlength="${puzzle.word.length}"`)
     expect(html).toContain(`[maxlength]="gameState.wordLength || ${puzzle.word.length}"`)
   })
+
+  it('should include green focus stars flanking input in EMAIL_HTML without highlighting squares', () => {
+    expect(EMAIL_HTML).toContain('focus-star focus-star-left')
+    expect(EMAIL_HTML).toContain('focus-star focus-star-right')
+    expect(EMAIL_HTML).toContain('star-bg')
+    expect(EMAIL_HTML).toContain('star-fg')
+    expect(EMAIL_HTML).toContain('#D8FFC5')
+    expect(EMAIL_HTML).toContain('margin-right: 4px')
+    expect(EMAIL_HTML).toContain('margin-left: 4px')
+    expect(EMAIL_HTML).toContain('.game-body:focus-within .focus-star')
+    expect(EMAIL_HTML).not.toContain('.mask-tile.tile-active')
+    expect(EMAIL_HTML).not.toContain('tile-active')
+  })
 })
 
 describe('Duplicate Guess Feedback & State Handling', () => {
