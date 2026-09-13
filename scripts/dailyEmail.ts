@@ -20,6 +20,7 @@ import { getDailyPuzzle, formatPrettyDate } from '../src/puzzleLogic'
 const args = process.argv.slice(2)
 const isDryRun = args.includes('--dry-run')
 const toArg = args.find(a => a.startsWith('--to='))?.split('=')[1]
+const dateArg = args.find(a => a.startsWith('--date='))?.split('=')[1]
 
 const SENDER_EMAIL = process.env.SENDER_EMAIL || 'game@nvidia.engineering'
 const PUBLIC_URL = (process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.workers.dev').replace(/\/$/, '')
@@ -54,10 +55,11 @@ async function getSubscribers(): Promise<string[]> {
   }
 }
 
-async function getEmailContent(email: string): Promise<{ ampHtml: string; fallbackHtml: string }> {
+async function getEmailContent(email: string, dateStr?: string): Promise<{ ampHtml: string; fallbackHtml: string }> {
+  const dateQuery = dateStr ? `&date=${encodeURIComponent(dateStr)}` : ''
   try {
-    const ampRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(email)}&forceHttps=true`)
-    const fbRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(email)}&forceHttps=true`)
+    const ampRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
+    const fbRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
     if (!ampRes.ok || !fbRes.ok) throw new Error('Dev server not running or returned error')
     const ampHtml = await ampRes.text()
     const fallbackHtml = await fbRes.text()
@@ -65,16 +67,16 @@ async function getEmailContent(email: string): Promise<{ ampHtml: string; fallba
   } catch {
     // Dev server not running — render via Hono app in-process
     const { app } = await import('../src/index')
-    const ampRes = await app.request(`/?email=${encodeURIComponent(email)}&forceHttps=true`)
+    const ampRes = await app.request(`/?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
     const ampHtml = await ampRes.text()
-    const fbRes = await app.request(`/fallback?email=${encodeURIComponent(email)}&forceHttps=true`)
+    const fbRes = await app.request(`/fallback?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
     const fallbackHtml = await fbRes.text()
     return { ampHtml, fallbackHtml }
   }
 }
 
 async function main() {
-  const puzzle = getDailyPuzzle()
+  const puzzle = getDailyPuzzle(dateArg)
   const today = puzzle.date
   const subject = `Inboxed #${puzzle.id} — ${puzzle.word.charAt(0) + puzzle.word.slice(1).toLowerCase()} — ${formatPrettyDate(today)}`
 
@@ -111,13 +113,14 @@ async function main() {
 
   for (const email of subscribers) {
     try {
-      const { ampHtml, fallbackHtml } = await getEmailContent(email)
+      const { ampHtml, fallbackHtml } = await getEmailContent(email, dateArg)
+      const dateQuery = dateArg ? `?date=${encodeURIComponent(dateArg)}` : ''
 
       const info = await transporter.sendMail({
         from: SENDER_EMAIL,
         to: email,
         subject,
-        text: `Play today's Inboxed puzzle: ${PUBLIC_URL}`,
+        text: `Play today's Inboxed puzzle: ${PUBLIC_URL}${dateQuery}`,
         html: fallbackHtml,
         alternatives: [
           {
@@ -130,7 +133,7 @@ async function main() {
           'List-Unsubscribe': `<${PUBLIC_URL}/unsubscribe>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           'Feedback-ID': `word-game-daily:mailgun`,
-          'X-Entity-Ref-ID': `puzzle-${puzzle.id}`,
+          'X-Entity-Ref-ID': `puzzle-${puzzle.id}-${puzzle.date}`,
         },
       })
 

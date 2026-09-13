@@ -283,7 +283,7 @@
 
         .active-clue-card {
             padding: 8px 14px;
-            min-height: 72px;
+            min-height: 88px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -295,7 +295,7 @@
         }
 
         .clue-text {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 500;
             color: #09090b;
             line-height: 1.4;
@@ -361,52 +361,6 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        /* Green Focus Stars flanking input when focused */
-        .focus-star {
-            position: relative;
-            height: 32px;
-            width: 22px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.15s ease;
-        }
-
-        .focus-star-left {
-            margin-right: 4px;
-        }
-
-        .focus-star-right {
-            margin-left: 4px;
-        }
-
-        .star-bg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #000000;
-            font-size: 22px;
-            line-height: 1;
-            z-index: 1;
-        }
-
-        .star-fg {
-            position: relative;
-            color: #D8FFC5;
-            font-size: 13px;
-            line-height: 1;
-            z-index: 2;
-        }
-
-        .game-body:focus-within .focus-star,
-        .focus-star.is-active {
-            opacity: 1;
-            visibility: visible;
-        }
 
         /* Input Form Section */
         .form-container {
@@ -588,20 +542,31 @@
         }
 
         /* Leaderboard */
+        .leaderboard-container {
+            position: relative;
+            height: 100px;
+            max-height: 100px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
         .leaderboard-blur-content {
             opacity: 0.15;
             filter: blur(4px);
+            max-height: 100px;
+            overflow: hidden;
         }
 
         .leaderboard-lock-banner {
             position: absolute;
-            top: 48px;
+            top: 50%;
             left: 12px;
             right: 12px;
+            transform: translateY(-50%);
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid #71717a;
             border-radius: 8px;
-            padding: 8px 12px;
+            padding: 6px 12px;
             color: #18181b;
             font-size: 11px;
             font-weight: 700;
@@ -825,7 +790,7 @@
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="172" layout="fixed-height"
+                <amp-list id="stateList" width="auto" height="188" layout="fixed-height"
                     src="https://email-game.teamify.workers.dev/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
@@ -855,13 +820,11 @@
 
                             <div class="revealed-letters-section">
                                 <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
-                                    <span class="focus-star focus-star-left" [class]="'focus-star focus-star-left' + ((typed.word || '').length > 0 ? ' is-active' : '')"><span class="star-bg">★</span><span class="star-fg">★</span></span>
                                     {{#formattedLetterMask}}
                                     <span class="mask-tile {{#isRevealed}}tile-revealed{{/isRevealed}}"
                                         [class]="'mask-tile ' + ((typed.word || '').slice({{index}}, {{indexNext}}) ? 'tile-typed' : ('{{#isRevealed}}tile-revealed{{/isRevealed}}'))"
                                         [text]="(typed.word || '').slice({{index}}, {{indexNext}}) || '{{char}}'">{{char}}</span>
                                     {{/formattedLetterMask}}
-                                    <span class="focus-star focus-star-right" [class]="'focus-star focus-star-right' + ((typed.word || '').length > 0 ? ' is-active' : '')"><span class="star-bg">★</span><span class="star-fg">★</span></span>
                                 </label>
                             </div>
                         </div>
@@ -874,9 +837,7 @@
                             <div class="message-banner">Guess the word!</div>
                             <div class="revealed-letters-section">
                                 <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
-                                    <span class="focus-star focus-star-left" [class]="'focus-star focus-star-left' + ((typed.word || '').length > 0 ? ' is-active' : '')"><span class="star-bg">★</span><span class="star-fg">★</span></span>
                                     __PLACEHOLDER_MASK_TILES__
-                                    <span class="focus-star focus-star-right" [class]="'focus-star focus-star-right' + ((typed.word || '').length > 0 ? ' is-active' : '')"><span class="star-bg">★</span><span class="star-fg">★</span></span>
                                 </label>
                             </div>
                         </div>
@@ -931,7 +892,7 @@
 
         <!-- 2. Organization Leaderboard -->
         <div class="leaderboard-section">
-            <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height"
+            <amp-list id="leaderboardList" width="auto" height="100" layout="fixed-height"
                 src="https://email-game.teamify.workers.dev/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                 <template type="amp-mustache">
                     <div class="leaderboard-container">
