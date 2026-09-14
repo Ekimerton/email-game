@@ -22,5 +22,10 @@
     "crons": [
       "0 17 * * *"
     ]
+  },
+  "vars": {
+    "PUBLIC_HTTPS_URL": "https://inboxed.fun",
+    "SENDER_EMAIL": "Inboxed <game@inboxed.fun>",
+    "MAILGUN_DOMAIN": "inboxed.fun"
   }
 }

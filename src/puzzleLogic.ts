@@ -33,7 +33,7 @@ export function formatPrettyDate(dateStr: string): string {
   const year = Number(parts[0])
   const month = Number(parts[1])
   const day = Number(parts[2])
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
   if (!year || !month || !day || month < 1 || month > 12) return dateStr
   return `${months[month - 1]} ${day}, ${year}`
 }

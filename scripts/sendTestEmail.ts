@@ -105,11 +105,11 @@ async function sendTestEmail() {
     targetEmails.push('ekim0252@gmail.com')
   }
 
-  const senderEmail = senderArg || process.env.SENDER_EMAIL || 'game@inboxed.fun'
+  const senderEmail = senderArg || process.env.SENDER_EMAIL || 'Inboxed <game@inboxed.fun>'
   const publicHttpsUrl = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
 
   const puzzle = getDailyPuzzle(dateArg)
-  const subject = `Inboxed #${puzzle.id} - Today's Multi-Definition Puzzle (${formatPrettyDate(puzzle.date)})`
+  const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(puzzle.date)}`
 
   console.log('Preparing test AMP Email via Mailgun SMTP...')
   console.log(`  Date:          ${puzzle.date} (Puzzle #${puzzle.id}: ${puzzle.word})`)

@@ -22,7 +22,7 @@ const isDryRun = args.includes('--dry-run')
 const toArg = args.find(a => a.startsWith('--to='))?.split('=')[1]
 const dateArg = args.find(a => a.startsWith('--date='))?.split('=')[1]
 
-const SENDER_EMAIL = process.env.SENDER_EMAIL || 'game@inboxed.fun'
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'Inboxed <game@inboxed.fun>'
 const PUBLIC_URL = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
 const MAILGUN_SMTP_LOGIN = process.env.MAILGUN_SMTP_LOGIN
 const MAILGUN_SMTP_PASS = process.env.MAILGUN_SMTP_PASS
@@ -78,7 +78,7 @@ async function getEmailContent(email: string, dateStr?: string): Promise<{ ampHt
 async function main() {
   const puzzle = getDailyPuzzle(dateArg)
   const today = puzzle.date
-  const subject = `Inboxed #${puzzle.id} — ${puzzle.word.charAt(0) + puzzle.word.slice(1).toLowerCase()} — ${formatPrettyDate(today)}`
+  const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(today)}`
 
   console.log(`\n📅 Daily Email — ${today}`)
   console.log(`📝 Puzzle #${puzzle.id}: ${puzzle.word}`)

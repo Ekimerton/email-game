@@ -57,6 +57,11 @@ export interface GameState {
 type Bindings = {
   GAME_STATE_KV: KVNamespace
   AUTH_SECRET?: string
+  MAILGUN_API_KEY?: string
+  MAILGUN_DOMAIN?: string
+  SENDER_EMAIL?: string
+  PUBLIC_HTTPS_URL?: string
+  ADMIN_SECRET?: string
 }
 
 export const app = new Hono<{ Bindings: Bindings }>()
@@ -1454,7 +1459,7 @@ export async function buildPuzzleEmailContent(
     accountUrl,
   })
 
-  const subject = `Inboxed #${puzzle.id} — ${puzzle.word.charAt(0) + puzzle.word.slice(1).toLowerCase()} — ${formatPrettyDate(puzzle.date)}`
+  const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(puzzle.date)}`
   const text = `Play today's Inboxed puzzle (#${puzzle.id}): ${origin}/?email=${encodedEmail}`
 
   return { ampHtml, fallbackHtml, subject, text, puzzle }
@@ -1467,7 +1472,7 @@ async function renderAmpGame(c: any) {
   const reqUrl = new URL(c.req.url)
   const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
   const forceHttps = c.req.query('forceHttps') === 'true'
-  const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
   const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
   const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
@@ -1527,7 +1532,7 @@ app.get('/fallback', async (c) => {
   const reqUrl = new URL(c.req.url)
   const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
   const forceHttps = c.req.query('forceHttps') === 'true'
-  const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
 
   const publicUrl = (isLocalHost && !forceHttps)
     ? reqUrl.origin
@@ -2030,7 +2035,7 @@ app.post('/api/subscribe', async (c) => {
     const reqUrl = new URL(c.req.url)
     const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
     const forceHttps = c.req.query('forceHttps') === 'true'
-    const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+    const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
     const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
 
     const confirmUrl = `${currentOrigin}/confirm?token=${encodeURIComponent(token)}`
@@ -2038,6 +2043,9 @@ app.post('/api/subscribe', async (c) => {
     const confirmText = renderConfirmationEmailText(confirmUrl)
 
     await sendMailgunEmail({
+      apiKey: c.env?.MAILGUN_API_KEY || process.env.MAILGUN_API_KEY,
+      domain: c.env?.MAILGUN_DOMAIN || process.env.MAILGUN_DOMAIN || 'inboxed.fun',
+      from: c.env?.SENDER_EMAIL || process.env.SENDER_EMAIL || 'Inboxed <game@inboxed.fun>',
       to: cleanEmail,
       subject: 'Confirm your subscription to Inboxed',
       html: confirmHtml,
@@ -2081,7 +2089,7 @@ app.post('/api/send-today', async (c) => {
     const reqUrl = new URL(c.req.url)
     const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
     const forceHttps = c.req.query('forceHttps') === 'true'
-    const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+    const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
     const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
 
     const emailContent = await buildPuzzleEmailContent(
@@ -2093,6 +2101,9 @@ app.post('/api/send-today', async (c) => {
     )
 
     await sendMailgunEmail({
+      apiKey: c.env?.MAILGUN_API_KEY || process.env.MAILGUN_API_KEY,
+      domain: c.env?.MAILGUN_DOMAIN || process.env.MAILGUN_DOMAIN || 'inboxed.fun',
+      from: c.env?.SENDER_EMAIL || process.env.SENDER_EMAIL || 'Inboxed <game@inboxed.fun>',
       to: email,
       subject: emailContent.subject,
       text: emailContent.text,

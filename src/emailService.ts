@@ -26,7 +26,10 @@ export async function sendMailgunEmail(
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
   const apiKey = options.apiKey || process.env.MAILGUN_API_KEY
   const domain = options.domain || process.env.MAILGUN_DOMAIN || 'inboxed.fun'
-  const from = options.from || process.env.SENDER_EMAIL || 'Inboxed <game@inboxed.fun>'
+  const rawFrom = options.from || process.env.SENDER_EMAIL || 'Inboxed <game@inboxed.fun>'
+  const from = rawFrom.includes('<') && rawFrom.includes('>')
+    ? rawFrom.trim()
+    : `Inboxed <${rawFrom.trim()}>`
 
   if (!apiKey) {
     console.warn(`[emailService] Mailgun API key not provided. Simulated send to ${options.to} (${options.subject})`)
