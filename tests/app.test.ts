@@ -18,7 +18,7 @@ describe('Hono App & Layout Calculations', () => {
       daysPlayed: 5,
       coworkerCount: 12,
       playerCount: 30,
-      playUrl: 'https://email-game.teamify.workers.dev/?email=testuser%40nvidia.engineering',
+      playUrl: 'https://inboxed.fun/?email=testuser%40nvidia.engineering',
     })
 
     expect(html).toContain('<!doctype html>')
@@ -31,7 +31,7 @@ describe('Hono App & Layout Calculations', () => {
     expect(html).toContain('Your email client might not be supported.')
     expect(html).toContain('This game uses AMP email, which is supported by Gmail, Yahoo Mail, AOL Mail, FairEmail, and Mail.ru.')
     expect(html).toContain('update your account preferences')
-    expect(html).toContain('https://email-game.teamify.workers.dev')
+    expect(html).toContain('https://inboxed.fun')
     expect(html).toContain('background-color: #ffffff')
     expect(html).toContain('background-color: #f4f4f5')
     expect(html).toContain('border: 1px solid #e4e4e7')
@@ -46,7 +46,7 @@ describe('Hono App & Layout Calculations', () => {
       daysPlayed: 1,
       coworkerCount: 0,
       playerCount: 30,
-      playUrl: 'https://email-game.teamify.workers.dev/',
+      playUrl: 'https://inboxed.fun/',
     })
 
     expect(html).toContain('Join 30 players playing the game today.')
@@ -57,7 +57,7 @@ describe('Hono App & Layout Calculations', () => {
     const response = await app.request('/fallback?email=player@example.com&forceHttps=true')
     const html = await response.text()
 
-    expect(html).toContain('https://email-game.teamify.workers.dev/')
+    expect(html).toContain('https://inboxed.fun/')
     expect(html).not.toContain('http://localhost')
   })
 
@@ -257,6 +257,87 @@ describe('Synonym Guess Scoring & Feedback System', () => {
     // Score must be 975 (1000 - 25), NOT 900 (1000 - 100)
     expect(winData.score).toBe(975)
     expect(winData.lastMessage).toContain('Solved "LOAD" in 2 guesses! 975 pts')
+  })
+})
+
+describe('Email Signup Landing Page & Subscribe API', () => {
+  it('should serve the email signup landing page at GET / by default', async () => {
+    const res = await app.request('/')
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('The Daily Word Game in Your Inbox')
+    expect(html).toContain('action="/api/subscribe"')
+    expect(html).toContain('Enter your email address')
+    expect(html).toContain('Get Daily Puzzles Free')
+    expect(html).toContain('logo-tiles')
+  })
+
+  it('should serve the email signup landing page at GET /signup', async () => {
+    const res = await app.request('/signup')
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('The Daily Word Game in Your Inbox')
+    expect(html).toContain('action="/api/subscribe"')
+  })
+
+  it('should pre-fill email input when ?email= query param is provided to /signup', async () => {
+    const res = await app.request('/signup?email=test%40company.com')
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('value="test@company.com"')
+  })
+
+  it('should show subscribed success confirmation when subscribed=true on GET /', async () => {
+    const res = await app.request('/?subscribed=true&email=user%40acme.com')
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain("You're Subscribed!")
+    expect(html).not.toContain("Play Today's Puzzle Online")
+  })
+
+  it('should include the AMP/Apple Mail disclaimer and omit quick habit feature and footer', async () => {
+    const res = await app.request('/')
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('Inboxed does not currently support Apple Mail, Outlook, or other non-AMP clients.')
+    expect(html).toContain('https://amp.dev/support/faq/email-support/')
+    expect(html).not.toContain('⚠️')
+    expect(html).not.toContain('Quick daily habit')
+    expect(html).not.toContain('Free to play • No spam • One-click unsubscribe anytime')
+  })
+
+  it('should serve AMP game preview on GET /play', async () => {
+    const res = await app.request('/play?email=testuser%40company.com')
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('id="stateList"')
+    expect(html).toContain('guess-form')
+    expect(html).toContain('hint-form')
+  })
+
+  it('should subscribe an email via POST /api/subscribe with JSON body', async () => {
+    const newEmail = `newuser_${Date.now()}@company.com`
+    const res = await app.request('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: newEmail }),
+    })
+    expect(res.status).toBe(200)
+    const data = await res.json() as any
+    expect(data.success).toBe(true)
+    expect(data.message).toContain(newEmail)
+  })
+
+  it('should reject invalid email via POST /api/subscribe', async () => {
+    const res = await app.request('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'invalid-email-no-at' }),
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json() as any
+    expect(data.success).toBe(false)
+    expect(data.message).toContain('valid email')
   })
 })
 

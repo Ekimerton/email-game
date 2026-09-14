@@ -132,7 +132,7 @@ describe('Spoof-Proof Account & Preferences API', () => {
       daysPlayed: 3,
       coworkerCount: 5,
       playerCount: 10,
-      playUrl: 'https://email-game.teamify.workers.dev',
+      playUrl: 'https://inboxed.fun',
     })
 
     expect(html).toContain('update your account preferences')

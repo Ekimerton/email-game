@@ -56,7 +56,7 @@ Arguments:
 Options:
   -e, --email=<str>  User email address
   -d, --date=<str>   Date (YYYY-MM-DD)
-  --remote, --prod   Target remote production worker (${process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.workers.dev'})
+  --remote, --prod   Target remote production worker (${process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun'})
   --local, --dev     Target local worker (http://localhost:8787, with in-process fallback)
   --url=<custom_url> Target a specific server URL
   --direct-kv        Also run 'wrangler kv key delete' directly
@@ -184,7 +184,7 @@ async function main() {
   console.log(`👤 User:  ${cleanEmail}`)
   console.log(`📅 Date:  ${cleanDate}`)
 
-  const prodUrl = (process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.workers.dev').replace(/\/$/, '')
+  const prodUrl = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
   const localUrl = 'http://localhost:8787'
   const targetBaseUrl = customUrl || (isRemote ? prodUrl : localUrl)
   const adminSecret = process.env.ADMIN_SECRET

@@ -105,8 +105,8 @@ async function sendTestEmail() {
     targetEmails.push('ekim0252@gmail.com')
   }
 
-  const senderEmail = senderArg || process.env.SENDER_EMAIL || 'game@nvidia.engineering'
-  const publicHttpsUrl = (process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.workers.dev').replace(/\/$/, '')
+  const senderEmail = senderArg || process.env.SENDER_EMAIL || 'game@inboxed.fun'
+  const publicHttpsUrl = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
 
   const puzzle = getDailyPuzzle(dateArg)
   const subject = `Inboxed #${puzzle.id} - Today's Multi-Definition Puzzle (${formatPrettyDate(puzzle.date)})`

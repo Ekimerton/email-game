@@ -22,8 +22,8 @@ const isDryRun = args.includes('--dry-run')
 const toArg = args.find(a => a.startsWith('--to='))?.split('=')[1]
 const dateArg = args.find(a => a.startsWith('--date='))?.split('=')[1]
 
-const SENDER_EMAIL = process.env.SENDER_EMAIL || 'game@nvidia.engineering'
-const PUBLIC_URL = (process.env.PUBLIC_HTTPS_URL || 'https://email-game.teamify.workers.dev').replace(/\/$/, '')
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'game@inboxed.fun'
+const PUBLIC_URL = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
 const MAILGUN_SMTP_LOGIN = process.env.MAILGUN_SMTP_LOGIN
 const MAILGUN_SMTP_PASS = process.env.MAILGUN_SMTP_PASS
 

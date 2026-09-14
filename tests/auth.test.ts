@@ -67,10 +67,10 @@ describe('Spoof-Proof Auth Tokens (HMAC-SHA256)', () => {
 
   it('should construct correct account URL with encoded token', () => {
     const email = 'user@example.com'
-    const baseUrl = 'https://email-game.teamify.workers.dev'
+    const baseUrl = 'https://inboxed.fun'
     const accountUrl = getAccountUrl(email, baseUrl)
 
-    expect(accountUrl).toContain('https://email-game.teamify.workers.dev/account?token=')
+    expect(accountUrl).toContain('https://inboxed.fun/account?token=')
     const tokenParam = new URL(accountUrl).searchParams.get('token')
     expect(tokenParam).toBeDefined()
     const verified = verifyAccountToken(tokenParam!)

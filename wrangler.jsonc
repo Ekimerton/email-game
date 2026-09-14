@@ -6,6 +6,12 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "routes": [
+    {
+      "pattern": "inboxed.fun",
+      "custom_domain": true
+    }
+  ],
   "kv_namespaces": [
     {
       "binding": "GAME_STATE_KV",
