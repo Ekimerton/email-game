@@ -18,6 +18,9 @@
       "id": "659e2e65e8bb4081a402110fda15b339"
     }
   ],
+  "assets": {
+    "directory": "./public"
+  },
   "triggers": {
     "crons": [
       "0 17 * * *"

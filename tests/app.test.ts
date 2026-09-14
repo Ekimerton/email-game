@@ -36,9 +36,8 @@ describe('Hono App & Layout Calculations', () => {
     expect(html).toContain('background-color: #f4f4f5')
     expect(html).toContain('border: 1px solid #e4e4e7')
     expect(html).toContain('border-top: 1px solid #e4e4e7')
-    expect(html).toContain('class="logo-tiles"')
-    expect(html).toContain('logo-tile rotate-neg')
-    expect(html).toContain('logo-tile rotate-pos')
+    expect(html).toContain('logo.png')
+    expect(html).toContain('alt="INBOXED"')
     expect(html).toContain('update your account preferences')
   })
 
@@ -420,6 +419,14 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     const data = await res.json() as any
     expect(data.success).toBe(true)
     expect(data.status).toBe('not_found')
+  })
+
+  it('should serve the logo image at GET /logo.png', async () => {
+    const res = await app.request('/logo.png')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('image/png')
+    const buffer = await res.arrayBuffer()
+    expect(buffer.byteLength).toBe(18686)
   })
 })
 
