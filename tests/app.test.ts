@@ -36,6 +36,9 @@ describe('Hono App & Layout Calculations', () => {
     expect(html).toContain('background-color: #f4f4f5')
     expect(html).toContain('border: 1px solid #e4e4e7')
     expect(html).toContain('border-top: 1px solid #e4e4e7')
+    expect(html).toContain('class="logo-tiles"')
+    expect(html).toContain('logo-tile rotate-neg')
+    expect(html).toContain('logo-tile rotate-pos')
     expect(html).toContain('update your account preferences')
   })
 

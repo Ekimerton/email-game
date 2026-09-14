@@ -112,7 +112,6 @@ export const EMAIL_HTML = `<!doctype html>
             font-weight: 800;
             border-radius: 4px;
             border: 1.5px solid #000000;
-            line-height: 28px;
             text-align: center;
             box-sizing: border-box;
             margin-right: -4px;

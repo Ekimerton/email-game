@@ -335,21 +335,62 @@ export function getFallbackHtml(options: {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&display=swap">
   <title>Inboxed #${puzzle.id} - Daily Word Puzzle</title>
+  <style>
+    .logo-container {
+      text-align: center;
+      margin: 0 0 24px;
+    }
+    .logo-tiles {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 0;
+      white-space: nowrap;
+    }
+    .logo-tile {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      font-size: 15px;
+      font-weight: 800;
+      border-radius: 4px;
+      border: 1.5px solid #18181b;
+      color: #18181b;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      box-sizing: border-box;
+      margin-right: -4px;
+      position: relative;
+    }
+    .logo-tile:last-child {
+      margin-right: 0;
+    }
+    .rotate-neg {
+      background-color: #D8FFC5;
+      transform: rotate(-8deg);
+      -webkit-transform: rotate(-8deg);
+    }
+    .rotate-pos {
+      background-color: #C4F7CA;
+      transform: rotate(8deg);
+      -webkit-transform: rotate(8deg);
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #18181b;">
   <div style="max-width: 480px; margin: 0 auto; padding: 12px 8px;">
     <div style="background-color: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 12px; padding: 16px 16px; box-sizing: border-box;">
-      <div style="text-align: center; margin: 0 0 24px; display: flex; justify-content: center; align-items: center; gap: 8px;" aria-label="INBOXED #${puzzle.id}">
-        <div style="display: inline-flex; padding: 4px 0;">
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #D8FFC5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">I</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #C4F7CA; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">N</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #D8FFC5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">B</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #C4F7CA; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">O</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #D8FFC5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">X</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #C4F7CA; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(10deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">E</span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background-color: #D8FFC5; color: #000000; border: 1.5px solid #000000; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-10deg); box-shadow: 0 1px 3px rgba(0,0,0,0.25); position: relative;">D</span>
+      <div class="logo-container" style="text-align: center; margin: 0 0 24px;" aria-label="INBOXED">
+        <div class="logo-tiles" style="display: inline-flex; align-items: center; justify-content: center; padding: 4px 0; white-space: nowrap;">
+          <span class="logo-tile rotate-neg" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; text-align: center; background-color: #D8FFC5; color: #18181b; border: 1.5px solid #18181b; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-8deg); -webkit-transform: rotate(-8deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); box-sizing: border-box; position: relative;">I</span>
+          <span class="logo-tile rotate-pos" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; text-align: center; background-color: #C4F7CA; color: #18181b; border: 1.5px solid #18181b; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(8deg); -webkit-transform: rotate(8deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); box-sizing: border-box; position: relative;">N</span>
+          <span class="logo-tile rotate-neg" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; text-align: center; background-color: #D8FFC5; color: #18181b; border: 1.5px solid #18181b; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-8deg); -webkit-transform: rotate(-8deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); box-sizing: border-box; position: relative;">B</span>
+          <span class="logo-tile rotate-pos" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; text-align: center; background-color: #C4F7CA; color: #18181b; border: 1.5px solid #18181b; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(8deg); -webkit-transform: rotate(8deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); box-sizing: border-box; position: relative;">O</span>
+          <span class="logo-tile rotate-neg" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; text-align: center; background-color: #D8FFC5; color: #18181b; border: 1.5px solid #18181b; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-8deg); -webkit-transform: rotate(-8deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); box-sizing: border-box; position: relative;">X</span>
+          <span class="logo-tile rotate-pos" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; text-align: center; background-color: #C4F7CA; color: #18181b; border: 1.5px solid #18181b; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(8deg); -webkit-transform: rotate(8deg); margin-right: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); box-sizing: border-box; position: relative;">E</span>
+          <span class="logo-tile rotate-neg" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; text-align: center; background-color: #D8FFC5; color: #18181b; border: 1.5px solid #18181b; font-size: 15px; font-weight: 800; border-radius: 4px; transform: rotate(-8deg); -webkit-transform: rotate(-8deg); box-shadow: 0 1px 3px rgba(0,0,0,0.25); box-sizing: border-box; position: relative;">D</span>
         </div>
       </div>
 
