@@ -115,3 +115,97 @@ export function getAccountUrl(email: string, baseUrl: string, secret?: string): 
   const cleanBaseUrl = baseUrl.replace(/\/$/, '')
   return `${cleanBaseUrl}/account?token=${encodeURIComponent(token)}`
 }
+
+export interface ConfirmationPayload {
+  email: string
+  action: 'confirm_sub'
+  iat: number
+}
+
+/**
+ * Generate a signed confirmation token for double opt-in email subscription.
+ */
+export function generateConfirmationToken(email: string, secret?: string): string {
+  const cleanEmail = email.toLowerCase().trim()
+  const key = secret || process.env.AUTH_SECRET || DEFAULT_AUTH_SECRET
+
+  const payloadData: ConfirmationPayload = {
+    email: cleanEmail,
+    action: 'confirm_sub',
+    iat: Date.now()
+  }
+
+  const payload = Buffer.from(JSON.stringify(payloadData)).toString('base64url')
+  const signature = crypto.createHmac('sha256', key).update(payload).digest('base64url')
+  return `${payload}.${signature}`
+}
+
+/**
+ * Verify a signed confirmation token and return the verified email if valid and not expired.
+ * Defaults to 48 hours validity.
+ */
+export function verifyConfirmationToken(
+  token: string | undefined | null,
+  secret?: string | string[],
+  maxAgeMs = 48 * 60 * 60 * 1000
+): { email: string; iat: number } | null {
+  if (!token || typeof token !== 'string') return null
+
+  let cleanToken = token.trim()
+  if (cleanToken.includes('%2E') || cleanToken.includes('%2e')) {
+    try {
+      cleanToken = decodeURIComponent(cleanToken)
+    } catch (_) { }
+  }
+
+  if (!cleanToken.includes('.')) return null
+
+  const parts = cleanToken.split('.')
+  if (parts.length !== 2) return null
+
+  const [payload, signature] = parts
+  if (!payload || !signature) return null
+
+  const candidateSecrets: string[] = []
+  if (Array.isArray(secret)) {
+    candidateSecrets.push(...secret.filter(Boolean))
+  } else if (secret) {
+    candidateSecrets.push(secret)
+  }
+  if (process.env.AUTH_SECRET) {
+    candidateSecrets.push(process.env.AUTH_SECRET)
+  }
+  candidateSecrets.push(DEFAULT_AUTH_SECRET)
+
+  const uniqueKeys = Array.from(new Set(candidateSecrets))
+
+  for (const key of uniqueKeys) {
+    try {
+      const expectedSignature = crypto.createHmac('sha256', key).update(payload).digest('base64url')
+      const sigBuffer = Buffer.from(signature)
+      const expectedBuffer = Buffer.from(expectedSignature)
+
+      if (sigBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
+        const rawJson = Buffer.from(payload, 'base64url').toString('utf8')
+        const data = JSON.parse(rawJson) as ConfirmationPayload
+        if (
+          data.email &&
+          typeof data.email === 'string' &&
+          data.email.includes('@') &&
+          data.action === 'confirm_sub'
+        ) {
+          if (typeof data.iat === 'number' && Date.now() - data.iat > maxAgeMs) {
+            return null
+          }
+          return {
+            email: data.email.toLowerCase().trim(),
+            iat: typeof data.iat === 'number' ? data.iat : Date.now()
+          }
+        }
+      }
+    } catch (_) { }
+  }
+
+  return null
+}
+

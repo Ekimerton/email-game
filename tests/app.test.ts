@@ -315,7 +315,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(html).toContain('hint-form')
   })
 
-  it('should subscribe an email via POST /api/subscribe with JSON body', async () => {
+  it('should trigger double opt-in confirmation email via POST /api/subscribe', async () => {
     const newEmail = `newuser_${Date.now()}@company.com`
     const res = await app.request('/api/subscribe', {
       method: 'POST',
@@ -325,6 +325,8 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(res.status).toBe(200)
     const data = await res.json() as any
     expect(data.success).toBe(true)
+    expect(data.pending).toBe(true)
+    expect(data.token).toBeDefined()
     expect(data.message).toContain(newEmail)
   })
 
@@ -338,6 +340,83 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     const data = await res.json() as any
     expect(data.success).toBe(false)
     expect(data.message).toContain('valid email')
+  })
+
+  it('should confirm subscription and show 9am PST notice with Receive Today button at GET /confirm', async () => {
+    const testEmail = `confirmed_${Date.now()}@testfirm.com`
+    const subRes = await app.request('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: testEmail }),
+    })
+    const { token } = await subRes.json() as any
+
+    const confirmRes = await app.request(`/confirm?token=${encodeURIComponent(token)}`)
+    expect(confirmRes.status).toBe(200)
+    const html = await confirmRes.text()
+
+    expect(html).toContain("You're Subscribed!")
+    expect(html).toContain("You'll get emails at 9am PST every day.")
+    expect(html).toContain("Receive Today's Puzzle Now")
+    expect(html).toContain('send-today-btn')
+  })
+
+  it('should reject invalid token at GET /confirm', async () => {
+    const res = await app.request('/confirm?token=invalid.token.here')
+    expect(res.status).toBe(400)
+    const html = await res.text()
+    expect(html).toContain('Link Expired or Invalid')
+  })
+
+  it('should send today puzzle when authorized via POST /api/send-today', async () => {
+    const testEmail = `instant_${Date.now()}@testfirm.com`
+    const subRes = await app.request('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: testEmail }),
+    })
+    const { token } = await subRes.json() as any
+
+    const sendRes = await app.request('/api/send-today', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: testEmail, token }),
+    })
+    expect(sendRes.status).toBe(200)
+    const data = await sendRes.json() as any
+    expect(data.success).toBe(true)
+    expect(data.message).toContain("Today's puzzle has been sent to your inbox!")
+  })
+
+  it('should reject unauthorized send-today request with invalid token', async () => {
+    const res = await app.request('/api/send-today', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'hacker@test.com', token: 'bad-token' }),
+    })
+    expect(res.status).toBe(401)
+  })
+
+  it('should unsubscribe an email via GET /unsubscribe', async () => {
+    const email = 'user_unsub@company.com'
+    const res = await app.request(`/unsubscribe?email=${encodeURIComponent(email)}`)
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('Unsubscribed')
+    expect(html).toContain(email)
+  })
+
+  it('should unsubscribe or purge user via POST /api/admin/unsubscribe', async () => {
+    const email = 'admin_unsub@company.com'
+    const res = await app.request('/api/admin/unsubscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, purge: true }),
+    })
+    expect(res.status).toBe(200)
+    const data = await res.json() as any
+    expect(data.success).toBe(true)
+    expect(data.status).toBe('not_found')
   })
 })
 

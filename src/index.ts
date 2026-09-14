@@ -3,8 +3,9 @@ import { OAuth2Client } from 'google-auth-library'
 import { DailyPuzzle } from './puzzles'
 import { getDailyPuzzle, formatPrettyDate } from './puzzleLogic'
 import { EMAIL_HTML } from './emailHtml'
-import { generateAccountToken, verifyAccountToken, getAccountUrl, extractEmailDomain } from './auth'
+import { generateAccountToken, verifyAccountToken, getAccountUrl, extractEmailDomain, generateConfirmationToken, verifyConfirmationToken } from './auth'
 import { GAME_MESSAGES } from './gameMessages'
+import { sendMailgunEmail, renderConfirmationEmailHtml, renderConfirmationEmailText } from './emailService'
 
 export type LetterStatus = 'correct' | 'present' | 'absent'
 
@@ -501,7 +502,7 @@ async function addSubscriber(kv: KVNamespace | undefined, email: string): Promis
   return subscribers
 }
 
-async function removeSubscriber(kv: KVNamespace | undefined, email: string): Promise<SubscriberEntry[]> {
+export async function removeSubscriber(kv: KVNamespace | undefined, email: string): Promise<SubscriberEntry[]> {
   const subscribers = await getSubscribers(kv)
   const existingIdx = subscribers.findIndex(s => s.email === email)
 
@@ -510,6 +511,36 @@ async function removeSubscriber(kv: KVNamespace | undefined, email: string): Pro
     await kvPut(kv, 'subscribers:list', subscribers)
   }
   return subscribers
+}
+
+export async function unsubscribeUser(
+  kv: KVNamespace | undefined,
+  email: string,
+  purge = false
+): Promise<{ success: boolean; email: string; status: string; totalSubscribers: number; activeCount: number }> {
+  const cleanEmail = email.toLowerCase().trim()
+  const subscribers = await getSubscribers(kv)
+  const existingIdx = subscribers.findIndex(s => s.email === cleanEmail)
+
+  let status = 'not_found'
+  if (existingIdx >= 0) {
+    if (purge) {
+      subscribers.splice(existingIdx, 1)
+      status = 'purged'
+    } else {
+      subscribers[existingIdx].status = 'unsubscribed'
+      status = 'unsubscribed'
+    }
+    await kvPut(kv, 'subscribers:list', subscribers)
+  }
+
+  return {
+    success: true,
+    email: cleanEmail,
+    status,
+    totalSubscribers: subscribers.length,
+    activeCount: subscribers.filter(s => s.status === 'active').length
+  }
 }
 
 async function ensureSubscribedOnOpen(kv: KVNamespace | undefined, email: string): Promise<boolean> {
@@ -620,6 +651,7 @@ app.use('/api/*', async (c, next) => {
 export function getSignupHtml(c: any): string {
   const queryEmail = c.req.query('email') || ''
   const isSubscribed = c.req.query('subscribed') === 'true'
+  const isPending = c.req.query('pending') === 'true'
   const safeEmail = escapeHtml(queryEmail)
   const puzzle = getDailyPuzzle()
 
@@ -909,12 +941,21 @@ export function getSignupHtml(c: any): string {
 
     <!-- Signup Form / Success Container -->
     <div id="signup-container">
-      ${isSubscribed ? `
+      ${isPending ? `
+        <div class="success-card">
+          <div class="success-icon">✉️</div>
+          <h2 class="success-title">Check Your Email!</h2>
+          <p class="success-desc">
+            We sent a confirmation link to <strong>${safeEmail}</strong>.<br>
+            Click the link in your email to confirm your subscription and start playing.
+          </p>
+        </div>
+      ` : isSubscribed ? `
         <div class="success-card">
           <div class="success-icon">🎉</div>
           <h2 class="success-title">You're Subscribed!</h2>
           <p class="success-desc">
-            We'll deliver tomorrow's puzzle directly to your inbox at 8:00 AM.
+            You'll get emails at 9:00 AM PST every day.
           </p>
         </div>
       ` : `
@@ -991,10 +1032,11 @@ export function getSignupHtml(c: any): string {
           if (data.success) {
             container.innerHTML = \`
               <div class="success-card">
-                <div class="success-icon">🎉</div>
-                <h2 class="success-title">You're Subscribed!</h2>
+                <div class="success-icon">✉️</div>
+                <h2 class="success-title">Check Your Email!</h2>
                 <p class="success-desc">
-                  We'll deliver tomorrow's puzzle to <strong>\${email}</strong> at 8:00 AM. Look out for it in your inbox!
+                  We sent a confirmation link to <strong>\${email}</strong>.<br>
+                  Click the link in your email to confirm your subscription and start playing.
                 </p>
               </div>
             \`;
@@ -1019,48 +1061,341 @@ export function getSignupHtml(c: any): string {
 </html>`
 }
 
-// Serve AMP HTML preview page helper
-async function renderAmpGame(c: any) {
-  const userEmail = await getUserEmail(c)
-  const dateParam = c.req.query('date')
-  const { state, puzzle } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam)
+// Render confirmation success page with 9:00 AM PST schedule notice and instant puzzle delivery button
+export function getConfirmationPageHtml(c: any, email: string, token: string): string {
+  const puzzle = getDailyPuzzle()
+  const safeEmail = escapeHtml(email)
+  const safeToken = escapeHtml(token)
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscription Confirmed - Inboxed</title>
+  <meta name="description" content="Your subscription to Inboxed has been confirmed.">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&display=swap">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #ffffff;
+      color: #18181b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .logo-tiles {
+      display: inline-flex;
+      padding: 4px 0;
+    }
+    .logo-tile {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 6px;
+      border: 2px solid #18181b;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+    .rotate-neg {
+      background-color: #D8FFC5;
+      color: #18181b;
+      transform: rotate(-8deg);
+      margin-right: -4px;
+    }
+    .rotate-pos {
+      background-color: #C4F7CA;
+      color: #18181b;
+      transform: rotate(8deg);
+      margin-right: -4px;
+    }
+    .success-card {
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 24px 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .success-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    .success-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #14532d;
+      margin-bottom: 8px;
+    }
+    .schedule-notice {
+      font-size: 15px;
+      font-weight: 600;
+      color: #166534;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .action-box {
+      background: #ffffff;
+      border: 1px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 18px 16px;
+      margin-top: 16px;
+    }
+    .action-box p {
+      font-size: 13.5px;
+      color: #374151;
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 13px 18px;
+      background-color: #14532d;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+    .btn-submit:hover {
+      background-color: #166534;
+    }
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+    .btn-submit:disabled {
+      background-color: #a1a1aa;
+      cursor: not-allowed;
+    }
+    .status-msg {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .status-success {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+    }
+    .status-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-container">
+      <div class="logo-tiles" aria-label="INBOXED">
+        <span class="logo-tile rotate-neg">I</span>
+        <span class="logo-tile rotate-pos">N</span>
+        <span class="logo-tile rotate-neg">B</span>
+        <span class="logo-tile rotate-pos">O</span>
+        <span class="logo-tile rotate-neg">X</span>
+        <span class="logo-tile rotate-pos">E</span>
+        <span class="logo-tile rotate-neg">D</span>
+      </div>
+    </div>
+
+    <div class="success-card">
+      <div class="success-icon">🎉</div>
+      <h1 class="success-title">You're Subscribed!</h1>
+      <p class="schedule-notice">
+        You'll get emails at 9am PST every day.
+      </p>
+
+      <div class="action-box">
+        <p>
+          Want to play today's game right now? Receive today's puzzle (<strong>#${puzzle.id}</strong>) in your inbox immediately:
+        </p>
+        <button id="send-today-btn" class="btn-submit">
+          Receive Today's Puzzle Now
+        </button>
+        <div id="status-msg" class="status-msg" style="display: none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const btn = document.getElementById('send-today-btn');
+    const msg = document.getElementById('status-msg');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Sending to your inbox...';
+        msg.style.display = 'none';
+
+        try {
+          const res = await fetch('/api/send-today', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: "${safeEmail}",
+              token: "${safeToken}"
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            btn.style.display = 'none';
+            msg.className = 'status-msg status-success';
+            msg.innerHTML = '🚀 <strong>Sent!</strong> Check your inbox for today\\'s puzzle.';
+            msg.style.display = 'block';
+          } else {
+            btn.disabled = false;
+            btn.textContent = "Receive Today's Puzzle Now";
+            msg.className = 'status-msg status-error';
+            msg.textContent = data.message || 'Could not send puzzle. Please try again.';
+            msg.style.display = 'block';
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = "Receive Today's Puzzle Now";
+          msg.className = 'status-msg status-error';
+          msg.textContent = 'Connection error. Please try again.';
+          msg.style.display = 'block';
+        }
+      });
+    }
+  </script>
+</body>
+</html>`
+}
+
+// Render error page for invalid or expired confirmation links
+export function getInvalidConfirmationHtml(): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invalid Link - Inboxed</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&display=swap">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #ffffff;
+      color: #18181b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+    }
+    .card {
+      background: #fef2f2;
+      border: 1.5px solid #fecaca;
+      border-radius: 12px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+    .icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #991b1b;
+      margin-bottom: 8px;
+    }
+    p {
+      font-size: 14px;
+      color: #7f1d1d;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #14532d;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="icon">⚠️</div>
+      <h1>Link Expired or Invalid</h1>
+      <p>
+        This confirmation link is invalid or has expired. Please enter your email on the homepage to request a new link.
+      </p>
+      <a href="/" class="btn">Back to Home</a>
+    </div>
+  </div>
+</body>
+</html>`
+}
+
+// Helper to build full AMP + Fallback HTML content for daily puzzle emails
+export async function buildPuzzleEmailContent(
+  kv: KVNamespace | undefined,
+  userEmail: string,
+  dateParam?: string,
+  currentOrigin?: string,
+  authSecret?: string
+): Promise<{ ampHtml: string; fallbackHtml: string; subject: string; text: string; puzzle: DailyPuzzle }> {
+  const { state, puzzle } = await getOrCreateGameState(kv, userEmail, dateParam)
   const domain = extractDomain(userEmail)
-  const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
-  const userToken = generateAccountToken(userEmail, authSecret)
-
-  const reqUrl = new URL(c.req.url)
-  const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
-  const forceHttps = c.req.query('forceHttps') === 'true'
-  const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
-
-  const currentOrigin = (isLocalHost && !forceHttps)
-    ? reqUrl.origin
-    : prodOrigin
+  const secret = authSecret || process.env.AUTH_SECRET
+  const userToken = generateAccountToken(userEmail, secret)
+  const origin = (currentOrigin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
 
   const encodedEmail = encodeURIComponent(userEmail)
   const encodedDomain = encodeURIComponent(domain)
 
-  let html = EMAIL_HTML
-    .replaceAll('https://inboxed.fun', currentOrigin)
+  let ampHtml = EMAIL_HTML
+    .replaceAll('https://inboxed.fun', origin)
     .replaceAll('USER_EMAIL_PLACEHOLDER', encodedEmail)
     .replaceAll('USER_DOMAIN_PLACEHOLDER', encodedDomain)
     .replaceAll('USER_DATE_PLACEHOLDER', puzzle.date)
     .replaceAll('default-dev-token', userToken)
 
-  // Dynamically calculate and replace amp-list height on pre-render
   const dynamicStateListHeight = calculateStateListHeight(puzzle)
-  html = html.replace('height="188"', `height="${dynamicStateListHeight}"`)
-
-  // Pre-render puzzle wordLength and input maxlength
-  html = html
+  ampHtml = ampHtml.replace('height="188"', `height="${dynamicStateListHeight}"`)
+  ampHtml = ampHtml
     .replaceAll('"wordLength": 7', `"wordLength": ${puzzle.word.length}`)
     .replaceAll('maxlength="7"', `maxlength="${puzzle.word.length}"`)
     .replaceAll('gameState.wordLength || 7', `gameState.wordLength || ${puzzle.word.length}`)
 
-  // Pre-render Header Meta (Date, Domain, and Game Title)
-  html = html.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
-  html = html.replaceAll('company.com', domain)
-  html = html
+  ampHtml = ampHtml.replace('Aug 5, 2026', formatPrettyDate(puzzle.date))
+  ampHtml = ampHtml.replaceAll('company.com', domain)
+  ampHtml = ampHtml
     .replaceAll(/<span class="logo-badge">#\d+<\/span>/g, `<span class="logo-badge">#${puzzle.id}</span>`)
     .replaceAll('aria-label="Inboxed #1"', `aria-label="Inboxed #${puzzle.id}"`)
     .replaceAll(/inboxed #1/gi, (match) => {
@@ -1074,11 +1409,9 @@ async function renderAmpGame(c: any) {
       return `Inboxed #${puzzle.id}`
     })
 
-  // Pre-render Message Banner (Always initial prompt for initial state placeholder)
   const initialMsg = GAME_MESSAGES.initialPrompt(puzzle.word.length)
-  html = html.replace('Guess the word!', initialMsg)
+  ampHtml = ampHtml.replace('Guess the word!', initialMsg)
 
-  // Pre-render definition clue tabs and active clue card for initial state placeholder
   const placeholderTabsHtml = puzzle.definitions.map((_, i) => {
     const isFirst = i === 0
     const activeClass = isFirst ? ' active unlocked' : ' locked'
@@ -1095,20 +1428,51 @@ async function renderAmpGame(c: any) {
   }).join('')
 
   const placeholderDefsHtml = `<div class="active-clue-card">${placeholderClueCardsHtml}</div><div class="clue-tabs-bar">${placeholderTabsHtml}</div>`
+  ampHtml = ampHtml.replace('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
 
-  html = html.replace('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
-
-  // Pre-render letter mask tiles for initial state placeholder
   const placeholderMaskHtml = state.letterMask.map((char, index) => {
     const isRevealed = char !== '_' && char !== ''
     const displayedChar = isRevealed ? char : ''
     const revClass = isRevealed ? ' tile-revealed' : ''
     return `<span class="mask-tile${revClass}" [class]="'mask-tile ' + ((typed.word || '').slice(${index}, ${index + 1}) ? 'tile-typed' : '${isRevealed ? 'tile-revealed' : ''}')" [text]="(typed.word || '').slice(${index}, ${index + 1}) || '${displayedChar}'">${displayedChar}</span>`
   }).join('')
+  ampHtml = ampHtml.replace('__PLACEHOLDER_MASK_TILES__', placeholderMaskHtml)
 
-  html = html.replace('__PLACEHOLDER_MASK_TILES__', placeholderMaskHtml)
+  const profile = await recordUserActivity(kv, userEmail, puzzle.date)
+  const coworkerCount = await getCoworkerCount(kv, domain, userEmail)
+  const playerCount = await getPlayerCount(kv)
+  const playUrl = `${origin}/?email=${encodedEmail}`
+  const accountUrl = getAccountUrl(userEmail, origin, secret)
 
-  return c.html(html)
+  const fallbackHtml = getFallbackHtml({
+    email: userEmail,
+    domain,
+    daysPlayed: profile.daysPlayed || 1,
+    coworkerCount,
+    playerCount,
+    playUrl,
+    accountUrl,
+  })
+
+  const subject = `Inboxed #${puzzle.id} — ${puzzle.word.charAt(0) + puzzle.word.slice(1).toLowerCase()} — ${formatPrettyDate(puzzle.date)}`
+  const text = `Play today's Inboxed puzzle (#${puzzle.id}): ${origin}/?email=${encodedEmail}`
+
+  return { ampHtml, fallbackHtml, subject, text, puzzle }
+}
+
+// Serve AMP HTML preview page helper
+async function renderAmpGame(c: any) {
+  const userEmail = await getUserEmail(c)
+  const dateParam = c.req.query('date')
+  const reqUrl = new URL(c.req.url)
+  const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
+  const forceHttps = c.req.query('forceHttps') === 'true'
+  const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
+  const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+
+  const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret)
+  return c.html(content.ampHtml)
 }
 
 // Serve Email Signup Landing Page at root
@@ -1128,6 +1492,22 @@ app.get('/', async (c) => {
 // Explicit Email Signup Landing Page route
 app.get('/signup', async (c) => {
   return c.html(getSignupHtml(c))
+})
+
+// Double Opt-In Email Confirmation route
+app.get('/confirm', async (c) => {
+  const token = c.req.query('token')
+  const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+  const verified = verifyConfirmationToken(token, authSecret)
+
+  if (!verified) {
+    return c.html(getInvalidConfirmationHtml(), 400)
+  }
+
+  // Persist directly to KV now that the user has confirmed their subscription
+  await addSubscriber(c.env?.GAME_STATE_KV, verified.email)
+
+  return c.html(getConfirmationPageHtml(c, verified.email, token || ''))
 })
 
 // Explicit Game Play / Preview routes
@@ -1624,7 +2004,7 @@ app.get('/account', async (c) => {
   return c.html(reactAppHtml)
 })
 
-// Subscribe Endpoint
+// Subscribe Endpoint (Double Opt-In Email Confirmation Dispatch)
 app.post('/api/subscribe', async (c) => {
   try {
     let email = c.req.query('email')
@@ -1644,22 +2024,94 @@ app.post('/api/subscribe', async (c) => {
     }
 
     const cleanEmail = email.toLowerCase().trim()
-    const subscribers = await addSubscriber(c.env?.GAME_STATE_KV, cleanEmail)
-    const activeCount = subscribers.filter(s => s.status === 'active').length
+    const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+    const token = generateConfirmationToken(cleanEmail, authSecret)
+
+    const reqUrl = new URL(c.req.url)
+    const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
+    const forceHttps = c.req.query('forceHttps') === 'true'
+    const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+    const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
+
+    const confirmUrl = `${currentOrigin}/confirm?token=${encodeURIComponent(token)}`
+    const confirmHtml = renderConfirmationEmailHtml(confirmUrl)
+    const confirmText = renderConfirmationEmailText(confirmUrl)
+
+    await sendMailgunEmail({
+      to: cleanEmail,
+      subject: 'Confirm your subscription to Inboxed',
+      html: confirmHtml,
+      text: confirmText,
+    })
 
     const acceptHeader = c.req.header('Accept') || ''
     const isHtmlReq = acceptHeader.includes('text/html') && !c.req.header('x-requested-with')
     if (isHtmlReq) {
-      return c.redirect('/?subscribed=true&email=' + encodeURIComponent(cleanEmail))
+      return c.redirect('/?pending=true&email=' + encodeURIComponent(cleanEmail))
     }
 
     return c.json({
       success: true,
-      message: `🎉 Subscribed ${cleanEmail}! You will receive daily emails at 8:00 AM PST.`,
-      activeSubscribers: activeCount
+      pending: true,
+      message: `✉️ Confirmation link sent to ${cleanEmail}! Please check your email to activate your subscription.`,
+      email: cleanEmail,
+      token,
     })
   } catch (error: any) {
-    return c.json({ success: false, message: '⚠️ Failed to record subscription.' }, 500)
+    return c.json({ success: false, message: '⚠️ Failed to process subscription.' }, 500)
+  }
+})
+
+// Send Today's Puzzle Endpoint (Triggered from confirmation page)
+app.post('/api/send-today', async (c) => {
+  try {
+    const body = (await c.req.json().catch(() => ({}))) as Record<string, any>
+    const email = (body.email as string || '').toLowerCase().trim()
+    const token = body.token as string || ''
+    const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+
+    const verified = verifyConfirmationToken(token, authSecret, 7 * 24 * 60 * 60 * 1000)
+    if (!verified || verified.email !== email) {
+      return c.json({ success: false, message: 'Invalid or expired confirmation token.' }, 401)
+    }
+
+    // Ensure subscriber is persisted in KV
+    await addSubscriber(c.env?.GAME_STATE_KV, email)
+
+    const reqUrl = new URL(c.req.url)
+    const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
+    const forceHttps = c.req.query('forceHttps') === 'true'
+    const prodOrigin = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+    const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
+
+    const emailContent = await buildPuzzleEmailContent(
+      c.env?.GAME_STATE_KV,
+      email,
+      undefined,
+      currentOrigin,
+      authSecret
+    )
+
+    await sendMailgunEmail({
+      to: email,
+      subject: emailContent.subject,
+      text: emailContent.text,
+      html: emailContent.fallbackHtml,
+      ampHtml: emailContent.ampHtml,
+      headers: {
+        'List-Unsubscribe': `<${prodOrigin}/unsubscribe?email=${encodeURIComponent(email)}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        'Feedback-ID': 'word-game-daily:mailgun',
+        'X-Entity-Ref-ID': `puzzle-${emailContent.puzzle.id}-${emailContent.puzzle.date}`,
+      },
+    })
+
+    return c.json({
+      success: true,
+      message: "Today's puzzle has been sent to your inbox!"
+    })
+  } catch (error: any) {
+    return c.json({ success: false, message: 'Failed to send today\'s puzzle.' }, 500)
   }
 })
 
@@ -1738,6 +2190,80 @@ const handleResetUserDay = async (c: any) => {
 
 app.post('/api/admin/reset-user-day', handleResetUserDay)
 app.get('/api/admin/reset-user-day', handleResetUserDay)
+
+// User-facing & RFC 8058 One-Click Unsubscribe route
+async function handleUnsubscribe(c: any) {
+  let email = c.req.query('email')
+  if (!email && c.req.method === 'POST') {
+    const body = (await c.req.parseBody().catch(() => ({}))) as Record<string, any>
+    email = (body['email'] as string) || (body['subscriberEmail'] as string)
+  }
+
+  if (email && email.includes('@')) {
+    await removeSubscriber(c.env?.GAME_STATE_KV, email.toLowerCase().trim())
+  }
+
+  const acceptHeader = c.req.header('Accept') || ''
+  if (acceptHeader.includes('application/json') || c.req.header('content-type')?.includes('application/json')) {
+    return c.json({ success: true, message: email ? `Unsubscribed ${email}` : 'Unsubscribed' })
+  }
+
+  return c.html(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsubscribed - Inboxed</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #fafafa; }
+    .card { background: white; border: 1px solid #e4e4e7; border-radius: 12px; padding: 32px 24px; text-align: center; max-width: 420px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    h1 { font-size: 20px; color: #18181b; margin-bottom: 8px; }
+    p { font-size: 14px; color: #71717a; line-height: 1.5; margin-bottom: 20px; }
+    a { display: inline-block; background: #14532d; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Unsubscribed</h1>
+    <p>${email ? `<strong>${escapeHtml(email)}</strong> has been unsubscribed from daily Inboxed puzzles.` : 'You have been unsubscribed from daily Inboxed puzzles.'}</p>
+    <a href="/">Back to Inboxed</a>
+  </div>
+</body>
+</html>`)
+}
+
+app.get('/unsubscribe', handleUnsubscribe)
+app.post('/unsubscribe', handleUnsubscribe)
+
+// Admin Unsubscribe Endpoint (supports purge)
+app.all('/api/admin/unsubscribe', async (c) => {
+  try {
+    let email = c.req.query('email')
+    let purge = c.req.query('purge') === 'true' || c.req.query('delete') === 'true'
+
+    if (!email && c.req.method === 'POST') {
+      const contentType = c.req.header('Content-Type') || ''
+      if (contentType.includes('application/json')) {
+        const body = (await c.req.json().catch(() => ({}))) as Record<string, any>
+        email = body.email
+        if (body.purge !== undefined) purge = Boolean(body.purge)
+      } else {
+        const body = (await c.req.parseBody().catch(() => ({}))) as Record<string, any>
+        email = body['email'] as string
+        if (body['purge'] !== undefined) purge = body['purge'] === 'true'
+      }
+    }
+
+    if (!email || !email.includes('@')) {
+      return c.json({ success: false, error: 'A valid email address is required.' }, 400)
+    }
+
+    const result = await unsubscribeUser(c.env?.GAME_STATE_KV, email, purge)
+    return c.json(result)
+  } catch (err: any) {
+    return c.json({ success: false, error: err.message || 'Failed to unsubscribe user' }, 500)
+  }
+})
 
 function getRedactedText(text: string): string {
   if (!text) return '••••••••••••••••••••'

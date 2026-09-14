@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateAccountToken, verifyAccountToken, getAccountUrl, extractEmailDomain } from '../src/auth'
+import { generateAccountToken, verifyAccountToken, getAccountUrl, extractEmailDomain, generateConfirmationToken, verifyConfirmationToken } from '../src/auth'
 
 describe('Spoof-Proof Auth Tokens (HMAC-SHA256)', () => {
   it('should extract domain properly from email', () => {
@@ -75,5 +75,34 @@ describe('Spoof-Proof Auth Tokens (HMAC-SHA256)', () => {
     expect(tokenParam).toBeDefined()
     const verified = verifyAccountToken(tokenParam!)
     expect(verified?.email).toBe('user@example.com')
+  })
+})
+
+describe('Double Opt-In Confirmation Tokens', () => {
+  it('should generate and verify a valid confirmation token', () => {
+    const email = 'newuser@company.com'
+    const token = generateConfirmationToken(email)
+
+    expect(token).toBeDefined()
+    expect(token.includes('.')).toBe(true)
+
+    const verified = verifyConfirmationToken(token)
+    expect(verified).not.toBeNull()
+    expect(verified?.email).toBe('newuser@company.com')
+  })
+
+  it('should reject tampered or invalid confirmation tokens', () => {
+    const token = generateConfirmationToken('valid@example.com')
+    const [payload] = token.split('.')
+
+    expect(verifyConfirmationToken(`${payload}.tamperedsignature`)).toBeNull()
+    expect(verifyConfirmationToken('not-a-token')).toBeNull()
+    expect(verifyConfirmationToken(null)).toBeNull()
+  })
+
+  it('should reject expired confirmation tokens', () => {
+    const token = generateConfirmationToken('valid@example.com')
+    // Verify with maxAgeMs = -1 (already expired)
+    expect(verifyConfirmationToken(token, undefined, -1)).toBeNull()
   })
 })
