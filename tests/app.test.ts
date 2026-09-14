@@ -428,5 +428,22 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     const buffer = await res.arrayBuffer()
     expect(buffer.byteLength).toBe(18686)
   })
+
+  it('should render the privacy policy at GET /privacy', async () => {
+    const res = await app.request('/privacy')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/html')
+    const html = await res.text()
+    expect(html).toContain('Privacy Policy')
+    expect(html).toContain('game@inboxed.fun')
+    expect(html).toContain('inboxed.fun')
+  })
+
+  it('should include link to privacy policy in signup landing page', async () => {
+    const res = await app.request('/signup')
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('href="/privacy"')
+  })
 })
 
