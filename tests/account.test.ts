@@ -207,7 +207,7 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(html).toContain('INBOXED')
     expect(html).toContain('Account &amp; Preferences')
     expect(html).toContain('background-color: #ffffff')
-    expect(html).toContain('background: #f4f4f5')
+    expect(html).toContain('section-divider')
     expect(html).toContain('#14532d')
     expect(html).toContain('Game made with ❤️ by')
     expect(html).toContain('https://ekimerton.github.io')

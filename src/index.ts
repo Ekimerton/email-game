@@ -916,6 +916,27 @@ export function getSignupHtml(c: any): string {
     .feature-text strong {
       color: #18181b;
     }
+    .footer-text {
+      margin-top: 24px;
+      font-size: 11.5px;
+      color: #71717a;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .footer-text a {
+      color: #14532d;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+    .footer-links a {
+      color: #71717a;
+      font-weight: 500;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .footer-links a:hover {
+      color: #18181b;
+    }
   </style>
 </head>
 <body>
@@ -1013,8 +1034,11 @@ export function getSignupHtml(c: any): string {
       Inboxed does not currently support Apple Mail, Outlook, or other non-AMP clients. <a href="https://amp.dev/support/faq/email-support/" target="_blank" rel="noopener noreferrer">See supported email clients</a>
     </div>
 
-    <div style="margin-top: 20px; font-size: 11.5px; color: #a1a1aa; text-align: center;">
-      <a href="/privacy" style="color: #71717a; text-decoration: underline; text-underline-offset: 2px;">Privacy Policy</a> &bull; Inboxed
+    <div class="footer-text">
+      <div>Game made with ❤️ by <a href="https://ekimerton.github.io" target="_blank" rel="noopener noreferrer">Ekim</a></div>
+      <div class="footer-links" style="margin-top: 6px;">
+        <a href="/privacy">Privacy Policy</a>
+      </div>
     </div>
   </div>
 
@@ -1145,43 +1169,38 @@ export function getConfirmationPageHtml(c: any, email: string, token: string): s
       transform: rotate(8deg);
       margin-right: -4px;
     }
-    .success-card {
-      background: #f0fdf4;
-      border: 1.5px solid #bbf7d0;
-      border-radius: 12px;
-      padding: 24px 20px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
     .success-icon {
-      font-size: 36px;
-      margin-bottom: 10px;
+      font-size: 38px;
+      margin-bottom: 12px;
     }
     .success-title {
-      font-size: 20px;
+      font-size: 24px;
       font-weight: 800;
-      color: #14532d;
+      color: #18181b;
+      letter-spacing: -0.5px;
       margin-bottom: 8px;
     }
     .schedule-notice {
       font-size: 15px;
-      font-weight: 600;
-      color: #166534;
+      font-weight: 500;
+      color: #52525b;
       line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .action-section {
+      margin-top: 12px;
+    }
+    .action-desc {
+      font-size: 14px;
+      color: #52525b;
       margin-bottom: 20px;
+      line-height: 1.5;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
     }
-    .action-box {
-      background: #ffffff;
-      border: 1px solid #bbf7d0;
-      border-radius: 10px;
-      padding: 18px 16px;
-      margin-top: 16px;
-    }
-    .action-box p {
-      font-size: 13.5px;
-      color: #374151;
-      margin-bottom: 14px;
-      line-height: 1.45;
+    .action-desc strong {
+      color: #18181b;
     }
     .btn-submit {
       width: auto;
@@ -1250,22 +1269,20 @@ export function getConfirmationPageHtml(c: any, email: string, token: string): s
       </div>
     </div>
 
-    <div class="success-card">
-      <div class="success-icon">🎉</div>
-      <h1 class="success-title">You're Subscribed!</h1>
-      <p class="schedule-notice">
-        You'll get emails at 9am PST every day.
-      </p>
+    <div class="success-icon">🎉</div>
+    <h1 class="success-title">You're Subscribed!</h1>
+    <p class="schedule-notice">
+      You'll get emails at 9am PST every day.
+    </p>
 
-      <div class="action-box">
-        <p>
-          Want to play today's game right now? Receive today's puzzle (<strong>#${puzzle.id}</strong>) in your inbox immediately:
-        </p>
-        <button id="send-today-btn" class="btn-submit">
-          Receive Today's Puzzle Now
-        </button>
-        <div id="status-msg" class="status-msg" style="display: none;"></div>
-      </div>
+    <div class="action-section">
+      <p class="action-desc">
+        Want to play today's game right now? Receive today's puzzle (<strong>#${puzzle.id}</strong>) in your inbox immediately:
+      </p>
+      <button id="send-today-btn" class="btn-submit">
+        Receive Today's Puzzle Now
+      </button>
+      <div id="status-msg" class="status-msg" style="display: none;"></div>
     </div>
   </div>
 
@@ -1341,51 +1358,109 @@ export function getInvalidConfirmationHtml(): string {
       max-width: 480px;
       text-align: center;
     }
-    .card {
-      background: #fef2f2;
-      border: 1.5px solid #fecaca;
-      border-radius: 12px;
-      padding: 24px 20px;
-      text-align: center;
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .logo-tiles {
+      display: inline-flex;
+      padding: 4px 0;
+    }
+    .logo-tile {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 6px;
+      border: 2px solid #18181b;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+    .rotate-neg {
+      background-color: #D8FFC5;
+      color: #18181b;
+      transform: rotate(-8deg);
+      margin-right: -4px;
+    }
+    .rotate-pos {
+      background-color: #C4F7CA;
+      color: #18181b;
+      transform: rotate(8deg);
+      margin-right: -4px;
     }
     .icon {
-      font-size: 36px;
-      margin-bottom: 10px;
+      font-size: 38px;
+      margin-bottom: 12px;
     }
     h1 {
-      font-size: 20px;
+      font-size: 24px;
       font-weight: 800;
-      color: #991b1b;
+      color: #18181b;
+      letter-spacing: -0.5px;
       margin-bottom: 8px;
     }
     p {
-      font-size: 14px;
-      color: #7f1d1d;
+      font-size: 14.5px;
+      color: #52525b;
       line-height: 1.5;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
+      max-width: 420px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .btn {
-      display: inline-block;
-      padding: 12px 24px;
-      background-color: #14532d;
-      color: #ffffff;
-      text-decoration: none;
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      white-space: nowrap;
+      background-color: #C4F7CA;
+      color: #000000;
+      border: 1.5px solid #7ecc84;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+      box-shadow: inset 0 2px 0 0 #e8ffea, 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+    .btn:hover {
+      background-color: #bbf4c3;
+      border-color: #76c87c;
+      box-shadow: inset 0 2px 0 0 #ddf9df, 0 2px 5px rgba(0, 0, 0, 0.08);
+    }
+    .btn:active {
+      transform: scale(0.99);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="card">
-      <div class="icon">⚠️</div>
-      <h1>Link Expired or Invalid</h1>
-      <p>
-        This confirmation link is invalid or has expired. Please enter your email on the homepage to request a new link.
-      </p>
-      <a href="/" class="btn">Back to Home</a>
+    <div class="logo-container">
+      <div class="logo-tiles" aria-label="INBOXED">
+        <span class="logo-tile rotate-neg">I</span>
+        <span class="logo-tile rotate-pos">N</span>
+        <span class="logo-tile rotate-neg">B</span>
+        <span class="logo-tile rotate-pos">O</span>
+        <span class="logo-tile rotate-neg">X</span>
+        <span class="logo-tile rotate-pos">E</span>
+        <span class="logo-tile rotate-neg">D</span>
+      </div>
     </div>
+
+    <div class="icon">⚠️</div>
+    <h1>Link Expired or Invalid</h1>
+    <p>
+      This confirmation link is invalid or has expired. Please enter your email on the homepage to request a new link.
+    </p>
+    <a href="/" class="btn">Back to Home</a>
   </div>
 </body>
 </html>`
@@ -2795,88 +2870,137 @@ export function getAccountPageHtml(): string {
       background-color: #ffffff;
       color: #18181b;
       line-height: 1.5;
-      padding: 24px 12px;
+      padding: 32px 16px;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
     }
-    .card-container {
+    .container {
       width: 100%;
       max-width: 480px;
-      background: #f4f4f5;
-      border: 1px solid #e4e4e7;
-      border-radius: 12px;
-      padding: 20px 18px;
+      margin: 0 auto;
       box-sizing: border-box;
       position: relative;
     }
-    .game-badge {
-      display: inline-block;
-      background-color: #14532d;
-      border-radius: 4px;
-      color: #ffffff;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      padding: 4px 10px;
-      text-transform: uppercase;
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 24px;
     }
-    .header { margin-top: 12px; margin-bottom: 14px; text-align: left; }
-    .title {
+    .logo-tiles {
+      display: inline-flex;
+      padding: 4px 0;
+    }
+    .logo-tile {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
       font-size: 18px;
       font-weight: 800;
+      border-radius: 6px;
+      border: 2px solid #18181b;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+    .rotate-neg {
+      background-color: #D8FFC5;
       color: #18181b;
-      letter-spacing: -0.3px;
+      transform: rotate(-8deg);
+      margin-right: -4px;
+    }
+    .rotate-pos {
+      background-color: #C4F7CA;
+      color: #18181b;
+      transform: rotate(8deg);
+      margin-right: -4px;
+    }
+    .header {
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #18181b;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
     }
     .user-badge {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #ffffff;
-      border: 1px solid #e4e4e7;
-      border-radius: 6px;
-      padding: 8px 12px;
-      margin-top: 12px;
-      font-size: 13px;
+      padding: 10px 0 24px 0;
+      font-size: 13.5px;
       font-weight: 600;
       color: #18181b;
     }
     .domain-pill {
-      background: #14532d;
-      color: #ffffff;
+      background: #C4F7CA;
+      color: #000000;
+      border: 1.5px solid #7ecc84;
       padding: 2px 8px;
-      border-radius: 4px;
+      border-radius: 6px;
       font-size: 11px;
       font-weight: 700;
       text-transform: lowercase;
+      box-shadow: inset 0 1px 0 0 #e8ffea;
     }
-    .setting-card {
-      background: #ffffff;
-      border: 1px solid #e4e4e7;
-      border-radius: 8px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      box-sizing: border-box;
+    .section-divider {
+      border: none;
+      border-top: 1px solid #e4e4e7;
+      margin: 0;
+    }
+    .setting-section {
+      padding: 18px 0;
+      text-align: left;
     }
     .setting-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .setting-title { font-size: 14px; font-weight: 700; color: #18181b; }
-    .setting-desc { font-size: 12px; color: #71717a; line-height: 1.45; margin-top: 4px; }
+    .setting-title { font-size: 14.5px; font-weight: 700; color: #18181b; }
+    .setting-desc { font-size: 13px; color: #71717a; line-height: 1.45; margin-top: 4px; }
+    .btn {
+      width: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      white-space: nowrap;
+      background-color: #C4F7CA;
+      color: #000000;
+      border: 1.5px solid #7ecc84;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+      box-shadow: inset 0 2px 0 0 #e8ffea, 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+    .btn:hover {
+      background-color: #bbf4c3;
+      border-color: #76c87c;
+      box-shadow: inset 0 2px 0 0 #ddf9df, 0 2px 5px rgba(0, 0, 0, 0.08);
+    }
+    .btn:active {
+      transform: scale(0.99);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
     
-    /* Modern iOS Style Switch Toggle with AMP Forest Green Theme */
+    /* Modern iOS Style Switch Toggle with Button Green Accent Theme */
     .switch-container {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px solid #f4f4f5;
     }
-    .switch-label { font-size: 12px; font-weight: 700; }
+    .switch-label { font-size: 12.5px; font-weight: 700; }
     .switch {
       position: relative;
       display: inline-block;
@@ -2888,24 +3012,32 @@ export function getAccountPageHtml(): string {
       position: absolute;
       cursor: pointer;
       top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #d4d4d8;
-      transition: .25s ease;
+      background-color: #e4e4e7;
+      border: 1.5px solid #d4d4d8;
+      box-sizing: border-box;
+      transition: .2s ease;
       border-radius: 24px;
     }
     .slider:before {
       position: absolute;
       content: "";
-      height: 18px;
-      width: 18px;
-      left: 3px;
-      bottom: 3px;
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
       background-color: white;
-      transition: .25s ease;
+      transition: .2s ease;
       border-radius: 50%;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
-    input:checked + .slider { background-color: #14532d; }
-    input:checked + .slider:before { transform: translateX(20px); }
+    input:checked + .slider {
+      background-color: #C4F7CA;
+      border-color: #7ecc84;
+      box-shadow: inset 0 1px 0 0 #e8ffea;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
     
     /* Toast Notification Banner */
     .toast {
@@ -2936,11 +3068,9 @@ export function getAccountPageHtml(): string {
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     .footer-text {
-      border-top: 1px solid #e4e4e7;
-      margin-top: 16px;
-      padding-top: 12px;
+      padding: 16px 0;
       text-align: center;
-      font-size: 11px;
+      font-size: 11.5px;
       color: #71717a;
     }
     .footer-text a {
@@ -3042,7 +3172,7 @@ export function getAccountPageHtml(): string {
 
       if (loading) {
         return (
-          <div className="card-container" style={{ textAlign: 'center', padding: '40px 20px' }}>
+          <div className="container" style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div className="spinner"></div>
             <p style={{ marginTop: '14px', color: '#71717a', fontSize: '13px', fontWeight: 600 }}>Loading account preferences...</p>
           </div>
@@ -3051,31 +3181,49 @@ export function getAccountPageHtml(): string {
 
       if (!user) {
         return (
-          <div className="card-container" style={{ textAlign: 'left', padding: '20px 18px' }}>
-            <div style={{ margin: '0 0 12px' }}>
-              <span className="game-badge">INBOXED</span>
+          <div className="container" style={{ textAlign: 'center' }}>
+            <div className="logo-container">
+              <div className="logo-tiles" aria-label="INBOXED">
+                <span className="logo-tile rotate-neg">I</span>
+                <span className="logo-tile rotate-pos">N</span>
+                <span className="logo-tile rotate-neg">B</span>
+                <span className="logo-tile rotate-pos">O</span>
+                <span className="logo-tile rotate-neg">X</span>
+                <span className="logo-tile rotate-pos">E</span>
+                <span className="logo-tile rotate-neg">D</span>
+              </div>
             </div>
-            <div style={{ padding: '4px 0 8px' }}>
-              <h2 style={{ color: '#b91c1c', fontSize: '16px', fontWeight: 800, marginBottom: '6px' }}>Invalid or Expired Link</h2>
-              <p style={{ color: '#52525b', fontSize: '13px', lineHeight: 1.5 }}>
+            <div style={{ marginTop: '16px' }}>
+              <div style={{ fontSize: '38px', marginBottom: '12px' }}>⚠️</div>
+              <h2 style={{ color: '#18181b', fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: '8px' }}>Invalid or Expired Link</h2>
+              <p style={{ color: '#52525b', fontSize: '14px', lineHeight: 1.5, maxWidth: '420px', margin: '0 auto 24px' }}>
                 This account link is invalid, tampered with, or expired.<br />
                 Please click the <strong>update your account preferences</strong> link directly from your daily Inboxed email to access and manage your settings.
               </p>
+              <a href="/" className="btn">Back to Home</a>
             </div>
           </div>
         );
       }
 
       return (
-        <div className="card-container">
+        <div className="container">
           {toast && <div className="toast">{toast}</div>}
 
-          <div style={{ textAlign: 'left', margin: '0 0 12px' }}>
-            <span className="game-badge">INBOXED</span>
+          <div className="logo-container">
+            <div className="logo-tiles" aria-label="INBOXED">
+              <span className="logo-tile rotate-neg">I</span>
+              <span className="logo-tile rotate-pos">N</span>
+              <span className="logo-tile rotate-neg">B</span>
+              <span className="logo-tile rotate-pos">O</span>
+              <span className="logo-tile rotate-neg">X</span>
+              <span className="logo-tile rotate-pos">E</span>
+              <span className="logo-tile rotate-neg">D</span>
+            </div>
           </div>
 
           <div className="header">
-            <div className="title">Account &amp; Preferences</div>
+            <h1 className="title">Account &amp; Preferences</h1>
             <div className="user-badge">
               <span>{user.email}</span>
               <span className="domain-pill">{user.domain}</span>
@@ -3083,7 +3231,7 @@ export function getAccountPageHtml(): string {
           </div>
 
           {/* Daily Morning Subscription Switch */}
-          <div className="setting-card">
+          <div className="setting-section">
             <div className="setting-header">
               <span className="setting-title">📬 Daily Morning Email</span>
             </div>
@@ -3106,8 +3254,10 @@ export function getAccountPageHtml(): string {
             </div>
           </div>
 
+          <hr className="section-divider" />
+
           {/* Leaderboard Privacy Switch */}
-          <div className="setting-card">
+          <div className="setting-section">
             <div className="setting-header">
               <span className="setting-title">🏆 Domain Leaderboard Visibility</span>
             </div>
@@ -3129,6 +3279,8 @@ export function getAccountPageHtml(): string {
               </label>
             </div>
           </div>
+
+          <hr className="section-divider" />
 
           <div className="footer-text">
             Game made with ❤️ by <a href="https://ekimerton.github.io" target="_blank" rel="noopener noreferrer">Ekim</a>
