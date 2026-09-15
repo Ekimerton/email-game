@@ -400,7 +400,7 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .btn {
-            border: 1px solid transparent;
+            border: 1.5px solid transparent;
             border-radius: 8px;
             padding: 5px 16px;
             font-size: 11px;
@@ -415,13 +415,35 @@ export const EMAIL_HTML = `<!doctype html>
         .btn-primary {
             background: #C4F7CA;
             color: #000000;
-            border-color: #000000;
+            border-color: #7ecc84;
+            box-shadow: inset 0 2px 0 0 #e8ffea, 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary:hover {
+            background-color: #bbf4c3;
+            border-color: #76c87c;
+            box-shadow: inset 0 2px 0 0 #ddf9df, 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-primary:active {
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
         }
 
         .btn-hint {
             background: #e4e4e7;
             color: #27272a;
-            border-color: #d4d4d8;
+            border-color: #a1a1aa;
+            box-shadow: inset 0 2px 0 0 #ffffff, 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-hint:hover {
+            background-color: #dcdce0;
+            border-color: #8e8e96;
+            box-shadow: inset 0 2px 0 0 #f0f0f3, 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-hint:active {
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
         }
 
         .btn:disabled {

@@ -270,7 +270,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(html).toContain('The Daily Word Game in Your Inbox')
     expect(html).toContain('action="/api/subscribe"')
     expect(html).toContain('Enter your email address')
-    expect(html).toContain('Get Daily Puzzles Free')
+    expect(html).toContain('Subscribe to Daily Puzzles')
     expect(html).toContain('logo-tiles')
   })
 
@@ -444,6 +444,121 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(res.status).toBe(200)
     const html = await res.text()
     expect(html).toContain('href="/privacy"')
+  })
+
+  describe('Development-Only Game HTML Viewer', () => {
+    it('should serve dev workbench with all page navigation tabs at GET /dev on localhost', async () => {
+      const res = await app.request('http://localhost:8787/dev')
+      expect(res.status).toBe(200)
+      expect(res.headers.get('content-type')).toContain('text/html')
+      const html = await res.text()
+      expect(html).toContain('Inboxed Dev Workbench')
+      expect(html).toContain('DEV WORKBENCH')
+      expect(html).toContain('Local Only')
+      expect(html).toContain('game-iframe')
+      expect(html).toContain('amp-source-code')
+      expect(html).toContain('data-page="game"')
+      expect(html).toContain('data-page="confirmed"')
+      expect(html).toContain('data-page="signup"')
+      expect(html).toContain('data-page="account"')
+      expect(html).toContain('data-page="fallback"')
+      expect(html).toContain('data-page="invalid"')
+      expect(html).toContain('data-page="privacy"')
+    })
+
+    it('should serve direct game HTML render at GET /dev/render on localhost', async () => {
+      const res = await app.request('http://localhost:8787/dev/render')
+      expect(res.status).toBe(200)
+      expect(res.headers.get('content-type')).toContain('text/html')
+      const html = await res.text()
+      expect(html).toContain('⚡4email')
+      expect(html).toContain('Submit Guess')
+    })
+
+    it('should serve raw game HTML text at GET /dev/raw on localhost', async () => {
+      const res = await app.request('http://localhost:8787/dev/raw')
+      expect(res.status).toBe(200)
+      expect(res.headers.get('content-type')).toContain('text/plain')
+      const text = await res.text()
+      expect(text).toContain('⚡4email')
+    })
+
+    it('should serve dev sub-pages at GET /dev/page/* on localhost', async () => {
+      // Confirmed page
+      const confRes = await app.request('http://localhost:8787/dev/page/confirmed?email=test%40example.com')
+      expect(confRes.status).toBe(200)
+      const confHtml = await confRes.text()
+      expect(confHtml).toContain('Subscription Confirmed')
+      expect(confHtml).toContain('test@example.com')
+
+      // Signup page
+      const signupRes = await app.request('http://localhost:8787/dev/page/signup')
+      expect(signupRes.status).toBe(200)
+      const signupHtml = await signupRes.text()
+      expect(signupHtml).toContain('Subscribe to Daily Puzzles')
+
+      // Invalid token page
+      const invalidRes = await app.request('http://localhost:8787/dev/page/invalid')
+      expect(invalidRes.status).toBe(200)
+      const invalidHtml = await invalidRes.text()
+      expect(invalidHtml).toContain('Link Expired or Invalid')
+
+      // Privacy policy page
+      const privRes = await app.request('http://localhost:8787/dev/page/privacy')
+      expect(privRes.status).toBe(200)
+      const privHtml = await privRes.text()
+      expect(privHtml).toContain('Privacy Policy')
+
+      // Fallback page
+      const fallbackRes = await app.request('http://localhost:8787/dev/fallback?email=test%40example.com')
+      expect(fallbackRes.status).toBe(200)
+      const fallbackHtml = await fallbackRes.text()
+      expect(fallbackHtml).toContain('Seeing this while trying to load the game?')
+
+      // Account page redirect to /account?token=...
+      const accountRes = await app.request('http://localhost:8787/dev/page/account?email=test%40example.com')
+      expect(accountRes.status).toBe(302)
+      expect(accountRes.headers.get('location')).toContain('/account?token=')
+    })
+
+    it('should serve raw text for all sub-pages via GET /dev/raw?page=...', async () => {
+      const confRaw = await (await app.request('http://localhost:8787/dev/raw?page=confirmed&email=test%40example.com')).text()
+      expect(confRaw).toContain('Subscription Confirmed')
+
+      const signupRaw = await (await app.request('http://localhost:8787/dev/raw?page=signup')).text()
+      expect(signupRaw).toContain('Subscribe to Daily Puzzles')
+
+      const invalidRaw = await (await app.request('http://localhost:8787/dev/raw?page=invalid')).text()
+      expect(invalidRaw).toContain('Link Expired or Invalid')
+
+      const privRaw = await (await app.request('http://localhost:8787/dev/raw?page=privacy')).text()
+      expect(privRaw).toContain('Privacy Policy')
+
+      const accountRaw = await (await app.request('http://localhost:8787/dev/raw?page=account')).text()
+      expect(accountRaw).toContain('Inboxed Account &amp; Preferences')
+
+      const fallbackRaw = await (await app.request('http://localhost:8787/dev/raw?page=fallback&email=test%40example.com')).text()
+      expect(fallbackRaw).toContain('Seeing this while trying to load the game?')
+    })
+
+    it('should block GET /dev on production host (inboxed.fun)', async () => {
+      const res = await app.request('https://inboxed.fun/dev')
+      expect(res.status).toBe(404)
+    })
+
+    it('should block GET /dev/render on production host (inboxed.fun)', async () => {
+      const res = await app.request('https://inboxed.fun/dev/render')
+      expect(res.status).toBe(404)
+    })
+
+    it('should block GET /dev/page/* on production host (inboxed.fun)', async () => {
+      const res1 = await app.request('https://inboxed.fun/dev/page/confirmed')
+      expect(res1.status).toBe(404)
+      const res2 = await app.request('https://inboxed.fun/dev/page/signup')
+      expect(res2.status).toBe(404)
+      const res3 = await app.request('https://inboxed.fun/dev/page/account')
+      expect(res3.status).toBe(404)
+    })
   })
 })
 

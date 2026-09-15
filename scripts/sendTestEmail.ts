@@ -61,9 +61,9 @@ function parseArgs(args: string[]) {
       if (toIdx !== -1 && args[toIdx + 1] && !args[toIdx + 1].startsWith('-')) {
         targetArg = args[toIdx + 1]
       } else {
-        const positionalEmail = args.find(a => !a.startsWith('-') && a.includes('@'))
-        if (positionalEmail) {
-          targetArg = positionalEmail
+        const positionalEmails = args.filter(a => !a.startsWith('-') && a.includes('@'))
+        if (positionalEmails.length > 0) {
+          targetArg = positionalEmails.join(',')
         }
       }
     }
