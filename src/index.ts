@@ -63,6 +63,8 @@ type Bindings = {
   SENDER_EMAIL?: string
   PUBLIC_HTTPS_URL?: string
   ADMIN_SECRET?: string
+  TEST_EMAILS?: string
+  TEST_EMAIL?: string
 }
 
 export const app = new Hono<{ Bindings: Bindings }>()
@@ -3494,6 +3496,28 @@ const handleResetUserDay = async (c: any) => {
 app.post('/api/admin/reset-user-day', handleResetUserDay)
 app.get('/api/admin/reset-user-day', handleResetUserDay)
 
+// Admin endpoint to manually trigger the daily cron email dispatch
+app.all('/api/admin/trigger-daily-cron', async (c) => {
+  const authHeader = c.req.header('Authorization')
+  const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+  if (adminSecret && authHeader !== `Bearer ${adminSecret}`) {
+    return c.json({ success: false, error: 'Unauthorized' }, 401)
+  }
+
+  const dryRun = c.req.query('dryRun') === 'true'
+  const emailParam = c.req.query('email') || c.req.query('to')
+  const dateParam = c.req.query('date')
+
+  const targetEmails = emailParam ? emailParam.split(/[,;\s]+/).map(e => e.trim()).filter(Boolean) : undefined
+  const result = await sendDailyPuzzleEmails(c.env || {}, {
+    targetEmails,
+    dateStr: dateParam,
+    isDryRun: dryRun
+  })
+
+  return c.json({ success: true, ...result })
+})
+
 // User-facing & RFC 8058 One-Click Unsubscribe route
 async function handleUnsubscribe(c: any) {
   let email = c.req.query('email')
@@ -3845,15 +3869,121 @@ app.get('/api/leaderboard', async (c) => {
   }
 })
 
+export interface DailyEmailDispatchResult {
+  total: number
+  sent: number
+  failed: number
+  recipients: string[]
+  errors: Record<string, string>
+}
+
+/**
+ * Dispatches today's puzzle email to all active subscribers and configured test emails.
+ * Triggered automatically by Cloudflare Workers Scheduled Cron (9:00 AM PST) or via admin API.
+ */
+export async function sendDailyPuzzleEmails(
+  env?: Partial<Bindings>,
+  options?: {
+    dateStr?: string
+    targetEmails?: string[]
+    isDryRun?: boolean
+  }
+): Promise<DailyEmailDispatchResult> {
+  const puzzle = getDailyPuzzle(options?.dateStr)
+  const prodOrigin = (env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const authSecret = env?.AUTH_SECRET || process.env.AUTH_SECRET
+
+  // 1. Determine recipients
+  let recipients: string[] = []
+  if (options?.targetEmails && options.targetEmails.length > 0) {
+    recipients = options.targetEmails
+  } else {
+    // Collect active subscribers from KV
+    const subscribers = await getSubscribers(env?.GAME_STATE_KV)
+    const activeSubscribers = subscribers
+      .filter(s => s.status === 'active')
+      .map(s => s.email.toLowerCase().trim())
+
+    // Collect configured test emails from env or process.env
+    const rawTestEmails = env?.TEST_EMAILS || env?.TEST_EMAIL || process.env.TEST_EMAILS || process.env.TEST_EMAIL
+    const testEmails = rawTestEmails
+      ? rawTestEmails.split(/[,;\s]+/).map(e => e.toLowerCase().trim()).filter(Boolean)
+      : []
+
+    recipients = Array.from(new Set([...activeSubscribers, ...testEmails]))
+
+    // If still no recipients found, fallback to ekim0252@gmail.com
+    if (recipients.length === 0) {
+      recipients = ['ekim0252@gmail.com']
+    }
+  }
+
+  // Deduplicate and filter empty
+  recipients = Array.from(new Set(recipients.map(e => e.toLowerCase().trim()))).filter(Boolean)
+
+  console.log(`[Daily Cron] Dispatching Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${recipients.length} recipient(s): ${recipients.join(', ')}`)
+
+  const errors: Record<string, string> = {}
+  let sent = 0
+  let failed = 0
+
+  for (const email of recipients) {
+    try {
+      if (options?.isDryRun) {
+        console.log(`[Daily Cron] [DRY RUN] Would send to ${email}`)
+        sent++
+        continue
+      }
+
+      const emailContent = await buildPuzzleEmailContent(
+        env?.GAME_STATE_KV,
+        email,
+        options?.dateStr,
+        prodOrigin,
+        authSecret
+      )
+
+      const res = await sendMailgunEmail({
+        apiKey: env?.MAILGUN_API_KEY || process.env.MAILGUN_API_KEY,
+        domain: env?.MAILGUN_DOMAIN || process.env.MAILGUN_DOMAIN || 'inboxed.fun',
+        from: env?.SENDER_EMAIL || process.env.SENDER_EMAIL || 'Inboxed <game@inboxed.fun>',
+        to: email,
+        subject: emailContent.subject,
+        text: emailContent.text,
+        html: emailContent.fallbackHtml,
+        ampHtml: emailContent.ampHtml,
+        headers: {
+          'List-Unsubscribe': `<${prodOrigin}/unsubscribe?email=${encodeURIComponent(email)}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          'Feedback-ID': 'word-game-daily:mailgun',
+          'X-Entity-Ref-ID': `puzzle-${emailContent.puzzle.id}-${emailContent.puzzle.date}`,
+        },
+      })
+
+      if (res.ok) {
+        sent++
+        console.log(`[Daily Cron] Successfully sent to ${email} (ID: ${res.id})`)
+      } else {
+        failed++
+        errors[email] = res.error || 'Unknown error'
+        console.error(`[Daily Cron] Failed to send to ${email}: ${res.error}`)
+      }
+    } catch (err: any) {
+      failed++
+      errors[email] = err?.message || String(err)
+      console.error(`[Daily Cron] Exception sending to ${email}:`, err)
+    }
+  }
+
+  console.log(`[Daily Cron] Finished dispatch. ${sent} sent, ${failed} failed.`)
+  return { total: recipients.length, sent, failed, recipients, errors }
+}
+
 // Cloudflare Worker export supporting fetch & scheduled 9:00 AM PST Cron Handler
 export default {
   fetch: app.fetch,
   async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
-    console.log('Executing daily 9:00 AM PST Cron Dispatch...', event.scheduledTime)
-    const puzzle = getDailyPuzzle()
-    const subscribers = await getSubscribers(env.GAME_STATE_KV)
-    const activeSubscribers = subscribers.filter(s => s.status === 'active')
-
-    console.log(`[Cron Dispatch] Ready to dispatch Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${activeSubscribers.length} active subscribers.`)
+    console.log(`[Cloudflare Cron] Executing daily 9:00 AM PST Cron Dispatch at ${event.scheduledTime} (cron: "${event.cron}")`)
+    await sendDailyPuzzleEmails(env)
   }
 }
