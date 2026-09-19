@@ -370,13 +370,13 @@ export const EMAIL_HTML = `<!doctype html>
 
         .mask-tile.tile-revealed {
             background: #ffffff;
-            border-color: #000000;
+            border-color: #a1a1aa;
             color: #52525b;
         }
 
         .mask-tile.tile-typed {
             background: #ffffff;
-            border-color: #000000;
+            border-color: #7ecc84;
             color: #18181b;
             font-weight: 900;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -635,9 +635,9 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .rank-number {
-            font-weight: 800;
-            width: 20px;
-            color: #30AFFF;
+            font-weight: 700;
+            width: 24px;
+            color: #71717a;
         }
 
         .player-email {
@@ -647,8 +647,9 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .player-score {
-            font-weight: 800;
-            color: #18181b;
+            font-weight: 500;
+            color: #71717a;
+            font-size: 11px;
         }
 
         /* Ticket Stub Divider */
@@ -666,8 +667,8 @@ export const EMAIL_HTML = `<!doctype html>
 
         /* Share with Friends Notice */
         .share-friends-text {
-            font-size: 11px;
-            font-weight: 500;
+            font-size: 10.5px;
+            font-weight: 400;
             line-height: 1.4;
             color: #71717a;
             text-align: center;
@@ -894,27 +895,27 @@ export const EMAIL_HTML = `<!doctype html>
                             <div class="leaderboard-item">
                                 <span class="rank-number">#1</span>
                                 <span class="player-email">alex@company.com</span>
-                                <span class="player-score">925 pts</span>
+                                <span class="player-score">925 points &bull; 1 guess</span>
                             </div>
                             <div class="leaderboard-item">
                                 <span class="rank-number">#2</span>
                                 <span class="player-email">sarah@company.com</span>
-                                <span class="player-score">850 pts</span>
+                                <span class="player-score">850 points &bull; 2 guesses</span>
                             </div>
                             <div class="leaderboard-item">
                                 <span class="rank-number">#3</span>
                                 <span class="player-email">david@company.com</span>
-                                <span class="player-score">775 pts</span>
+                                <span class="player-score">775 points &bull; 3 guesses</span>
                             </div>
                             <div class="leaderboard-item">
                                 <span class="rank-number">#4</span>
                                 <span class="player-email">emily@company.com</span>
-                                <span class="player-score">710 pts</span>
+                                <span class="player-score">710 points &bull; 4 guesses</span>
                             </div>
                             <div class="leaderboard-item">
                                 <span class="rank-number">#5</span>
                                 <span class="player-email">michael@company.com</span>
-                                <span class="player-score">650 pts</span>
+                                <span class="player-score">650 points &bull; 5 guesses</span>
                             </div>
                         </div>
                     </div>
@@ -928,7 +929,7 @@ export const EMAIL_HTML = `<!doctype html>
             </div>
 
             <div class="share-friends-text">
-                Have someone you think would like this game? Forward this email to them!
+                Have someone you think would like this game? Forward this email to invite them!
             </div>
         </div>
 

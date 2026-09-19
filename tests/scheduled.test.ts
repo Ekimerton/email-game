@@ -83,4 +83,26 @@ describe('Cloudflare Daily Cron & Email Dispatch', () => {
 
     await expect(worker.scheduled(mockEvent, mockEnv, mockCtx)).resolves.not.toThrow()
   })
+
+  it('should dispatch dark mode CSS when user has dark theme enabled in settings', async () => {
+    const darkUser = 'darkmode_player@example.com'
+    const { generateAccountToken } = await import('../src/auth')
+    const token = generateAccountToken(darkUser)
+
+    // Set user theme to dark
+    const toggleRes = await app.request('/api/account/toggle-theme', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, theme: 'dark' }),
+    })
+    expect(toggleRes.status).toBe(200)
+
+    // Build email content for user
+    const { buildPuzzleEmailContent } = await import('../src/index')
+    const content = await buildPuzzleEmailContent(undefined, darkUser)
+    expect(content.theme).toBe('dark')
+    expect(content.ampHtml).toContain('background-color: #121212')
+    expect(content.ampHtml).toContain('color: #f4f4f5')
+    expect(content.fallbackHtml).toContain('background-color: #121212')
+  })
 })

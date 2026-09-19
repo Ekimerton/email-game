@@ -14,7 +14,8 @@
     "reset-user-day": "tsx scripts/helpers/resetUserDay.ts",
     "generate-puzzles": "tsx scripts/helpers/generatePuzzles.ts",
     "backfill-synonyms": "tsx scripts/helpers/backfillSynonyms.ts",
-    "unsubscribe": "tsx scripts/helpers/unsubscribeUser.ts"
+    "unsubscribe": "tsx scripts/helpers/unsubscribeUser.ts",
+    "sync-email": "tsx scripts/helpers/syncEmailHtml.ts"
   },
   "dependencies": {
     "dotenv": "^16.5.0",

@@ -7,6 +7,7 @@ import { generateAccountToken, verifyAccountToken, getAccountUrl, extractEmailDo
 import { GAME_MESSAGES } from './gameMessages'
 import { sendMailgunEmail, renderConfirmationEmailHtml, renderConfirmationEmailText } from './emailService'
 import { LOGO_PNG_BASE64 } from './logoData'
+import { EmailTheme, applyEmailTheme } from './emailThemes'
 
 export type LetterStatus = 'correct' | 'present' | 'absent'
 
@@ -37,6 +38,7 @@ export interface UserSettings {
   showOnLeaderboard: boolean
   daysPlayed?: number
   playedDates?: string[]
+  theme?: EmailTheme
 }
 
 export interface GameState {
@@ -242,6 +244,7 @@ async function getUserSettings(kv: KVNamespace | undefined, email: string): Prom
       showOnLeaderboard: typeof existing.showOnLeaderboard === 'boolean' ? existing.showOnLeaderboard : true,
       daysPlayed: existing.daysPlayed,
       playedDates: existing.playedDates,
+      theme: existing.theme === 'dark' ? 'dark' : 'light',
     }
   }
 
@@ -249,6 +252,7 @@ async function getUserSettings(kv: KVNamespace | undefined, email: string): Prom
     email: cleanEmail,
     domain,
     showOnLeaderboard: true,
+    theme: 'light',
   }
 }
 
@@ -318,9 +322,11 @@ export function getFallbackHtml(options: {
   playerCount?: number
   playUrl: string
   accountUrl?: string
+  theme?: EmailTheme
 }): string {
-  const { email, domain, coworkerCount, playerCount = 0, playUrl } = options
+  const { email, domain, coworkerCount, playerCount = 0, playUrl, theme = 'light' } = options
   const puzzle = getDailyPuzzle()
+  const isDark = theme === 'dark'
 
   // Use clean public URL without raw query string email parameters to pass Gmail security filters
   const cleanPlayUrl = playUrl.split('?')[0]
@@ -336,6 +342,17 @@ export function getFallbackHtml(options: {
     ? `Join ${playerCount} players playing the game today.`
     : `Join ${coworkerCount} coworkers playing in the ${safeDomain} org.`
 
+  const bodyBg = isDark ? '#121212' : '#ffffff'
+  const cardBg = isDark ? '#18181b' : '#f4f4f5'
+  const cardBorder = isDark ? '#27272a' : '#e4e4e7'
+  const bodyText = isDark ? '#f4f4f5' : '#18181b'
+  const strongText = isDark ? '#ffffff' : '#18181b'
+  const pText = isDark ? '#e4e4e7' : '#27272a'
+  const dividerColor = isDark ? '#27272a' : '#e4e4e7'
+  const mutedText = isDark ? '#a1a1aa' : '#71717a'
+  const subStrongText = isDark ? '#d4d4d8' : '#52525b'
+  const ctaColor = isDark ? '#C4F7CA' : '#14532d'
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -343,9 +360,9 @@ export function getFallbackHtml(options: {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inboxed #${puzzle.id} - Daily Word Puzzle</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #18181b;">
+<body style="margin: 0; padding: 0; background-color: ${bodyBg}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: ${bodyText};">
   <div style="max-width: 480px; margin: 0 auto; padding: 12px 8px;">
-    <div style="background-color: #f4f4f5; border: 1px solid #e4e4e7; border-radius: 12px; padding: 20px 16px; box-sizing: border-box;">
+    <div style="background-color: ${cardBg}; border: 1px solid ${cardBorder}; border-radius: 12px; padding: 20px 16px; box-sizing: border-box;">
       <div style="text-align: center; margin: 0 0 20px;">
         <a href="${safePlayUrl}" style="text-decoration: none; display: inline-block;">
           <img src="${safeLogoUrl}" alt="INBOXED" width="160" height="38" style="display: block; margin: 0 auto; width: 160px; height: 38px; border: 0; outline: none; text-decoration: none;">
@@ -353,17 +370,17 @@ export function getFallbackHtml(options: {
       </div>
 
       <div style="padding: 4px 0 16px; text-align: left;">
-        <p style="font-size: 15px; font-weight: 600; line-height: 1.55; color: #27272a; margin: 0;">
-          <strong style="color: #18181b;">${safeEmail}</strong> is inviting you to play Inboxed, the daily word game in your inbox. ${communityMessage}
+        <p style="font-size: 15px; font-weight: 600; line-height: 1.55; color: ${pText}; margin: 0;">
+          <strong style="color: ${strongText};">${safeEmail}</strong> is inviting you to play Inboxed, the daily word game in your inbox. ${communityMessage}
         </p>
-        <a href="${safePlayUrl}" style="display: block; color: #14532d; font-size: 14px; font-weight: 800; margin-top: 16px; text-align: center; text-decoration: underline;">Sign up to play →</a>
+        <a href="${safePlayUrl}" style="display: block; color: ${ctaColor}; font-size: 14px; font-weight: 800; margin-top: 16px; text-align: center; text-decoration: underline;">Sign up to play →</a>
       </div>
 
-      <div style="border-top: 1px solid #e4e4e7;"></div>
-      <div style="padding: 14px 0 2px; text-align: left; font-size: 12px; line-height: 1.5; color: #71717a;">
-        <strong style="color: #52525b;">Seeing this while trying to load the game?</strong><br>
+      <div style="border-top: 1px solid ${dividerColor};"></div>
+      <div style="padding: 14px 0 2px; text-align: left; font-size: 12px; line-height: 1.5; color: ${mutedText};">
+        <strong style="color: ${subStrongText};">Seeing this while trying to load the game?</strong><br>
         <p style="margin: 6px 0 0;">Your email client might not be supported. This game uses AMP email, which is supported by Gmail, Yahoo Mail, AOL Mail, FairEmail, and Mail.ru.</p>
-        <p style="margin: 4px 0 0;">You can <a href="${safeAccountUrl}" style="color: #14532d; font-weight: 700; text-decoration: underline;">update your account preferences</a>.</p>
+        <p style="margin: 4px 0 0;">You can <a href="${safeAccountUrl}" style="color: ${ctaColor}; font-weight: 700; text-decoration: underline;">update your account preferences</a>.</p>
       </div>
     </div>
   </div>
@@ -2402,8 +2419,9 @@ export async function buildPuzzleEmailContent(
   userEmail: string,
   dateParam?: string,
   currentOrigin?: string,
-  authSecret?: string
-): Promise<{ ampHtml: string; fallbackHtml: string; subject: string; text: string; puzzle: DailyPuzzle }> {
+  authSecret?: string,
+  themeOverride?: EmailTheme
+): Promise<{ ampHtml: string; fallbackHtml: string; subject: string; text: string; puzzle: DailyPuzzle; theme: EmailTheme }> {
   const { state, puzzle } = await getOrCreateGameState(kv, userEmail, dateParam)
   const domain = extractDomain(userEmail)
   const secret = authSecret || process.env.AUTH_SECRET
@@ -2413,12 +2431,17 @@ export async function buildPuzzleEmailContent(
   const encodedEmail = encodeURIComponent(userEmail)
   const encodedDomain = encodeURIComponent(domain)
 
+  const profile = await recordUserActivity(kv, userEmail, puzzle.date)
+  const theme: EmailTheme = themeOverride || profile.theme || 'light'
+
   let ampHtml = EMAIL_HTML
     .replaceAll('https://inboxed.fun', origin)
     .replaceAll('USER_EMAIL_PLACEHOLDER', encodedEmail)
     .replaceAll('USER_DOMAIN_PLACEHOLDER', encodedDomain)
     .replaceAll('USER_DATE_PLACEHOLDER', puzzle.date)
     .replaceAll('default-dev-token', userToken)
+
+  ampHtml = applyEmailTheme(ampHtml, theme)
 
   const dynamicStateListHeight = calculateStateListHeight(puzzle)
   ampHtml = ampHtml.replace('height="196"', `height="${dynamicStateListHeight}"`)
@@ -2472,7 +2495,6 @@ export async function buildPuzzleEmailContent(
   }).join('')
   ampHtml = ampHtml.replace('__PLACEHOLDER_MASK_TILES__', placeholderMaskHtml)
 
-  const profile = await recordUserActivity(kv, userEmail, puzzle.date)
   const coworkerCount = await getCoworkerCount(kv, domain, userEmail)
   const playerCount = await getPlayerCount(kv)
   const playUrl = `${origin}/?email=${encodedEmail}`
@@ -2486,18 +2508,20 @@ export async function buildPuzzleEmailContent(
     playerCount,
     playUrl,
     accountUrl,
+    theme,
   })
 
   const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(puzzle.date)}`
   const text = `Play today's Inboxed puzzle (#${puzzle.id}): ${origin}/?email=${encodedEmail}`
 
-  return { ampHtml, fallbackHtml, subject, text, puzzle }
+  return { ampHtml, fallbackHtml, subject, text, puzzle, theme }
 }
 
 // Serve AMP HTML preview page helper
 async function renderAmpGame(c: any) {
   const userEmail = await getUserEmail(c)
   const dateParam = c.req.query('date')
+  const themeParam = c.req.query('theme') as EmailTheme | undefined
   const reqUrl = new URL(c.req.url)
   const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
   const forceHttps = c.req.query('forceHttps') === 'true'
@@ -2505,7 +2529,7 @@ async function renderAmpGame(c: any) {
   const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
   const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
-  const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret)
+  const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret, themeParam)
   return c.html(content.ampHtml)
 }
 
@@ -2737,11 +2761,13 @@ app.get('/dev/page/account', async (c) => {
 app.get('/fallback', async (c) => {
   const userEmail = await getUserEmail(c)
   const dateParam = c.req.query('date')
+  const themeParam = c.req.query('theme') as EmailTheme | undefined
   const puzzle = getDailyPuzzle(dateParam)
   const domain = extractDomain(userEmail)
   const profile = await recordUserActivity(c.env?.GAME_STATE_KV, userEmail, puzzle.date)
   const coworkerCount = await getCoworkerCount(c.env?.GAME_STATE_KV, domain, userEmail)
   const playerCount = await getPlayerCount(c.env?.GAME_STATE_KV)
+  const theme: EmailTheme = themeParam || profile.theme || 'light'
 
   const reqUrl = new URL(c.req.url)
   const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
@@ -2764,6 +2790,7 @@ app.get('/fallback', async (c) => {
     playerCount,
     playUrl,
     accountUrl,
+    theme,
   })
 
   return c.html(html)
@@ -2782,6 +2809,7 @@ app.get('/api/account', async (c) => {
   const userProfile = await getUserSettings(c.env?.GAME_STATE_KV, verified.email)
   const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
   const isSubscribed = subscribers.some(s => s.email.toLowerCase() === verified.email.toLowerCase() && s.status === 'active')
+  const theme = userProfile.theme || 'light'
 
   return c.json({
     success: true,
@@ -2789,7 +2817,9 @@ app.get('/api/account', async (c) => {
     domain: userProfile.domain,
     token,
     isSubscribed,
-    showOnLeaderboard: userProfile.showOnLeaderboard
+    showOnLeaderboard: userProfile.showOnLeaderboard,
+    theme,
+    darkMode: theme === 'dark'
   })
 })
 
@@ -2848,6 +2878,44 @@ app.post('/api/account/toggle-privacy', async (c) => {
     })
   } catch (error: any) {
     return c.json({ success: false, message: 'Failed to update privacy preference.' }, 500)
+  }
+})
+
+// React API Endpoint: Toggle Theme / Dark Mode (AJAX)
+app.post('/api/account/toggle-theme', async (c) => {
+  try {
+    const body = await c.req.json()
+    const token = body?.token
+    const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+    const verified = verifyAccountToken(token, authSecret)
+
+    if (!verified) {
+      return c.json({ success: false, message: 'Invalid authentication token.' }, 401)
+    }
+
+    const userProfile = await getUserSettings(c.env?.GAME_STATE_KV, verified.email)
+    let nextTheme: EmailTheme = 'light'
+    if (typeof body.theme === 'string') {
+      nextTheme = body.theme === 'dark' ? 'dark' : 'light'
+    } else if (typeof body.darkMode === 'boolean') {
+      nextTheme = body.darkMode ? 'dark' : 'light'
+    } else {
+      nextTheme = userProfile.theme === 'dark' ? 'light' : 'dark'
+    }
+
+    userProfile.theme = nextTheme
+    await updateUserSettings(c.env?.GAME_STATE_KV, userProfile)
+
+    return c.json({
+      success: true,
+      theme: nextTheme,
+      darkMode: nextTheme === 'dark',
+      message: nextTheme === 'dark'
+        ? '🌙 Dark mode enabled for your daily emails!'
+        : '☀️ Light mode enabled for your daily emails!'
+    })
+  } catch (error: any) {
+    return c.json({ success: false, message: 'Failed to update theme preference.' }, 500)
   }
 })
 
@@ -3080,6 +3148,40 @@ export function getAccountPageHtml(): string {
       font-weight: 700;
       text-decoration: underline;
     }
+
+    /* Dark Mode Theme Overrides for Account Preferences SPA */
+    body.dark-theme {
+      background-color: #121212;
+      color: #f4f4f5;
+    }
+    body.dark-theme .title {
+      color: #ffffff;
+    }
+    body.dark-theme .user-badge {
+      color: #f4f4f5;
+    }
+    body.dark-theme .section-divider {
+      border-top-color: #27272a;
+    }
+    body.dark-theme .setting-title {
+      color: #f4f4f5;
+    }
+    body.dark-theme .setting-desc {
+      color: #a1a1aa;
+    }
+    body.dark-theme .slider {
+      background-color: #27272a;
+      border-color: #3f3f46;
+    }
+    body.dark-theme .slider:before {
+      background-color: #f4f4f5;
+    }
+    body.dark-theme .footer-text {
+      color: #a1a1aa;
+    }
+    body.dark-theme .footer-text a {
+      color: #C4F7CA;
+    }
   </style>
 </head>
 <body>
@@ -3094,6 +3196,7 @@ export function getAccountPageHtml(): string {
       const [toast, setToast] = useState('');
       const [updatingSub, setUpdatingSub] = useState(false);
       const [updatingPriv, setUpdatingPriv] = useState(false);
+      const [updatingTheme, setUpdatingTheme] = useState(false);
 
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token') || '';
@@ -3122,6 +3225,14 @@ export function getAccountPageHtml(): string {
             setLoading(false);
           });
       }, []);
+
+      useEffect(() => {
+        if (user && user.theme === 'dark') {
+          document.body.classList.add('dark-theme');
+        } else {
+          document.body.classList.remove('dark-theme');
+        }
+      }, [user?.theme]);
 
       const showToast = (msg) => {
         setToast(msg);
@@ -3170,6 +3281,29 @@ export function getAccountPageHtml(): string {
           showToast('Failed to update privacy');
         }
         setUpdatingPriv(false);
+      };
+
+      const handleToggleTheme = async (e) => {
+        const nextDark = e.target.checked;
+        const nextTheme = nextDark ? 'dark' : 'light';
+        setUpdatingTheme(true);
+        try {
+          const res = await fetch('/api/account/toggle-theme', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: user.token, theme: nextTheme, darkMode: nextDark })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setUser(prev => ({ ...prev, theme: data.theme, darkMode: data.darkMode }));
+            showToast(data.message);
+          } else {
+            showToast(data.message || 'Failed to update');
+          }
+        } catch (_) {
+          showToast('Failed to update theme preference');
+        }
+        setUpdatingTheme(false);
       };
 
       if (loading) {
@@ -3276,6 +3410,32 @@ export function getAccountPageHtml(): string {
                   checked={user.showOnLeaderboard}
                   onChange={handleTogglePrivacy}
                   disabled={updatingPriv}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <hr className="section-divider" />
+
+          {/* Dark Mode Theme Switch */}
+          <div className="setting-section">
+            <div className="setting-header">
+              <span className="setting-title">🌙 Dark Mode</span>
+            </div>
+            <div className="setting-desc">
+              Receive your daily puzzle email in dark mode instead of light mode.
+            </div>
+            <div className="switch-container">
+              <span className="switch-label" style={{ color: user.theme === 'dark' ? (user.theme === 'dark' ? '#C4F7CA' : '#14532d') : '#71717a' }}>
+                {user.theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+              </span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={user.theme === 'dark'}
+                  onChange={handleToggleTheme}
+                  disabled={updatingTheme}
                 />
                 <span className="slider"></span>
               </label>
@@ -3845,13 +4005,16 @@ app.get('/api/leaderboard', async (c) => {
 
     const allItems = visibleEntriesWithSettings
       .filter(item => item.showOnLeaderboard)
-      .map((item, index) => ({
-        rank: index + 1,
-        displayEmail: formatDisplayEmail(item.entry.email),
-        score: `${item.entry.score} pts (${item.entry.guessCount}g)`,
-        email: item.entry.email,
-        isCurrentPlayer: item.entry.email.toLowerCase() === userEmail.toLowerCase()
-      }))
+      .map((item, index) => {
+        const guessWord = item.entry.guessCount === 1 ? 'guess' : 'guesses'
+        return {
+          rank: index + 1,
+          displayEmail: formatDisplayEmail(item.entry.email),
+          score: `${item.entry.score} points • ${item.entry.guessCount} ${guessWord}`,
+          email: item.entry.email,
+          isCurrentPlayer: item.entry.email.toLowerCase() === userEmail.toLowerCase()
+        }
+      })
 
     const top5 = allItems.slice(0, 5)
     const currentPlayerItem = allItems.find(item => item.isCurrentPlayer)

@@ -69,7 +69,7 @@ describe('Hono App & Layout Calculations', () => {
     expect(EMAIL_HTML).toContain('logo-tile rotate-pos')
     expect(EMAIL_HTML).toContain('logo-tile rotate-neg')
     expect(EMAIL_HTML).toContain('ticket-stub-divider')
-    expect(EMAIL_HTML).toContain("Have someone you think would like this game? Forward this email to them!")
+    expect(EMAIL_HTML).toContain("Have someone you think would like this game? Forward this email to invite them!")
   })
 
   it('should include the mini tutorial within 40px height limit in EMAIL_HTML', () => {

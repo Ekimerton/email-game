@@ -107,7 +107,53 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(resetData.showOnLeaderboard).toBe(true)
   })
 
-  it('should reject subscription and privacy toggles with invalid token', async () => {
+  it('should toggle theme between light and dark with a valid token', async () => {
+    // 1. Initially default to light
+    const initRes = await app.request(`/api/account?token=${encodeURIComponent(validToken)}`)
+    const initData = await initRes.json() as any
+    expect(initData.theme).toBe('light')
+    expect(initData.darkMode).toBe(false)
+
+    // 2. Enable dark mode
+    const darkRes = await app.request('/api/account/toggle-theme', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: validToken, theme: 'dark' })
+    })
+    expect(darkRes.status).toBe(200)
+    const darkData = await darkRes.json() as any
+    expect(darkData.success).toBe(true)
+    expect(darkData.theme).toBe('dark')
+    expect(darkData.darkMode).toBe(true)
+    expect(darkData.message).toContain('Dark mode enabled')
+
+    // 3. Verify settings reflect dark mode
+    const checkDarkRes = await app.request(`/api/account?token=${encodeURIComponent(validToken)}`)
+    const checkDarkData = await checkDarkRes.json() as any
+    expect(checkDarkData.theme).toBe('dark')
+    expect(checkDarkData.darkMode).toBe(true)
+
+    // 4. Switch back to light mode using darkMode boolean
+    const lightRes = await app.request('/api/account/toggle-theme', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: validToken, darkMode: false })
+    })
+    expect(lightRes.status).toBe(200)
+    const lightData = await lightRes.json() as any
+    expect(lightData.success).toBe(true)
+    expect(lightData.theme).toBe('light')
+    expect(lightData.darkMode).toBe(false)
+    expect(lightData.message).toContain('Light mode enabled')
+
+    // 5. Verify settings reflect light mode
+    const checkLightRes = await app.request(`/api/account?token=${encodeURIComponent(validToken)}`)
+    const checkLightData = await checkLightRes.json() as any
+    expect(checkLightData.theme).toBe('light')
+    expect(checkLightData.darkMode).toBe(false)
+  })
+
+  it('should reject subscription, privacy, and theme toggles with invalid token', async () => {
     const invalidToken = 'invalid.token.signature'
 
     const subRes = await app.request('/api/account/toggle-subscription', {
@@ -123,6 +169,13 @@ describe('Spoof-Proof Account & Preferences API', () => {
       body: JSON.stringify({ token: invalidToken, showOnLeaderboard: false })
     })
     expect(privRes.status).toBe(401)
+
+    const themeRes = await app.request('/api/account/toggle-theme', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: invalidToken, theme: 'dark' })
+    })
+    expect(themeRes.status).toBe(401)
   })
 
   it('should include the spoof-proof account link in the fallback HTML', () => {
@@ -269,5 +322,41 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(players3[2].rank).toBe(3)
     expect(players3[2].email).toBe(player3Email)
     expect(players3[2].isCurrentPlayer).toBe(true)
+  })
+
+  it('should render dark mode fallback HTML when theme is dark', () => {
+    const html = getFallbackHtml({
+      email: testEmail,
+      domain: 'example.com',
+      daysPlayed: 3,
+      coworkerCount: 5,
+      playerCount: 10,
+      playUrl: 'https://inboxed.fun',
+      theme: 'dark',
+    })
+
+    expect(html).toContain('background-color: #121212')
+    expect(html).toContain('background-color: #18181b')
+    expect(html).toContain('color: #f4f4f5')
+  })
+
+  it('should render dark mode AMP email when theme=dark parameter is provided', async () => {
+    const res = await app.request(`/?email=${encodeURIComponent(testEmail)}&theme=dark&forceHttps=true`)
+    expect(res.status).toBe(200)
+    const html = await res.text()
+
+    expect(html).toContain('background-color: #121212')
+    expect(html).toContain('background-color: #18181b')
+    expect(html).toContain('color: #f4f4f5')
+  })
+
+  it('should render the Dark Mode switch in the account preferences page', async () => {
+    const res = await app.request('/account?token=' + encodeURIComponent(validToken))
+    expect(res.status).toBe(200)
+    const html = await res.text()
+
+    expect(html).toContain('Dark Mode')
+    expect(html).toContain('/api/account/toggle-theme')
+    expect(html).toContain('body.dark-theme')
   })
 })
