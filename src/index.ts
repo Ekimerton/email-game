@@ -3843,7 +3843,7 @@ app.get('/api/leaderboard', async (c) => {
       })
     )
 
-    const items = visibleEntriesWithSettings
+    const allItems = visibleEntriesWithSettings
       .filter(item => item.showOnLeaderboard)
       .map((item, index) => ({
         rank: index + 1,
@@ -3852,6 +3852,14 @@ app.get('/api/leaderboard', async (c) => {
         email: item.entry.email,
         isCurrentPlayer: item.entry.email.toLowerCase() === userEmail.toLowerCase()
       }))
+
+    const top5 = allItems.slice(0, 5)
+    const currentPlayerItem = allItems.find(item => item.isCurrentPlayer)
+
+    const items = [...top5]
+    if (currentPlayerItem && !top5.some(item => item.email.toLowerCase() === userEmail.toLowerCase())) {
+      items.push(currentPlayerItem)
+    }
 
     const { state: userState } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateStr)
 

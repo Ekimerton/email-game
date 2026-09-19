@@ -213,4 +213,61 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(html).toContain('https://ekimerton.github.io')
     expect(html).toContain('Ekim')
   })
+
+  it('should return top 5 players plus the current player if they are ranked outside top 5', async () => {
+    const domain = `testdomain-${Date.now()}.com`
+    const puzzle = (await import('../src/puzzleLogic')).getDailyPuzzle()
+
+    // Create 8 players with different scores
+    for (let i = 1; i <= 8; i++) {
+      const email = `player${i}@${domain}`
+      for (let w = 0; w < i - 1; w++) {
+        await app.request(`/api/guess?email=${encodeURIComponent(email)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ 'user-guess': 'ZZZZZ' }).toString()
+        })
+      }
+      await app.request(`/api/guess?email=${encodeURIComponent(email)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ 'user-guess': puzzle.word }).toString()
+      })
+    }
+
+    // Fetch as player8 (rank 8, outside top 5)
+    const player8Email = `player8@${domain}`
+    const res8 = await app.request(`/api/leaderboard?domain=${domain}&email=${encodeURIComponent(player8Email)}&date=${puzzle.date}`)
+    expect(res8.status).toBe(200)
+    const data8 = (await res8.json()) as any
+    const players8 = data8.items[0].players
+
+    // Should return top 5 + player 8 (total 6 entries)
+    expect(players8.length).toBe(6)
+    expect(players8[0].rank).toBe(1)
+    expect(players8[0].email).toBe(`player1@${domain}`)
+    expect(players8[0].isCurrentPlayer).toBe(false)
+
+    expect(players8[1].rank).toBe(2)
+    expect(players8[2].rank).toBe(3)
+    expect(players8[3].rank).toBe(4)
+    expect(players8[4].rank).toBe(5)
+
+    expect(players8[5].rank).toBe(8)
+    expect(players8[5].email).toBe(player8Email)
+    expect(players8[5].isCurrentPlayer).toBe(true)
+
+    // Fetch as player3 (rank 3, inside top 5)
+    const player3Email = `player3@${domain}`
+    const res3 = await app.request(`/api/leaderboard?domain=${domain}&email=${encodeURIComponent(player3Email)}&date=${puzzle.date}`)
+    expect(res3.status).toBe(200)
+    const data3 = (await res3.json()) as any
+    const players3 = data3.items[0].players
+
+    // Should return exactly top 5 without duplicates
+    expect(players3.length).toBe(5)
+    expect(players3[2].rank).toBe(3)
+    expect(players3[2].email).toBe(player3Email)
+    expect(players3[2].isCurrentPlayer).toBe(true)
+  })
 })

@@ -587,16 +587,16 @@
         /* Leaderboard */
         .leaderboard-container {
             position: relative;
-            height: 100px;
-            max-height: 100px;
-            overflow-y: auto;
+            height: 160px;
+            max-height: 160px;
+            overflow: hidden;
             box-sizing: border-box;
         }
 
         .leaderboard-blur-content {
             opacity: 0.15;
             filter: blur(4px);
-            max-height: 100px;
+            max-height: 160px;
             overflow: hidden;
         }
 
@@ -621,7 +621,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 8px;
+            padding: 5px 8px;
             font-size: 12px;
             border-radius: 6px;
         }
@@ -859,7 +859,7 @@
 
         <!-- 2. Organization Leaderboard -->
         <div class="leaderboard-section">
-            <amp-list id="leaderboardList" width="auto" height="100" layout="fixed-height"
+            <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height"
                 src="https://inboxed.fun/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                 <template type="amp-mustache">
                     <div class="leaderboard-container">
@@ -905,6 +905,16 @@
                                 <span class="rank-number">#3</span>
                                 <span class="player-email">david@company.com</span>
                                 <span class="player-score">775 pts</span>
+                            </div>
+                            <div class="leaderboard-item">
+                                <span class="rank-number">#4</span>
+                                <span class="player-email">emily@company.com</span>
+                                <span class="player-score">710 pts</span>
+                            </div>
+                            <div class="leaderboard-item">
+                                <span class="rank-number">#5</span>
+                                <span class="player-email">michael@company.com</span>
+                                <span class="player-score">650 pts</span>
                             </div>
                         </div>
                     </div>
