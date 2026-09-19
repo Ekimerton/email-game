@@ -79,7 +79,7 @@ const BASE_STATIC_STATE_LIST_HEIGHT = 136
 
 // Calculate dynamic total amp-list height for pre-render (stable bounded height for clue stepper view)
 function calculateStateListHeight(puzzle?: DailyPuzzle): number {
-  return 188
+  return 196
 }
 
 async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
@@ -2421,7 +2421,7 @@ export async function buildPuzzleEmailContent(
     .replaceAll('default-dev-token', userToken)
 
   const dynamicStateListHeight = calculateStateListHeight(puzzle)
-  ampHtml = ampHtml.replace('height="188"', `height="${dynamicStateListHeight}"`)
+  ampHtml = ampHtml.replace('height="196"', `height="${dynamicStateListHeight}"`)
   ampHtml = ampHtml
     .replaceAll('"wordLength": 7', `"wordLength": ${puzzle.word.length}`)
     .replaceAll('maxlength="7"', `maxlength="${puzzle.word.length}"`)
@@ -3849,7 +3849,8 @@ app.get('/api/leaderboard', async (c) => {
         rank: index + 1,
         displayEmail: formatDisplayEmail(item.entry.email),
         score: `${item.entry.score} pts (${item.entry.guessCount}g)`,
-        email: item.entry.email
+        email: item.entry.email,
+        isCurrentPlayer: item.entry.email.toLowerCase() === userEmail.toLowerCase()
       }))
 
     const { state: userState } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateStr)

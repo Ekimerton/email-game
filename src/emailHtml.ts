@@ -196,7 +196,20 @@ export const EMAIL_HTML = `<!doctype html>
 
         /* Definition Clue Stepper & Active Card */
         .definitions-section {
+            border-radius: 12px;
             margin-bottom: 22px;
+            position: relative;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            background-image:
+                radial-gradient(circle at center, #a1a1aa 1px, transparent 1.2px),
+                radial-gradient(circle at center, #a1a1aa 1px, transparent 1.2px),
+                radial-gradient(circle at center, #a1a1aa 1px, transparent 1.2px),
+                radial-gradient(circle at center, #a1a1aa 1px, transparent 1.2px);
+            background-position: top left, bottom left, top left, top right;
+            background-size: 7px 2px, 7px 2px, 2px 7px, 2px 7px;
+            background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+            padding-top: 20px;
         }
 
         .definitions-header,
@@ -227,9 +240,18 @@ export const EMAIL_HTML = `<!doctype html>
 
         .clue-tabs-bar {
             display: flex;
-            gap: 5px;
+            width: max-content;
+            max-width: 100%;
+            margin: 0 auto;
+            gap: 6px;
             align-items: center;
             justify-content: center;
+            position: relative;
+            top: 11px;
+            background: #ffffff;
+            padding: 0 10px;
+            border-radius: 12px;
+            z-index: 2;
         }
 
         .clue-tab-btn {
@@ -250,6 +272,7 @@ export const EMAIL_HTML = `<!doctype html>
             align-items: center;
             justify-content: center;
             font-family: inherit;
+            box-shadow: 0 0 0 2px #ffffff;
         }
 
         .clue-tab-btn.unlocked {
@@ -260,7 +283,6 @@ export const EMAIL_HTML = `<!doctype html>
 
         .clue-tab-btn.locked {
             color: #a1a1aa;
-            opacity: 0.5;
             background: #f4f4f5;
             border-color: #e4e4e7;
         }
@@ -281,8 +303,8 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .active-clue-card {
-            padding: 8px 14px;
-            min-height: 88px;
+            padding: 8px 14px 8px 14px;
+            min-height: 76px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -416,13 +438,13 @@ export const EMAIL_HTML = `<!doctype html>
             background: #C4F7CA;
             color: #000000;
             border-color: #7ecc84;
-            box-shadow: inset 0 2px 0 0 #e8ffea, 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 2px 0 0 #dafcdb, 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .btn-primary:hover {
             background-color: #bbf4c3;
             border-color: #76c87c;
-            box-shadow: inset 0 2px 0 0 #ddf9df, 0 2px 4px rgba(0, 0, 0, 0.08);
+            box-shadow: inset 0 2px 0 0 #d1f7d5, 0 2px 4px rgba(0, 0, 0, 0.08);
         }
 
         .btn-primary:active {
@@ -433,13 +455,13 @@ export const EMAIL_HTML = `<!doctype html>
             background: #e4e4e7;
             color: #27272a;
             border-color: #a1a1aa;
-            box-shadow: inset 0 2px 0 0 #ffffff, 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 2px 0 0 #f4f4f6, 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .btn-hint:hover {
             background-color: #dcdce0;
             border-color: #8e8e96;
-            box-shadow: inset 0 2px 0 0 #f0f0f3, 0 2px 4px rgba(0, 0, 0, 0.08);
+            box-shadow: inset 0 2px 0 0 #e9e9ec, 0 2px 4px rgba(0, 0, 0, 0.08);
         }
 
         .btn-hint:active {
@@ -601,6 +623,11 @@ export const EMAIL_HTML = `<!doctype html>
             align-items: center;
             padding: 6px 8px;
             font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .leaderboard-item.current-player {
+            background-color: #dcfce7;
         }
 
         .leaderboard-item:last-child {
@@ -637,97 +664,16 @@ export const EMAIL_HTML = `<!doctype html>
             display: none;
         }
 
-        /* Horizontal Ticket Component */
-        .ticket-card {
-            position: relative;
-            display: flex;
-            align-items: center;
-            background: #FCE7F3;
-            border: none;
-            border-radius: 8px;
-            margin-top: 14px;
-            overflow: hidden;
-            box-sizing: border-box;
-        }
-
-        .ticket-body {
-            padding: 10px 14px;
-            flex: 1;
-        }
-
-        .ticket-fine-text {
-            font-size: 10.5px;
-            font-weight: 600;
+        /* Share with Friends Notice */
+        .share-friends-text {
+            font-size: 11px;
+            font-weight: 500;
             line-height: 1.4;
-            color: #831843;
-        }
-
-        .ticket-perforation {
-            position: relative;
-            align-self: stretch;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            width: 0;
-        }
-
-        .ticket-dashed-line {
-            display: block;
-            width: 0;
-            height: 100%;
-            border-left: 2px dashed #ffffff;
-            box-sizing: border-box;
-        }
-
-        .ticket-notch {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: #ffffff;
-            border: none;
-            border-radius: 50%;
-            left: 50%;
-            transform: translateX(-50%);
-            box-sizing: border-box;
-            z-index: 2;
-        }
-
-        .ticket-notch.notch-top {
-            top: -6px;
-        }
-
-        .ticket-notch.notch-bottom {
-            bottom: -6px;
-        }
-
-        .ticket-stub {
-            background: #FCE7F3;
-            padding: 10px 14px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+            color: #71717a;
             text-align: center;
-        }
-
-        .stub-text {
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            color: #000000;
-            text-transform: uppercase;
-            white-space: nowrap;
-            line-height: 1.2;
-        }
-
-        .stub-subtext {
-            font-size: 8.5px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #9d174d;
-            margin-top: 2px;
+            margin-top: 10px;
+            margin-bottom: 12px;
+            padding: 0 8px;
         }
 
         /* Mini Tutorial (Clean inline single-line layout under logo) */
@@ -811,7 +757,7 @@ export const EMAIL_HTML = `<!doctype html>
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="188" layout="fixed-height"
+                <amp-list id="stateList" width="auto" height="196" layout="fixed-height"
                     src="https://inboxed.fun/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
@@ -926,7 +872,7 @@ export const EMAIL_HTML = `<!doctype html>
                         <div
                             class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
                             {{#players}}
-                            <div class="leaderboard-item">
+                            <div class="leaderboard-item {{#isCurrentPlayer}}current-player{{/isCurrentPlayer}}">
                                 <span class="rank-number">#{{rank}}</span>
                                 <span class="player-email">{{displayEmail}}</span>
                                 <span class="player-score">{{score}}</span>
@@ -971,23 +917,12 @@ export const EMAIL_HTML = `<!doctype html>
                 <span class="stub-notch stub-notch-right"></span>
             </div>
 
-            <div class="ticket-card">
-                <div class="ticket-body">
-                    <div class="ticket-fine-text">
-                        Have someone you think would like this game? Forward this email to them!
-                    </div>
-                </div>
-                <div class="ticket-perforation">
-                    <span class="ticket-notch notch-top"></span>
-                    <span class="ticket-dashed-line"></span>
-                    <span class="ticket-notch notch-bottom"></span>
-                </div>
-                <div class="ticket-stub">
-                    <div class="stub-text">ADMIT ONE</div>
-                    <div class="stub-subtext">Nº 04821</div>
-                </div>
+            <div class="share-friends-text">
+                Have someone you think would like this game? Forward this email to them!
             </div>
         </div>
+
+        <hr class="section-divider">
 
         <!-- Footer -->
         <div class="footer">
