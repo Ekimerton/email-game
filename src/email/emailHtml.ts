@@ -304,7 +304,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         .active-clue-card {
             padding: 8px 14px 8px 14px;
-            min-height: 76px;
+            min-height: 84px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -758,7 +758,7 @@ export const EMAIL_HTML = `<!doctype html>
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="196" layout="fixed-height"
+                <amp-list id="stateList" width="auto" height="204" layout="fixed-height"
                     src="https://inboxed.fun/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">

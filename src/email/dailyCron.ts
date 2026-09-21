@@ -1,4 +1,4 @@
-import { getDailyPuzzle, formatPrettyDate, calculateStateListHeight, getRedactedText, getOrCreateGameState, GAME_MESSAGES, type DailyPuzzle } from '../game'
+import { getDailyPuzzle, formatPrettyDate, getRedactedText, getOrCreateGameState, GAME_MESSAGES, type DailyPuzzle } from '../game'
 import { EMAIL_HTML } from './emailHtml'
 import { generateAccountToken, getAccountUrl, extractEmailDomain, type Bindings, type DailyEmailDispatchResult } from '../core'
 import { sendMailgunEmail } from './emailService'
@@ -36,8 +36,6 @@ export async function buildPuzzleEmailContent(
 
   ampHtml = applyEmailTheme(ampHtml, theme)
 
-  const dynamicStateListHeight = calculateStateListHeight(puzzle)
-  ampHtml = ampHtml.replace('height="196"', `height="${dynamicStateListHeight}"`)
   ampHtml = ampHtml
     .replaceAll('"wordLength": 7', `"wordLength": ${puzzle.word.length}`)
     .replaceAll('maxlength="7"', `maxlength="${puzzle.word.length}"`)

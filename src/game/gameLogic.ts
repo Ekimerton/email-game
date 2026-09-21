@@ -78,9 +78,6 @@ export function calculateScore(
   return Math.max(100, 1000 - penalty)
 }
 
-export function calculateStateListHeight(puzzle?: DailyPuzzle): number {
-  return 196
-}
 
 export function getRedactedText(text: string): string {
   if (!text) return '••••••••••••••••••••'

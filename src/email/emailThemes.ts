@@ -291,7 +291,7 @@ export const DARK_THEME_CSS = `
 
         .active-clue-card {
             padding: 8px 14px 8px 14px;
-            min-height: 76px;
+            min-height: 84px;
             display: flex;
             align-items: center;
             justify-content: center;
