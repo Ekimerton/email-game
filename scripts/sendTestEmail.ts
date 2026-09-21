@@ -14,7 +14,7 @@
 
 import 'dotenv/config'
 import nodemailer from 'nodemailer'
-import { getDailyPuzzle, formatPrettyDate } from '../src/puzzleLogic'
+import { getDailyPuzzle, formatPrettyDate } from '../src/game'
 
 function parseEmailList(raw: string | undefined): string[] {
   if (!raw) return []

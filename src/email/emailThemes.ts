@@ -1,4 +1,5 @@
-export type EmailTheme = 'light' | 'dark'
+import type { EmailTheme } from '../core'
+export type { EmailTheme }
 
 export const DARK_THEME_CSS = `
         /* Josh Comeau's Modern CSS Reset (AMP4EMAIL Adapted - Dark Mode) */

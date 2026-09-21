@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { getDailyPuzzle } from '../src/puzzleLogic'
+import { getDailyPuzzle } from '../src/game'
 import { app, getFallbackHtml, calculateScore, isPuzzleSynonym } from '../src/index'
-import { EMAIL_HTML } from '../src/emailHtml'
+import { EMAIL_HTML } from '../src/email'
 
 describe('Hono App & Layout Calculations', () => {
   it('should generate valid daily puzzle data for today', () => {
@@ -467,6 +467,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
       expect(html).toContain('data-page="fallback"')
       expect(html).toContain('data-page="invalid"')
       expect(html).toContain('data-page="privacy"')
+      expect(html).toContain('data-page="subscribers"')
     })
 
     it('should serve direct game HTML render at GET /dev/render on localhost', async () => {
@@ -522,6 +523,24 @@ describe('Email Signup Landing Page & Subscribe API', () => {
       const accountRes = await app.request('http://localhost:8787/dev/page/account?email=test%40example.com')
       expect(accountRes.status).toBe(302)
       expect(accountRes.headers.get('location')).toContain('/account?token=')
+
+      // Subscribed emails page (defaults to prod source, supports local toggle)
+      const subRes = await app.request('http://localhost:8787/dev/page/subscribers')
+      expect(subRes.status).toBe(200)
+      const subHtml = await subRes.text()
+      expect(subHtml).toContain('Subscribed Emails')
+      expect(subHtml).toContain('Total Subscribers')
+      expect(subHtml).toContain('Active (Receiving)')
+
+      const localSubRes = await app.request('http://localhost:8787/dev/page/subscribers?source=local')
+      expect(localSubRes.status).toBe(200)
+      const localSubHtml = await localSubRes.text()
+      expect(localSubHtml).toContain('Local Dev KV')
+
+      const prodSubRes = await app.request('http://localhost:8787/dev/page/subscribers?source=prod')
+      expect(prodSubRes.status).toBe(200)
+      const prodSubHtml = await prodSubRes.text()
+      expect(prodSubHtml).toContain('Production')
     })
 
     it('should serve raw text for all sub-pages via GET /dev/raw?page=...', async () => {
@@ -542,6 +561,10 @@ describe('Email Signup Landing Page & Subscribe API', () => {
 
       const fallbackRaw = await (await app.request('http://localhost:8787/dev/raw?page=fallback&email=test%40example.com')).text()
       expect(fallbackRaw).toContain('Seeing this while trying to load the game?')
+
+      const subRaw = await (await app.request('http://localhost:8787/dev/raw?page=subscribers')).text()
+      expect(subRaw).toContain('Subscribed Emails')
+      expect(subRaw).toContain('Total Subscribers')
     })
 
     it('should block GET /dev on production host (inboxed.fun)', async () => {
@@ -561,6 +584,75 @@ describe('Email Signup Landing Page & Subscribe API', () => {
       expect(res2.status).toBe(404)
       const res3 = await app.request('https://inboxed.fun/dev/page/account')
       expect(res3.status).toBe(404)
+      const res4 = await app.request('https://inboxed.fun/dev/page/subscribers')
+      expect(res4.status).toBe(404)
+    })
+
+    it('should support dev subscriber management APIs and block on production host', async () => {
+      // Add subscriber
+      const addRes = await app.request('http://localhost:8787/dev/api/subscribers/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'workbench.user@company.com' })
+      })
+      expect(addRes.status).toBe(200)
+      const addData = (await addRes.json()) as any
+      expect(addData.success).toBe(true)
+
+      // Verify appearance on subscribers page
+      const pageRes = await app.request('http://localhost:8787/dev/page/subscribers?source=local')
+      const pageHtml = await pageRes.text()
+      expect(pageHtml).toContain('workbench.user@company.com')
+
+      // Toggle status
+      const toggleRes = await app.request('http://localhost:8787/dev/api/subscribers/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'workbench.user@company.com' })
+      })
+      expect(toggleRes.status).toBe(200)
+      const toggleData = (await toggleRes.json()) as any
+      expect(toggleData.success).toBe(true)
+      expect(toggleData.status).toBe('unsubscribed')
+
+      // Seed demo subscribers
+      const seedRes = await app.request('http://localhost:8787/dev/api/subscribers/seed', {
+        method: 'POST'
+      })
+      expect(seedRes.status).toBe(200)
+      const seedData = (await seedRes.json()) as any
+      expect(seedData.success).toBe(true)
+      expect(seedData.total).toBeGreaterThanOrEqual(5)
+
+      // Remove / Purge subscriber via dev API
+      const removeRes = await app.request('http://localhost:8787/dev/api/subscribers/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'workbench.user@company.com', target: 'local', purge: true })
+      })
+      expect(removeRes.status).toBe(200)
+      const removeData = (await removeRes.json()) as any
+      expect(removeData.success).toBe(true)
+
+      // Verify removal from local list
+      const checkRes = await app.request('http://localhost:8787/dev/page/subscribers?source=local')
+      const checkHtml = await checkRes.text()
+      expect(checkHtml).not.toContain('workbench.user@company.com')
+
+      // Blocked on production host
+      const prodRes = await app.request('https://inboxed.fun/dev/api/subscribers/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'hacker@malicious.com' })
+      })
+      expect(prodRes.status).toBe(404)
+
+      const prodRemoveRes = await app.request('https://inboxed.fun/dev/api/subscribers/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'hacker@malicious.com' })
+      })
+      expect(prodRemoveRes.status).toBe(404)
     })
   })
 })

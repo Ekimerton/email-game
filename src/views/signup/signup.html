@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inboxed - The Daily Word Game in Your Inbox</title>
+  <meta name="description" content="A daily synonym word-guessing game right inside your email. Misses unlock new definitions. Compete with coworkers on your company leaderboard.">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&display=swap">
+  <link rel="stylesheet" href="./signup.css">
+  <style>/* INJECT_CSS */</style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-container">
+      <div class="logo-tiles" aria-label="INBOXED">
+        <span class="logo-tile rotate-neg">I</span>
+        <span class="logo-tile rotate-pos">N</span>
+        <span class="logo-tile rotate-neg">B</span>
+        <span class="logo-tile rotate-pos">O</span>
+        <span class="logo-tile rotate-neg">X</span>
+        <span class="logo-tile rotate-pos">E</span>
+        <span class="logo-tile rotate-neg">D</span>
+      </div>
+    </div>
+
+    <h1>The Daily Word Game in Your Inbox</h1>
+    <p class="subtitle">
+      Guess the hidden word from its definitions. Every morning at 8:00 AM, right inside your email.
+    </p>
+
+    <!-- Interactive / Clue Teaser Preview -->
+    <div class="preview-card">
+      <div class="preview-header">
+        <span>Today's Clues</span>
+        <span style="color: #14532d; font-weight: 700;">Puzzle #{{PUZZLE_ID}}</span>
+      </div>
+      <div class="preview-clue">
+        <span class="clue-num">1</span>
+        <span>{{FIRST_DEFINITION}}</span>
+      </div>
+      <div class="preview-clue">
+        <span class="clue-num" style="background: #a1a1aa;">2</span>
+        <span class="clue-blur">Miss a guess to reveal next definition</span>
+      </div>
+    </div>
+
+    <!-- Signup Form / Success Container -->
+    <div id="signup-container">
+      {{STATUS_CONTENT}}
+    </div>
+
+    <div class="features">
+      <div class="feature-item">
+        <span class="feature-icon">✉️</span>
+        <span class="feature-text"><strong>Interactive in your email:</strong> Play directly inside supported email clients (like Gmail and Yahoo Mail) without leaving your inbox.</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🏢</span>
+        <span class="feature-text"><strong>Company leaderboard:</strong> Compete automatically with coworkers at your email domain.</span>
+      </div>
+      <div class="feature-item">
+        <span class="feature-icon">🛡️</span>
+        <span class="feature-text"><strong>Zero spam:</strong> Strictly one puzzle per day. One-click unsubscribe anytime.</span>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      Inboxed does not currently support Apple Mail, Outlook, or other non-AMP clients. <a href="https://amp.dev/support/faq/email-support/" target="_blank" rel="noopener noreferrer">See supported email clients</a>
+    </div>
+
+    <div class="footer-text">
+      <div>Game made with ❤️ by <a href="https://ekimerton.github.io" target="_blank" rel="noopener noreferrer">Ekim</a></div>
+      <div class="footer-links" style="margin-top: 6px;">
+        <a href="/privacy">Privacy Policy</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('signup-form');
+    if (form) {
+      const input = document.getElementById('email-input');
+      const btn = document.getElementById('submit-btn');
+      const msg = document.getElementById('status-msg');
+      const container = document.getElementById('signup-container');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = input.value.trim();
+        if (!email || !email.includes('@')) {
+          msg.textContent = 'Please enter a valid email address.';
+          msg.className = 'status-msg status-error';
+          msg.style.display = 'block';
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Subscribing...';
+        msg.style.display = 'none';
+
+        try {
+          const res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const data = await res.json();
+          if (data.success) {
+            container.innerHTML = `
+              <div class="success-card">
+                <div class="success-icon">✉️</div>
+                <h2 class="success-title">Check Your Email!</h2>
+                <p class="success-desc">
+                  We sent a confirmation link to <strong>${email}</strong>.<br>
+                  Click the link in your email to confirm your subscription and start playing.
+                </p>
+              </div>
+            `;
+          } else {
+            msg.textContent = data.message || 'Could not subscribe. Please try again.';
+            msg.className = 'status-msg status-error';
+            msg.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Subscribe to Daily Puzzles';
+          }
+        } catch (err) {
+          msg.textContent = 'Something went wrong. Please check your connection.';
+          msg.className = 'status-msg status-error';
+          msg.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Subscribe to Daily Puzzles';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

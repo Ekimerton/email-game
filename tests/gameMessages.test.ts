@@ -9,7 +9,7 @@ import {
   MSG_HINT_REVEALED,
   MSG_PUZZLE_SOLVED,
   GAME_MESSAGES,
-} from '../src/gameMessages'
+} from '../src/game'
 
 describe('Game Messages', () => {
   it('should format MSG_INITIAL_PROMPT correctly', () => {

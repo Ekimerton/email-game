@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateAccountToken, verifyAccountToken, getAccountUrl, extractEmailDomain, generateConfirmationToken, verifyConfirmationToken } from '../src/auth'
+import { generateAccountToken, verifyAccountToken, getAccountUrl, extractEmailDomain, generateConfirmationToken, verifyConfirmationToken } from '../src/core'
 
 describe('Spoof-Proof Auth Tokens (HMAC-SHA256)', () => {
   it('should extract domain properly from email', () => {

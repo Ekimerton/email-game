@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inboxed Account &amp; Preferences</title>
+  
+  <!-- Load React & ReactDOM via CDN for lightweight high-performance SPA -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <link rel="stylesheet" href="./account.css">
+  <style>/* INJECT_CSS */</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function AccountApp() {
+      const [loading, setLoading] = useState(true);
+      const [user, setUser] = useState(null);
+      const [toast, setToast] = useState('');
+      const [updatingSub, setUpdatingSub] = useState(false);
+      const [updatingPriv, setUpdatingPriv] = useState(false);
+      const [updatingTheme, setUpdatingTheme] = useState(false);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token') || '';
+
+      useEffect(() => {
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        fetch('/api/account?token=' + encodeURIComponent(token))
+          .then(res => {
+            if (!res.ok) throw new Error('Unauthorized');
+            return res.json();
+          })
+          .then(data => {
+            if (data.success) {
+              setUser(data);
+            } else {
+              setUser(null);
+            }
+            setLoading(false);
+          })
+          .catch(() => {
+            setUser(null);
+            setLoading(false);
+          });
+      }, []);
+
+      useEffect(() => {
+        if (user && user.theme === 'dark') {
+          document.body.classList.add('dark-theme');
+        } else {
+          document.body.classList.remove('dark-theme');
+        }
+      }, [user?.theme]);
+
+      const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(''), 3500);
+      };
+
+      const handleToggleSub = async (e) => {
+        const nextSub = e.target.checked;
+        setUpdatingSub(true);
+        try {
+          const res = await fetch('/api/account/toggle-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: user.token, subscribed: nextSub })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setUser(prev => ({ ...prev, isSubscribed: data.isSubscribed }));
+            showToast(data.message);
+          } else {
+            showToast(data.message || 'Failed to update');
+          }
+        } catch (_) {
+          showToast('Failed to update subscription');
+        }
+        setUpdatingSub(false);
+      };
+
+      const handleTogglePrivacy = async (e) => {
+        const nextPriv = e.target.checked;
+        setUpdatingPriv(true);
+        try {
+          const res = await fetch('/api/account/toggle-privacy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: user.token, showOnLeaderboard: nextPriv })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setUser(prev => ({ ...prev, showOnLeaderboard: data.showOnLeaderboard }));
+            showToast(data.message);
+          } else {
+            showToast(data.message || 'Failed to update');
+          }
+        } catch (_) {
+          showToast('Failed to update privacy');
+        }
+        setUpdatingPriv(false);
+      };
+
+      const handleToggleTheme = async (e) => {
+        const nextDark = e.target.checked;
+        const nextTheme = nextDark ? 'dark' : 'light';
+        setUpdatingTheme(true);
+        try {
+          const res = await fetch('/api/account/toggle-theme', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: user.token, theme: nextTheme, darkMode: nextDark })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setUser(prev => ({ ...prev, theme: data.theme, darkMode: data.darkMode }));
+            showToast(data.message);
+          } else {
+            showToast(data.message || 'Failed to update');
+          }
+        } catch (_) {
+          showToast('Failed to update theme preference');
+        }
+        setUpdatingTheme(false);
+      };
+
+      if (loading) {
+        return (
+          <div className="container" style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div className="spinner"></div>
+            <p style={{ marginTop: '14px', color: '#71717a', fontSize: '13px', fontWeight: 600 }}>Loading account preferences...</p>
+          </div>
+        );
+      }
+
+      if (!user) {
+        return (
+          <div className="container" style={{ textAlign: 'center' }}>
+            <div className="logo-container">
+              <div className="logo-tiles" aria-label="INBOXED">
+                <span className="logo-tile rotate-neg">I</span>
+                <span className="logo-tile rotate-pos">N</span>
+                <span className="logo-tile rotate-neg">B</span>
+                <span className="logo-tile rotate-pos">O</span>
+                <span className="logo-tile rotate-neg">X</span>
+                <span className="logo-tile rotate-pos">E</span>
+                <span className="logo-tile rotate-neg">D</span>
+              </div>
+            </div>
+            <div style={{ marginTop: '16px' }}>
+              <div style={{ fontSize: '38px', marginBottom: '12px' }}>⚠️</div>
+              <h2 style={{ color: '#18181b', fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', marginBottom: '8px' }}>Invalid or Expired Link</h2>
+              <p style={{ color: '#52525b', fontSize: '14px', lineHeight: 1.5, maxWidth: '420px', margin: '0 auto 24px' }}>
+                This account link is invalid, tampered with, or expired.<br />
+                Please click the <strong>update your account preferences</strong> link directly from your daily Inboxed email to access and manage your settings.
+              </p>
+              <a href="/" className="btn">Back to Home</a>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="container">
+          {toast && <div className="toast">{toast}</div>}
+
+          <div className="logo-container">
+            <div className="logo-tiles" aria-label="INBOXED">
+              <span className="logo-tile rotate-neg">I</span>
+              <span className="logo-tile rotate-pos">N</span>
+              <span className="logo-tile rotate-neg">B</span>
+              <span className="logo-tile rotate-pos">O</span>
+              <span className="logo-tile rotate-neg">X</span>
+              <span className="logo-tile rotate-pos">E</span>
+              <span className="logo-tile rotate-neg">D</span>
+            </div>
+          </div>
+
+          <div className="header">
+            <h1 className="title">Account &amp; Preferences</h1>
+            <div className="user-badge">
+              <span>{user.email}</span>
+              <span className="domain-pill">{user.domain}</span>
+            </div>
+          </div>
+
+          {/* Daily Morning Subscription Switch */}
+          <div className="setting-section">
+            <div className="setting-header">
+              <span className="setting-title">📬 Daily Morning Email</span>
+            </div>
+            <div className="setting-desc">
+              Receive today's multi-definition word puzzle in your inbox each morning.
+            </div>
+            <div className="switch-container">
+              <span className="switch-label" style={{ color: user.isSubscribed ? '#14532d' : '#71717a' }}>
+                {user.isSubscribed ? 'Subscribed' : 'Unsubscribed'}
+              </span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={user.isSubscribed}
+                  onChange={handleToggleSub}
+                  disabled={updatingSub}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <hr className="section-divider" />
+
+          {/* Leaderboard Privacy Switch */}
+          <div className="setting-section">
+            <div className="setting-header">
+              <span className="setting-title">🏆 Domain Leaderboard Visibility</span>
+            </div>
+            <div className="setting-desc">
+              Show your score on the <strong>{user.domain}</strong> leaderboard when you solve the puzzle.
+            </div>
+            <div className="switch-container">
+              <span className="switch-label" style={{ color: user.showOnLeaderboard ? '#14532d' : '#71717a' }}>
+                {user.showOnLeaderboard ? 'Visible on Leaderboard' : 'Hidden from Leaderboard'}
+              </span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={user.showOnLeaderboard}
+                  onChange={handleTogglePrivacy}
+                  disabled={updatingPriv}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <hr className="section-divider" />
+
+          {/* Dark Mode Theme Switch */}
+          <div className="setting-section">
+            <div className="setting-header">
+              <span className="setting-title">🌙 Dark Mode</span>
+            </div>
+            <div className="setting-desc">
+              Receive your daily puzzle email in dark mode instead of light mode.
+            </div>
+            <div className="switch-container">
+              <span className="switch-label" style={{ color: user.theme === 'dark' ? (user.theme === 'dark' ? '#C4F7CA' : '#14532d') : '#71717a' }}>
+                {user.theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+              </span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={user.theme === 'dark'}
+                  onChange={handleToggleTheme}
+                  disabled={updatingTheme}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <hr className="section-divider" />
+
+          <div className="footer-text">
+            Game made with ❤️ by <a href="https://ekimerton.github.io" target="_blank" rel="noopener noreferrer">Ekim</a>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<AccountApp />);
+  </script>
+</body>
+</html>

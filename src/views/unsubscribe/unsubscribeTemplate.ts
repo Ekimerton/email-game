@@ -1,0 +1,96 @@
+export const UNSUBSCRIBE_CSS = `body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  background: #fafafa;
+}
+.card {
+  background: white;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 420px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+h1 {
+  font-size: 20px;
+  color: #18181b;
+  margin-bottom: 8px;
+}
+p {
+  font-size: 14px;
+  color: #71717a;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+a {
+  display: inline-block;
+  background: #14532d;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 14px;
+}
+`;
+
+export const UNSUBSCRIBE_HTML = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsubscribed - Inboxed</title>
+  <style>body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  background: #fafafa;
+}
+.card {
+  background: white;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 420px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+h1 {
+  font-size: 20px;
+  color: #18181b;
+  margin-bottom: 8px;
+}
+p {
+  font-size: 14px;
+  color: #71717a;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+a {
+  display: inline-block;
+  background: #14532d;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 14px;
+}</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Unsubscribed</h1>
+    <p>{{UNSUBSCRIBE_MESSAGE}}</p>
+    <a href="/">Back to Inboxed</a>
+  </div>
+</body>
+</html>
+`;

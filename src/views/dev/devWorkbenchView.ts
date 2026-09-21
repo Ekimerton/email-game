@@ -1,0 +1,426 @@
+import { escapeHtml, formatPrettyDate, type DailyPuzzle } from '../../game'
+import { DEV_WORKBENCH_CSS } from './devWorkbenchTemplate'
+
+export function getDevWorkbenchHtml(params: {
+  ampHtml: string
+  fallbackHtml: string
+  subject: string
+  puzzle: DailyPuzzle
+  userEmail: string
+  currentOrigin: string
+}): string {
+  const { ampHtml, fallbackHtml, subject, puzzle, userEmail, currentOrigin } = params
+  const safeEmail = escapeHtml(userEmail)
+  const safeDate = escapeHtml(puzzle.date)
+  const safeWord = escapeHtml(puzzle.word)
+  const safeSubject = escapeHtml(subject)
+  const encodedEmail = encodeURIComponent(userEmail)
+  const encodedDate = encodeURIComponent(puzzle.date)
+  const ampHtmlSizeKb = (ampHtml.length / 1024).toFixed(1)
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inboxed Dev Workbench - All Pages &amp; HTML Inspector</title>
+  <style>${DEV_WORKBENCH_CSS}</style>
+</head>
+<body>
+  <header class="dev-header">
+    <div class="header-content">
+      <div class="brand-section">
+        <div class="logo-tiles" aria-label="INBOXED">
+          <span class="logo-tile" style="background-color: #D8FFC5;">I</span>
+          <span class="logo-tile" style="background-color: #C4F7CA;">N</span>
+          <span class="logo-tile" style="background-color: #D8FFC5;">B</span>
+          <span class="logo-tile" style="background-color: #C4F7CA;">O</span>
+          <span class="logo-tile" style="background-color: #D8FFC5;">X</span>
+          <span class="logo-tile" style="background-color: #C4F7CA;">E</span>
+          <span class="logo-tile" style="background-color: #D8FFC5;">D</span>
+        </div>
+        <span class="badge-dev">DEV WORKBENCH</span>
+        <span class="badge-local">Local Only</span>
+      </div>
+
+      <form id="dev-params-form" class="controls-section" method="GET" action="/dev">
+        <input
+          type="date"
+          id="date-input"
+          name="date"
+          class="dev-input"
+          value="${safeDate}"
+          title="Select Puzzle Date"
+        >
+        <input
+          type="email"
+          id="email-input"
+          name="email"
+          class="dev-input"
+          value="${safeEmail}"
+          placeholder="player@company.com"
+          title="Test User Email"
+          style="width: 190px;"
+        >
+        <button type="submit" class="btn-dev btn-primary">Update</button>
+        <button type="button" id="reset-state-btn" class="btn-dev btn-danger" title="Reset guess state for this day">Reset Game</button>
+        <a
+          id="standalone-link"
+          href="/dev/render?date=${encodedDate}&email=${encodedEmail}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-dev btn-secondary"
+          title="Open page in a new full-screen tab"
+        >
+          ↗ Standalone Tab
+        </a>
+      </form>
+    </div>
+  </header>
+
+  <!-- Navigation bar for all app pages -->
+  <nav class="pages-nav-bar">
+    <div class="pages-nav-content">
+      <button type="button" class="page-tab-btn active" data-page="game">🎮 Daily Game (AMP)</button>
+      <button type="button" class="page-tab-btn" data-page="confirmed">🎉 Subscription Confirmed</button>
+      <button type="button" class="page-tab-btn" data-page="signup">📝 Landing / Signup</button>
+      <button type="button" class="page-tab-btn" data-page="account">⚙️ Account Preferences</button>
+      <button type="button" class="page-tab-btn" data-page="fallback">✉️ Fallback Email</button>
+      <button type="button" class="page-tab-btn" data-page="invalid">⚠️ Invalid / Expired Token</button>
+      <button type="button" class="page-tab-btn" data-page="privacy">🔒 Privacy Policy</button>
+      <button type="button" class="page-tab-btn" data-page="subscribers">👥 Subscribed Emails</button>
+    </div>
+  </nav>
+
+  <main class="workspace-container">
+    <!-- Context bar for active page -->
+    <div class="page-context-box">
+      <div class="page-info">
+        <div class="page-title">
+          <span id="ctx-title">🎮 Daily Game (AMP Email)</span>
+          <span id="ctx-badge" class="badge-dev">Interactive</span>
+        </div>
+        <div id="ctx-desc" class="page-desc">Interactive AMP Email game with clue stepper, letter masking, and live guess validation.</div>
+      </div>
+
+      <div class="page-controls">
+        <!-- Game specific metadata -->
+        <div id="game-meta-group" style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #475569;">
+          <span>Puzzle: <strong>#${puzzle.id}</strong></span>
+          <span>Date: <strong>${formatPrettyDate(puzzle.date)}</strong></span>
+          <span>
+            Word:
+            <span id="spoiler-word" class="spoiler-box" title="Click to reveal">${safeWord}</span>
+          </span>
+        </div>
+
+        <!-- Landing page variations -->
+        <div id="signup-variants-group" style="display: none; align-items: center; gap: 4px;">
+          <span style="font-size: 11px; font-weight: 600; color: #64748b; margin-right: 4px;">State:</span>
+          <button type="button" class="sub-switch-btn active" onclick="setSignupVariant('default', this)">Form</button>
+          <button type="button" class="sub-switch-btn" onclick="setSignupVariant('pending', this)">Check Email (Pending)</button>
+          <button type="button" class="sub-switch-btn" onclick="setSignupVariant('subscribed', this)">Subscribed</button>
+        </div>
+
+        <!-- Viewport selector -->
+        <div class="viewport-buttons" style="display: flex; gap: 4px;">
+          <button type="button" class="sub-switch-btn" onclick="setFrameWidth('375px', this)" title="Mobile">📱 375px</button>
+          <button type="button" class="sub-switch-btn" onclick="setFrameWidth('520px', this)" title="Tablet">💻 520px</button>
+          <button type="button" class="sub-switch-btn active" onclick="setFrameWidth('640px', this)" title="Desktop">🖥️ 640px</button>
+          <button type="button" class="sub-switch-btn" onclick="setFrameWidth('100%', this)" title="Full">↔️ 100%</button>
+        </div>
+
+        <button type="button" class="sub-switch-btn" onclick="reloadIframe()" title="Reload Frame">🔄 Reload</button>
+
+        <!-- View mode toggle: Preview vs HTML Source -->
+        <div class="mode-toggle-group">
+          <button type="button" id="btn-mode-preview" class="mode-btn active" onclick="setViewMode('preview')">👁️ Preview</button>
+          <button type="button" id="btn-mode-source" class="mode-btn" onclick="setViewMode('source')">📄 HTML Source</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Mode 1: Live Interactive Iframe -->
+    <div id="preview-panel" class="frame-wrapper">
+      <iframe
+        id="preview-iframe"
+        class="game-iframe"
+        src="/dev/render?date=${encodedDate}&email=${encodedEmail}"
+        title="Page Live Preview"
+      ></iframe>
+    </div>
+
+    <!-- View Mode 2: HTML Source Code View -->
+    <div id="source-panel" class="code-container">
+      <div class="code-actions">
+        <button type="button" id="copy-html-btn" class="btn-dev btn-primary">📋 Copy HTML</button>
+        <button type="button" id="download-html-btn" class="btn-dev btn-secondary">💾 Download .html</button>
+      </div>
+      <pre class="code-pre"><code id="code-content" class="amp-source-code">${escapeHtml(ampHtml)}</code></pre>
+    </div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    var currentEmail = '${encodedEmail}';
+    var currentDate = '${encodedDate}';
+    var currentPage = 'game';
+    var currentViewMode = 'preview';
+    var currentSignupVariant = 'default';
+
+    var PAGE_DEFS = {
+      game: {
+        title: '🎮 Daily Game (AMP Email)',
+        desc: 'Interactive AMP Email game with clue stepper, letter masking, and live guess validation.',
+        badge: 'Interactive',
+        url: '/dev/render?date=' + currentDate + '&email=' + currentEmail,
+        hasGameMeta: true
+      },
+      confirmed: {
+        title: '🎉 Subscription Confirmed',
+        desc: 'Confirmation success page with 9:00 AM PST schedule notice and instant puzzle delivery button.',
+        badge: 'Page',
+        url: '/dev/page/confirmed?email=' + currentEmail
+      },
+      signup: {
+        title: '📝 Landing / Signup Page',
+        desc: 'Email signup landing page with daily puzzle preview and newsletter features.',
+        badge: 'Page',
+        url: '/dev/page/signup?email=' + currentEmail,
+        hasSignupVariants: true
+      },
+      account: {
+        title: '⚙️ Account &amp; Preferences',
+        desc: 'React Single Page App (SPA) for managing workplace leaderboard privacy and subscription.',
+        badge: 'React SPA',
+        url: '/dev/page/account?email=' + currentEmail
+      },
+      fallback: {
+        title: '✉️ Fallback Email Card',
+        desc: 'Non-AMP fallback email invitation card for Apple Mail, Outlook, and desktop clients.',
+        badge: 'Email Card',
+        url: '/dev/fallback?date=' + currentDate + '&email=' + currentEmail
+      },
+      invalid: {
+        title: '⚠️ Invalid / Expired Token',
+        desc: 'Error screen displayed when a confirmation token is expired, tampered with, or malformed.',
+        badge: 'Error Screen',
+        url: '/dev/page/invalid'
+      },
+      privacy: {
+        title: '🔒 Privacy Policy',
+        desc: 'Official Inboxed privacy policy (GET /privacy).',
+        badge: 'Document',
+        url: '/dev/page/privacy'
+      },
+      subscribers: {
+        title: '👥 Subscribed Emails (Production)',
+        desc: 'Live directory of confirmed email subscribers fetched directly from the production database at https://inboxed.fun.',
+        badge: 'Production DB',
+        url: '/dev/page/subscribers?source=prod'
+      }
+    };
+
+    function showToast(message) {
+      var toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(function() {
+        toast.style.display = 'none';
+      }, 2500);
+    }
+
+    function switchPage(pageKey) {
+      currentPage = pageKey;
+      var def = PAGE_DEFS[pageKey];
+      if (!def) return;
+
+      // Update nav button active states
+      document.querySelectorAll('.page-tab-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-page') === pageKey);
+      });
+
+      // Update context header
+      document.getElementById('ctx-title').innerHTML = def.title;
+      document.getElementById('ctx-desc').innerHTML = def.desc;
+      document.getElementById('ctx-badge').textContent = def.badge;
+
+      // Show/hide sub-controls
+      document.getElementById('game-meta-group').style.display = def.hasGameMeta ? 'flex' : 'none';
+      document.getElementById('signup-variants-group').style.display = def.hasSignupVariants ? 'flex' : 'none';
+
+      // Compute URL
+      var targetUrl = def.url;
+      if (pageKey === 'signup' && currentSignupVariant !== 'default') {
+        targetUrl += '&' + currentSignupVariant + '=true';
+      }
+
+      // Update iframe & standalone link
+      var iframe = document.getElementById('preview-iframe');
+      if (iframe) iframe.src = targetUrl;
+      var standalone = document.getElementById('standalone-link');
+      if (standalone) standalone.href = targetUrl;
+
+      // If source mode is active, fetch HTML source for this page
+      if (currentViewMode === 'source') {
+        loadPageSource(pageKey);
+      }
+    }
+
+    function setSignupVariant(variant, btn) {
+      currentSignupVariant = variant;
+      document.querySelectorAll('#signup-variants-group .sub-switch-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      if (btn) btn.classList.add('active');
+
+      var targetUrl = '/dev/page/signup?email=' + currentEmail;
+      if (variant !== 'default') {
+        targetUrl += '&' + variant + '=true';
+      }
+
+      var iframe = document.getElementById('preview-iframe');
+      if (iframe) iframe.src = targetUrl;
+      var standalone = document.getElementById('standalone-link');
+      if (standalone) standalone.href = targetUrl;
+
+      if (currentViewMode === 'source') {
+        loadPageSource('signup');
+      }
+    }
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      document.getElementById('btn-mode-preview').classList.toggle('active', mode === 'preview');
+      document.getElementById('btn-mode-source').classList.toggle('active', mode === 'source');
+
+      document.getElementById('preview-panel').style.display = (mode === 'preview') ? 'flex' : 'none';
+      document.getElementById('source-panel').style.display = (mode === 'source') ? 'block' : 'none';
+
+      if (mode === 'source') {
+        loadPageSource(currentPage);
+      }
+    }
+
+    async function loadPageSource(pageKey) {
+      var codeElem = document.getElementById('code-content');
+      codeElem.textContent = 'Loading source code for ' + pageKey + '...';
+
+      try {
+        var url = '/dev/raw?page=' + pageKey + '&email=' + currentEmail + '&date=' + currentDate;
+        if (pageKey === 'signup' && currentSignupVariant !== 'default') {
+          url += '&' + currentSignupVariant + '=true';
+        }
+        var res = await fetch(url);
+        var text = await res.text();
+        codeElem.textContent = text;
+      } catch (err) {
+        codeElem.textContent = 'Failed to load HTML source.';
+      }
+    }
+
+    function setFrameWidth(width, btn) {
+      var frame = document.getElementById('preview-iframe');
+      if (frame) frame.style.width = width;
+      document.querySelectorAll('.viewport-buttons .sub-switch-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      if (btn) btn.classList.add('active');
+    }
+
+    function reloadIframe() {
+      var frame = document.getElementById('preview-iframe');
+      if (frame) {
+        var currentSrc = frame.src;
+        frame.src = 'about:blank';
+        setTimeout(function() { frame.src = currentSrc; }, 50);
+        showToast('Reloaded preview');
+      }
+    }
+
+    // Spoiler toggle
+    var spoiler = document.getElementById('spoiler-word');
+    if (spoiler) {
+      spoiler.addEventListener('click', function() {
+        spoiler.classList.toggle('revealed');
+      });
+    }
+
+    // Copy HTML button
+    var copyBtn = document.getElementById('copy-html-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function() {
+        var code = document.getElementById('code-content').textContent;
+        navigator.clipboard.writeText(code).then(function() {
+          showToast('Copied HTML to clipboard!');
+        }).catch(function() {
+          showToast('Failed to copy. Please select manually.');
+        });
+      });
+    }
+
+    // Download HTML file
+    var downloadBtn = document.getElementById('download-html-btn');
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', function() {
+        var code = document.getElementById('code-content').textContent;
+        var blob = new Blob([code], { type: 'text/html;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'inboxed-' + currentPage + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Downloaded HTML file!');
+      });
+    }
+
+    // Reset Game State for current email and date
+    var resetBtn = document.getElementById('reset-state-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', async function() {
+        var email = document.getElementById('email-input').value.trim();
+        var date = document.getElementById('date-input').value.trim();
+        if (!email) {
+          showToast('Please enter an email to reset');
+          return;
+        }
+
+        resetBtn.disabled = true;
+        resetBtn.textContent = 'Resetting...';
+
+        try {
+          var res = await fetch('/api/admin/reset-user-day?email=' + encodeURIComponent(email) + '&date=' + encodeURIComponent(date), {
+            method: 'POST'
+          });
+          var data = await res.json();
+          if (data.success) {
+            showToast('Game state reset! Reloading...');
+            reloadIframe();
+          } else {
+            showToast('Reset failed: ' + (data.error || 'Unknown error'));
+          }
+        } catch (err) {
+          showToast('Error connecting to reset endpoint');
+        } finally {
+          resetBtn.disabled = false;
+          resetBtn.textContent = 'Reset Game';
+        }
+      });
+    }
+
+    // Initialize page navigation buttons
+    document.querySelectorAll('.page-tab-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var page = btn.getAttribute('data-page');
+        switchPage(page);
+      });
+    });
+  </script>
+</body>
+</html>`
+}
+

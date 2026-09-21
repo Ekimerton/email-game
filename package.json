@@ -2,10 +2,10 @@
   "name": "email-game",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy --minify",
-    "build:check": "tsc --noEmit && wrangler deploy --dry-run",
-    "test": "vitest run",
+    "dev": "npm run sync && wrangler dev",
+    "deploy": "npm run sync && wrangler deploy --minify",
+    "build:check": "npm run sync && tsc --noEmit && wrangler deploy --dry-run",
+    "test": "npm run sync && vitest run",
     "ci": "npm run build:check && npm run test",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "create-kv": "wrangler kv namespace create GAME_STATE_KV",
@@ -15,7 +15,8 @@
     "generate-puzzles": "tsx scripts/helpers/generatePuzzles.ts",
     "backfill-synonyms": "tsx scripts/helpers/backfillSynonyms.ts",
     "unsubscribe": "tsx scripts/helpers/unsubscribeUser.ts",
-    "sync-email": "tsx scripts/helpers/syncEmailHtml.ts"
+    "sync": "tsx scripts/helpers/syncViews.ts",
+    "sync-email": "tsx scripts/helpers/syncViews.ts"
   },
   "dependencies": {
     "dotenv": "^16.5.0",

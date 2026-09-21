@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import amphtmlValidator from 'amphtml-validator'
 import fs from 'fs'
 import path from 'path'
-import { EMAIL_HTML } from '../src/emailHtml'
+import { EMAIL_HTML } from '../src/email'
 
 describe('AMP HTML Validation', () => {
   it('should validate src/email.html as valid AMP4EMAIL', async () => {

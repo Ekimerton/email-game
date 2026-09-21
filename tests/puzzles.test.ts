@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { PUZZLES } from '../src/puzzles'
-import { getDailyPuzzle, formatPrettyDate, getTodayDateString } from '../src/puzzleLogic'
+import { PUZZLES, getDailyPuzzle, formatPrettyDate, getTodayDateString } from '../src/game'
 import {
   definitionMentionsWordOrStem,
   areDefinitionsTooSimilar,

@@ -86,7 +86,7 @@ describe('Cloudflare Daily Cron & Email Dispatch', () => {
 
   it('should dispatch dark mode CSS when user has dark theme enabled in settings', async () => {
     const darkUser = 'darkmode_player@example.com'
-    const { generateAccountToken } = await import('../src/auth')
+    const { generateAccountToken } = await import('../src/core')
     const token = generateAccountToken(darkUser)
 
     // Set user theme to dark

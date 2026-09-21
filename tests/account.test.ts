@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { app, getFallbackHtml } from '../src/index'
-import { generateAccountToken, verifyAccountToken } from '../src/auth'
+import { generateAccountToken, verifyAccountToken } from '../src/core'
 
 describe('Spoof-Proof Account & Preferences API', () => {
   const testEmail = 'alice@example.com'
@@ -221,7 +221,7 @@ describe('Spoof-Proof Account & Preferences API', () => {
     const tokenB = generateAccountToken(userB)
 
     // 1. Submit winning guesses for both users
-    const puzzle = (await import('../src/puzzleLogic')).getDailyPuzzle()
+    const puzzle = (await import('../src/game')).getDailyPuzzle()
     await app.request(`/api/guess?email=${encodeURIComponent(userA)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -269,7 +269,7 @@ describe('Spoof-Proof Account & Preferences API', () => {
 
   it('should return top 5 players plus the current player if they are ranked outside top 5', async () => {
     const domain = `testdomain-${Date.now()}.com`
-    const puzzle = (await import('../src/puzzleLogic')).getDailyPuzzle()
+    const puzzle = (await import('../src/game')).getDailyPuzzle()
 
     // Create 8 players with different scores
     for (let i = 1; i <= 8; i++) {

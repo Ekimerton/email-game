@@ -119,7 +119,7 @@ async function main() {
   const delayMs = delayArg ? parseInt(delayArg.split('=')[1], 10) : 150
 
   const jsonFilePath = fileArg ? fileArg.split('=')[1] : null
-  const targetFilePath = targetArg ? targetArg.split('=')[1] : (jsonFilePath ? null : 'src/puzzles.ts')
+  const targetFilePath = targetArg ? targetArg.split('=')[1] : (jsonFilePath ? null : 'src/game/puzzles.ts')
   const outPath = outArg ? outArg.split('=')[1] : null
 
   if (jsonFilePath) {

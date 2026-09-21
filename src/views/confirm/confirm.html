@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscription Confirmed - Inboxed</title>
+  <meta name="description" content="Your subscription to Inboxed has been confirmed.">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&display=swap">
+  <link rel="stylesheet" href="./confirm.css">
+  <style>/* INJECT_CSS */</style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-container">
+      <div class="logo-tiles" aria-label="INBOXED">
+        <span class="logo-tile rotate-neg">I</span>
+        <span class="logo-tile rotate-pos">N</span>
+        <span class="logo-tile rotate-neg">B</span>
+        <span class="logo-tile rotate-pos">O</span>
+        <span class="logo-tile rotate-neg">X</span>
+        <span class="logo-tile rotate-pos">E</span>
+        <span class="logo-tile rotate-neg">D</span>
+      </div>
+    </div>
+
+    <div class="success-icon">🎉</div>
+    <h1 class="success-title">You're Subscribed!</h1>
+    <p class="schedule-notice">
+      You'll get emails at 9am PST every day.
+    </p>
+
+    <div class="action-section">
+      <p class="action-desc">
+        Want to play today's game right now? Receive today's puzzle (<strong>#{{PUZZLE_ID}}</strong>) in your inbox immediately:
+      </p>
+      <button id="send-today-btn" class="btn-submit">
+        Receive Today's Puzzle Now
+      </button>
+      <div id="status-msg" class="status-msg" style="display: none;"></div>
+    </div>
+  </div>
+
+  <script>
+    const btn = document.getElementById('send-today-btn');
+    const msg = document.getElementById('status-msg');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Sending to your inbox...';
+        msg.style.display = 'none';
+
+        try {
+          const res = await fetch('/api/send-today', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: "{{SAFE_EMAIL}}",
+              token: "{{SAFE_TOKEN}}"
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            btn.style.display = 'none';
+            msg.className = 'status-msg status-success';
+            msg.innerHTML = '🚀 <strong>Sent!</strong> Check your inbox for today\'s puzzle.';
+            msg.style.display = 'block';
+          } else {
+            btn.disabled = false;
+            btn.textContent = "Receive Today's Puzzle Now";
+            msg.className = 'status-msg status-error';
+            msg.textContent = data.message || 'Could not send puzzle. Please try again.';
+            msg.style.display = 'block';
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = "Receive Today's Puzzle Now";
+          msg.className = 'status-msg status-error';
+          msg.textContent = 'Connection error. Please try again.';
+          msg.style.display = 'block';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
