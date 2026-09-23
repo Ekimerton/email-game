@@ -210,12 +210,14 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
     const dryRun = c.req.query('dryRun') === 'true'
     const emailParam = c.req.query('email') || c.req.query('to')
     const dateParam = c.req.query('date')
+    const modeParam = c.req.query('mode') as 'subscribers' | 'test' | 'all' | undefined
 
     const targetEmails = emailParam ? emailParam.split(/[,;\s]+/).map((e: string) => e.trim()).filter(Boolean) : undefined
     const result = await sendDailyPuzzleEmails(c.env || {}, {
       targetEmails,
       dateStr: dateParam,
-      isDryRun: dryRun
+      isDryRun: dryRun,
+      mode: modeParam,
     })
 
     return c.json({ success: true, ...result })

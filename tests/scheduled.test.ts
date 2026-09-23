@@ -63,9 +63,25 @@ describe('Cloudflare Daily Cron & Email Dispatch', () => {
     }
   })
 
-  it('should execute scheduled handler without errors', async () => {
+  it('should dispatch only to test emails when mode is test', async () => {
+    const result = await sendDailyPuzzleEmails(
+      {
+        PUBLIC_HTTPS_URL: 'https://inboxed.fun',
+        TEST_EMAILS: 'test1@example.com, test2@example.com',
+      },
+      {
+        isDryRun: true,
+        mode: 'test',
+      }
+    )
+
+    expect(result.total).toBe(2)
+    expect(result.recipients).toEqual(['test1@example.com', 'test2@example.com'])
+  })
+
+  it('should execute scheduled handler for daily cron (0 15 * * *) to send to subscribers and test emails', async () => {
     const mockEvent = {
-      cron: '0 17 * * *',
+      cron: '0 15 * * *',
       scheduledTime: Date.now(),
       type: 'cron',
     } as any
@@ -73,7 +89,7 @@ describe('Cloudflare Daily Cron & Email Dispatch', () => {
     const mockEnv = {
       GAME_STATE_KV: undefined as any,
       PUBLIC_HTTPS_URL: 'https://inboxed.fun',
-      TEST_EMAILS: 'test@example.com',
+      TEST_EMAILS: 'tester@example.com',
     }
 
     const mockCtx = {

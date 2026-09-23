@@ -134,34 +134,53 @@ export async function sendDailyPuzzleEmails(
     dateStr?: string
     targetEmails?: string[]
     isDryRun?: boolean
+    mode?: 'subscribers' | 'test' | 'all'
   }
 ): Promise<DailyEmailDispatchResult> {
   const puzzle = getDailyPuzzle(options?.dateStr)
   const prodOrigin = (env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
   const authSecret = env?.AUTH_SECRET || process.env.AUTH_SECRET
+  const mode = options?.mode || 'all'
 
   // 1. Determine recipients
   let recipients: string[] = []
   if (options?.targetEmails && options.targetEmails.length > 0) {
     recipients = options.targetEmails
   } else {
-    // Collect active subscribers from KV
-    const subscribers = await getSubscribers(env?.GAME_STATE_KV)
-    const activeSubscribers = subscribers
-      .filter(s => s.status === 'active')
-      .map(s => s.email.toLowerCase().trim())
+    let activeSubscribers: string[] = []
+    let testEmails: string[] = []
 
-    // Collect configured test emails from env or process.env
-    const rawTestEmails = env?.TEST_EMAILS || env?.TEST_EMAIL || process.env.TEST_EMAILS || process.env.TEST_EMAIL
-    const testEmails = rawTestEmails
-      ? rawTestEmails.split(/[,;\s]+/).map((e: string) => e.toLowerCase().trim()).filter(Boolean)
-      : []
+    if (mode === 'subscribers' || mode === 'all') {
+      const subscribers = await getSubscribers(env?.GAME_STATE_KV)
+      activeSubscribers = subscribers
+        .filter(s => s.status === 'active')
+        .map(s => s.email.toLowerCase().trim())
+    }
 
-    recipients = Array.from(new Set([...activeSubscribers, ...testEmails]))
+    if (mode === 'test' || mode === 'all') {
+      const rawTestEmails = env?.TEST_EMAILS || env?.TEST_EMAIL || process.env.TEST_EMAILS || process.env.TEST_EMAIL
+      testEmails = rawTestEmails
+        ? rawTestEmails.split(/[,;\s]+/).map((e: string) => e.toLowerCase().trim()).filter(Boolean)
+        : []
+    }
 
-    // If still no recipients found, fallback to ekim0252@gmail.com
-    if (recipients.length === 0) {
-      recipients = ['ekim0252@gmail.com']
+    if (mode === 'test') {
+      recipients = testEmails.length > 0 ? testEmails : ['ekim0252@gmail.com']
+    } else if (mode === 'subscribers') {
+      recipients = activeSubscribers
+      // If no active subscribers found, fallback to test emails or ekim0252@gmail.com
+      if (recipients.length === 0) {
+        const rawTestEmails = env?.TEST_EMAILS || env?.TEST_EMAIL || process.env.TEST_EMAILS || process.env.TEST_EMAIL
+        const fallbackEmails = rawTestEmails
+          ? rawTestEmails.split(/[,;\s]+/).map((e: string) => e.toLowerCase().trim()).filter(Boolean)
+          : []
+        recipients = fallbackEmails.length > 0 ? fallbackEmails : ['ekim0252@gmail.com']
+      }
+    } else {
+      recipients = Array.from(new Set([...activeSubscribers, ...testEmails]))
+      if (recipients.length === 0) {
+        recipients = ['ekim0252@gmail.com']
+      }
     }
   }
 

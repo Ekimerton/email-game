@@ -90,11 +90,11 @@ registerAccountApiRoutes(app)
 registerSubscribersApiRoutes(app)
 registerDevRoutes(app)
 
-// Cloudflare Worker export supporting fetch & scheduled 9:00 AM PST Cron Handler
+// Cloudflare Worker export supporting fetch & scheduled daily Cron Handlers
 export default {
   fetch: app.fetch,
   async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
-    console.log(`[Cloudflare Cron] Executing daily 9:00 AM PST Cron Dispatch at ${event.scheduledTime} (cron: "${event.cron}")`)
-    await sendDailyPuzzleEmails(env)
+    console.log(`[Cloudflare Cron] Executing daily 8:00 AM PDT Cron Dispatch at ${event.scheduledTime} (cron: "${event.cron}")`)
+    await sendDailyPuzzleEmails(env, { mode: 'all' })
   }
 }
