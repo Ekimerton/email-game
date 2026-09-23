@@ -25,17 +25,14 @@
 
     <h1>The Daily Word Game in Your Inbox</h1>
     <p class="subtitle">
-      Guess the hidden word from its definitions. Every morning at 8:00 AM, right inside your email.
+      Guess the hidden word from its definitions. Every morning at 9:00 AM, right inside your email.
     </p>
 
-    <!-- Looped Sample Game Video Spot -->
+    <!-- Sample Game Video Spot -->
     <div class="video-card">
-      <video id="demo-video" class="game-video" autoplay loop muted playsinline preload="auto">
-        <source src="/demo-3.mp4" type="video/mp4">
-        <source src="/demo-2.mp4" type="video/mp4">
+      <video id="demo-video" class="game-video" autoplay muted playsinline preload="auto">
+        <source src="/demo-4.mp4" type="video/mp4">
         <source src="/demo.mp4" type="video/mp4">
-        <source src="/demo-recording.mp4" type="video/mp4">
-        <source src="/demo-recording.mov" type="video/quicktime">
         Your browser does not support the video tag.
       </video>
       <div id="video-placeholder" class="video-placeholder">
@@ -67,16 +64,13 @@
 
     <div class="features">
       <div class="feature-item">
-        <span class="feature-icon">✉️</span>
-        <span class="feature-text"><strong>Interactive in your email:</strong> Play directly inside supported email clients (like Gmail and Yahoo Mail) without leaving your inbox.</span>
+        <strong>Interactive in your email:</strong> Play directly inside supported email clients (like Gmail and Yahoo Mail) without leaving your inbox.
       </div>
       <div class="feature-item">
-        <span class="feature-icon">🏢</span>
-        <span class="feature-text"><strong>Company leaderboard:</strong> Compete automatically with coworkers at your email domain.</span>
+        <strong>Company leaderboard:</strong> Compete automatically with coworkers at your email domain.
       </div>
       <div class="feature-item">
-        <span class="feature-icon">🛡️</span>
-        <span class="feature-text"><strong>Zero spam:</strong> Strictly one puzzle per day. One-click unsubscribe anytime.</span>
+        <strong>Zero spam:</strong> Strictly one puzzle per day. One-click unsubscribe anytime.
       </div>
     </div>
 
@@ -101,6 +95,17 @@
       demoVideo.addEventListener('playing', hidePlaceholder);
       demoVideo.addEventListener('loadeddata', hidePlaceholder);
       demoVideo.addEventListener('canplay', hidePlaceholder);
+      // Ensure video sits on last frame when finished
+      demoVideo.addEventListener('ended', () => {
+        demoVideo.pause();
+      });
+      // Allow tapping video to replay from start if finished
+      demoVideo.addEventListener('click', () => {
+        if (demoVideo.ended) {
+          demoVideo.currentTime = 0;
+          demoVideo.play();
+        }
+      });
     }
 
     const form = document.getElementById('signup-form');

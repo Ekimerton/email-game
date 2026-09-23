@@ -61,11 +61,8 @@ export function registerPageRoutes(app: Hono<{ Bindings: Bindings }>) {
     return c.notFound()
   }
 
-  app.get('/demo-3.mp4', (c) => serveVideo(c, 'demo-3.mp4', 'video/mp4'))
-  app.get('/demo-2.mp4', (c) => serveVideo(c, 'demo-2.mp4', 'video/mp4'))
-  app.get('/demo-recording.mov', (c) => serveVideo(c, 'demo-recording.mov', 'video/quicktime'))
-  app.get('/demo-recording.mp4', (c) => serveVideo(c, 'demo-recording.mp4', 'video/mp4'))
-  app.get('/demo.mp4', (c) => serveVideo(c, 'demo-3.mp4', 'video/mp4'))
+  app.get('/demo-4.mp4', (c) => serveVideo(c, 'demo-4.mp4', 'video/mp4'))
+  app.get('/demo.mp4', (c) => serveVideo(c, 'demo.mp4', 'video/mp4'))
 
   // Explicit Email Signup Landing Page route
   app.get('/signup', async (c) => {

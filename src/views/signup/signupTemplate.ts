@@ -115,7 +115,7 @@ h1 {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 .preview-card {
-  background: #f4f4f5;
+  background: #fafafa;
   border: 1px solid #e4e4e7;
   border-radius: 10px;
   padding: 10px 12px;
@@ -224,6 +224,14 @@ h1 {
   cursor: not-allowed;
   box-shadow: none;
 }
+@media (max-width: 640px) {
+  .btn-submit {
+    width: 100%;
+    align-self: stretch;
+    padding: 11px 18px;
+    font-size: 14px;
+  }
+}
 .status-msg {
   margin-top: 10px;
   padding: 8px 12px;
@@ -289,19 +297,11 @@ h1 {
   text-align: left;
 }
 .feature-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
   font-size: 12px;
   color: #52525b;
-  line-height: 1.35;
+  line-height: 1.4;
 }
-.feature-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.feature-text strong {
+.feature-item strong {
   color: #18181b;
 }
 .footer-text {
@@ -452,7 +452,7 @@ h1 {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 .preview-card {
-  background: #f4f4f5;
+  background: #fafafa;
   border: 1px solid #e4e4e7;
   border-radius: 10px;
   padding: 10px 12px;
@@ -561,6 +561,14 @@ h1 {
   cursor: not-allowed;
   box-shadow: none;
 }
+@media (max-width: 640px) {
+  .btn-submit {
+    width: 100%;
+    align-self: stretch;
+    padding: 11px 18px;
+    font-size: 14px;
+  }
+}
 .status-msg {
   margin-top: 10px;
   padding: 8px 12px;
@@ -626,19 +634,11 @@ h1 {
   text-align: left;
 }
 .feature-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
   font-size: 12px;
   color: #52525b;
-  line-height: 1.35;
+  line-height: 1.4;
 }
-.feature-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.feature-text strong {
+.feature-item strong {
   color: #18181b;
 }
 .footer-text {
@@ -679,17 +679,14 @@ h1 {
 
     <h1>The Daily Word Game in Your Inbox</h1>
     <p class="subtitle">
-      Guess the hidden word from its definitions. Every morning at 8:00 AM, right inside your email.
+      Guess the hidden word from its definitions. Every morning at 9:00 AM, right inside your email.
     </p>
 
-    <!-- Looped Sample Game Video Spot -->
+    <!-- Sample Game Video Spot -->
     <div class="video-card">
-      <video id="demo-video" class="game-video" autoplay loop muted playsinline preload="auto">
-        <source src="/demo-3.mp4" type="video/mp4">
-        <source src="/demo-2.mp4" type="video/mp4">
+      <video id="demo-video" class="game-video" autoplay muted playsinline preload="auto">
+        <source src="/demo-4.mp4" type="video/mp4">
         <source src="/demo.mp4" type="video/mp4">
-        <source src="/demo-recording.mp4" type="video/mp4">
-        <source src="/demo-recording.mov" type="video/quicktime">
         Your browser does not support the video tag.
       </video>
       <div id="video-placeholder" class="video-placeholder">
@@ -721,16 +718,13 @@ h1 {
 
     <div class="features">
       <div class="feature-item">
-        <span class="feature-icon">✉️</span>
-        <span class="feature-text"><strong>Interactive in your email:</strong> Play directly inside supported email clients (like Gmail and Yahoo Mail) without leaving your inbox.</span>
+        <strong>Interactive in your email:</strong> Play directly inside supported email clients (like Gmail and Yahoo Mail) without leaving your inbox.
       </div>
       <div class="feature-item">
-        <span class="feature-icon">🏢</span>
-        <span class="feature-text"><strong>Company leaderboard:</strong> Compete automatically with coworkers at your email domain.</span>
+        <strong>Company leaderboard:</strong> Compete automatically with coworkers at your email domain.
       </div>
       <div class="feature-item">
-        <span class="feature-icon">🛡️</span>
-        <span class="feature-text"><strong>Zero spam:</strong> Strictly one puzzle per day. One-click unsubscribe anytime.</span>
+        <strong>Zero spam:</strong> Strictly one puzzle per day. One-click unsubscribe anytime.
       </div>
     </div>
 
@@ -755,6 +749,17 @@ h1 {
       demoVideo.addEventListener('playing', hidePlaceholder);
       demoVideo.addEventListener('loadeddata', hidePlaceholder);
       demoVideo.addEventListener('canplay', hidePlaceholder);
+      // Ensure video sits on last frame when finished
+      demoVideo.addEventListener('ended', () => {
+        demoVideo.pause();
+      });
+      // Allow tapping video to replay from start if finished
+      demoVideo.addEventListener('click', () => {
+        if (demoVideo.ended) {
+          demoVideo.currentTime = 0;
+          demoVideo.play();
+        }
+      });
     }
 
     const form = document.getElementById('signup-form');
