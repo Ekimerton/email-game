@@ -95,6 +95,6 @@ export default {
   fetch: app.fetch,
   async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     console.log(`[Cloudflare Cron] Executing daily 8:00 AM PDT Cron Dispatch at ${event.scheduledTime} (cron: "${event.cron}")`)
-    await sendDailyPuzzleEmails(env, { mode: 'all' })
+    await sendDailyPuzzleEmails(env, { mode: 'subscribers' })
   }
 }

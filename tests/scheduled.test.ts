@@ -79,7 +79,24 @@ describe('Cloudflare Daily Cron & Email Dispatch', () => {
     expect(result.recipients).toEqual(['test1@example.com', 'test2@example.com'])
   })
 
-  it('should execute scheduled handler for daily cron (0 15 * * *) to send to subscribers and test emails', async () => {
+  it('should not dispatch to test emails when mode is subscribers and no subscribers exist', async () => {
+    const result = await sendDailyPuzzleEmails(
+      {
+        PUBLIC_HTTPS_URL: 'https://inboxed.fun',
+        TEST_EMAILS: 'tester@example.com',
+      },
+      {
+        isDryRun: true,
+        mode: 'subscribers',
+      }
+    )
+
+    expect(result.total).toBe(0)
+    expect(result.sent).toBe(0)
+    expect(result.recipients).toEqual([])
+  })
+
+  it('should execute scheduled handler for daily cron (0 15 * * *) to send exclusively to subscribers', async () => {
     const mockEvent = {
       cron: '0 15 * * *',
       scheduledTime: Date.now(),

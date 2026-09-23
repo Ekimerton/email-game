@@ -168,14 +168,6 @@ export async function sendDailyPuzzleEmails(
       recipients = testEmails.length > 0 ? testEmails : ['ekim0252@gmail.com']
     } else if (mode === 'subscribers') {
       recipients = activeSubscribers
-      // If no active subscribers found, fallback to test emails or ekim0252@gmail.com
-      if (recipients.length === 0) {
-        const rawTestEmails = env?.TEST_EMAILS || env?.TEST_EMAIL || process.env.TEST_EMAILS || process.env.TEST_EMAIL
-        const fallbackEmails = rawTestEmails
-          ? rawTestEmails.split(/[,;\s]+/).map((e: string) => e.toLowerCase().trim()).filter(Boolean)
-          : []
-        recipients = fallbackEmails.length > 0 ? fallbackEmails : ['ekim0252@gmail.com']
-      }
     } else {
       recipients = Array.from(new Set([...activeSubscribers, ...testEmails]))
       if (recipients.length === 0) {
@@ -186,6 +178,11 @@ export async function sendDailyPuzzleEmails(
 
   // Deduplicate and filter empty
   recipients = Array.from(new Set(recipients.map(e => e.toLowerCase().trim()))).filter(Boolean)
+
+  if (recipients.length === 0) {
+    console.log(`[Daily Cron] No recipients found for mode '${mode}'. Skipping email dispatch.`)
+    return { total: 0, sent: 0, failed: 0, recipients: [], errors: {} }
+  }
 
   console.log(`[Daily Cron] Dispatching Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${recipients.length} recipient(s): ${recipients.join(', ')}`)
 
