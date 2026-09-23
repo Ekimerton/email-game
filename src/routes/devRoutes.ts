@@ -1,6 +1,6 @@
 import type { Hono } from 'hono'
 import { generateConfirmationToken, generateAccountToken, kvPut, type Bindings, type SubscriberEntry } from '../core'
-import { buildPuzzleEmailContent } from '../email'
+import { buildPuzzleEmailContent, renderConfirmationEmailHtml } from '../email'
 import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser } from '../services'
 import {
   getDevWorkbenchHtml,
@@ -103,6 +103,10 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     } else if (page === 'fallback') {
       const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret)
       html = content.fallbackHtml
+    } else if (page === 'confirm-email') {
+      const token = generateConfirmationToken(userEmail, authSecret)
+      const confirmUrl = `${currentOrigin}/confirm?token=${encodeURIComponent(token)}`
+      html = renderConfirmationEmailHtml(confirmUrl)
     } else if (page === 'invalid') {
       html = getInvalidConfirmationHtml()
     } else if (page === 'privacy') {
@@ -168,6 +172,25 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
 
     const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret)
     return c.html(content.fallbackHtml)
+  })
+
+  // Development-only direct render of confirmation email
+  app.get('/dev/email/confirm', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+
+    const userEmail = (c.req.query('email') || await getUserEmail(c)).toLowerCase().trim()
+    const reqUrl = new URL(c.req.url)
+    const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
+    const forceHttps = c.req.query('forceHttps') === 'true'
+    const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+    const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
+    const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+
+    const token = generateConfirmationToken(userEmail, authSecret)
+    const confirmUrl = `${currentOrigin}/confirm?token=${encodeURIComponent(token)}`
+    return c.html(renderConfirmationEmailHtml(confirmUrl))
   })
 
   // Development-only direct render of sub-pages

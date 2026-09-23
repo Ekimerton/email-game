@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getDailyPuzzle } from '../src/game'
-import { app, getFallbackHtml, calculateScore, isPuzzleSynonym } from '../src/index'
+import { app, getFallbackHtml, calculateScore, isPuzzleSynonym, renderConfirmationEmailHtml, renderConfirmationEmailText } from '../src/index'
 import { EMAIL_HTML } from '../src/email'
 
 describe('Hono App & Layout Calculations', () => {
@@ -332,6 +332,39 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(data.message).toContain(newEmail)
   })
 
+  it('should render confirmation email with the official Inboxed logo image matching fallback email', () => {
+    const confirmUrl = 'https://inboxed.fun/confirm?token=test-secret-token'
+    const html = renderConfirmationEmailHtml(confirmUrl)
+
+    expect(html).toContain('<!doctype html>')
+    expect(html).toContain('<title>Confirm your Inboxed subscription</title>')
+    expect(html).toContain('src="https://inboxed.fun/logo.png"')
+    expect(html).toContain('alt="INBOXED"')
+    expect(html).toContain('width="160"')
+    expect(html).toContain('height="38"')
+    expect(html).toContain('href="https://inboxed.fun"')
+    expect(html).toContain('Confirm Subscription')
+    expect(html).toContain(confirmUrl)
+
+    // Verify text version as well
+    const text = renderConfirmationEmailText(confirmUrl)
+    expect(text).toContain('Confirm your subscription to Inboxed:')
+    expect(text).toContain(confirmUrl)
+  })
+
+  it('should support custom origin and options in renderConfirmationEmailHtml', () => {
+    const confirmUrl = 'http://localhost:8787/confirm?token=custom-token'
+    const html = renderConfirmationEmailHtml(confirmUrl, {
+      origin: 'https://staging.inboxed.fun',
+      playUrl: 'https://staging.inboxed.fun/?ref=email',
+      logoUrl: 'https://staging.inboxed.fun/custom-logo.png',
+    })
+
+    expect(html).toContain('src="https://staging.inboxed.fun/custom-logo.png"')
+    expect(html).toContain('href="https://staging.inboxed.fun/?ref=email"')
+    expect(html).toContain('alt="INBOXED"')
+  })
+
   it('should reject invalid email via POST /api/subscribe', async () => {
     const res = await app.request('/api/subscribe', {
       method: 'POST',
@@ -519,6 +552,14 @@ describe('Email Signup Landing Page & Subscribe API', () => {
       const fallbackHtml = await fallbackRes.text()
       expect(fallbackHtml).toContain('Seeing this while trying to load the game?')
 
+      // Confirmation email preview
+      const confirmEmailRes = await app.request('http://localhost:8787/dev/email/confirm?email=test%40example.com')
+      expect(confirmEmailRes.status).toBe(200)
+      const confirmEmailHtml = await confirmEmailRes.text()
+      expect(confirmEmailHtml).toContain('logo.png')
+      expect(confirmEmailHtml).toContain('alt="INBOXED"')
+      expect(confirmEmailHtml).toContain('Confirm your subscription')
+
       // Account page redirect to /account?token=...
       const accountRes = await app.request('http://localhost:8787/dev/page/account?email=test%40example.com')
       expect(accountRes.status).toBe(302)
@@ -561,6 +602,11 @@ describe('Email Signup Landing Page & Subscribe API', () => {
 
       const fallbackRaw = await (await app.request('http://localhost:8787/dev/raw?page=fallback&email=test%40example.com')).text()
       expect(fallbackRaw).toContain('Seeing this while trying to load the game?')
+
+      const confirmEmailRaw = await (await app.request('http://localhost:8787/dev/raw?page=confirm-email&email=test%40example.com')).text()
+      expect(confirmEmailRaw).toContain('logo.png')
+      expect(confirmEmailRaw).toContain('alt="INBOXED"')
+      expect(confirmEmailRaw).toContain('Confirm your subscription')
 
       const subRaw = await (await app.request('http://localhost:8787/dev/raw?page=subscribers')).text()
       expect(subRaw).toContain('Subscribed Emails')

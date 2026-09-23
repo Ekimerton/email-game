@@ -159,7 +159,7 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
 
     <!-- Subscribers Table -->
     <div class="table-container">
-      <table id="subscribers-table" style="display: ${total === 0 ? 'none' : 'table'};">
+      <table id="subscribers-table">
         <thead>
           <tr>
             <th>Email</th>
@@ -173,14 +173,6 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
           ${rowsHtml}
         </tbody>
       </table>
-
-      <!-- Empty State -->
-      <div id="empty-state" class="empty-box">
-        <div class="empty-icon">📬</div>
-        <div class="empty-title">No Subscribers Yet</div>
-        <div class="empty-desc">There are currently no subscribers stored in the KV database. Add a test subscriber above or seed demo accounts to test.</div>
-        <button type="button" class="btn btn-primary" onclick="seedDemoSubscribers()">🌱 Seed Demo Subscribers</button>
-      </div>
     </div>
   </div>
 

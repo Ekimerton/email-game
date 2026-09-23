@@ -387,28 +387,6 @@ export const DEV_SUBSCRIBERS_CSS = `* { box-sizing: border-box; margin: 0; paddi
     .btn-purge:hover {
       background: #fee2e2;
     }
-    /* Empty State */
-    .empty-box {
-      padding: 48px 24px;
-      text-align: center;
-      display: \${total === 0 ? 'block' : 'none'};
-    }
-    .empty-icon {
-      font-size: 36px;
-      margin-bottom: 12px;
-    }
-    .empty-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 6px;
-    }
-    .empty-desc {
-      font-size: 13px;
-      color: #64748b;
-      max-width: 380px;
-      margin: 0 auto 16px auto;
-    }
     /* Toast */
     .toast {
       position: fixed;
@@ -821,28 +799,6 @@ export const DEV_SUBSCRIBERS_HTML = `  return \`<!doctype html>
     .btn-purge:hover {
       background: #fee2e2;
     }
-    /* Empty State */
-    .empty-box {
-      padding: 48px 24px;
-      text-align: center;
-      display: \${total === 0 ? 'block' : 'none'};
-    }
-    .empty-icon {
-      font-size: 36px;
-      margin-bottom: 12px;
-    }
-    .empty-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 6px;
-    }
-    .empty-desc {
-      font-size: 13px;
-      color: #64748b;
-      max-width: 380px;
-      margin: 0 auto 16px auto;
-    }
     /* Toast */
     .toast {
       position: fixed;
@@ -953,14 +909,6 @@ export const DEV_SUBSCRIBERS_HTML = `  return \`<!doctype html>
           \${rowsHtml}
         </tbody>
       </table>
-
-      <!-- Empty State -->
-      <div id="empty-state" class="empty-box">
-        <div class="empty-icon">📬</div>
-        <div class="empty-title">No Subscribers Yet</div>
-        <div class="empty-desc">There are currently no subscribers stored in the KV database. Add a test subscriber above or seed demo accounts to test.</div>
-        <button type="button" class="btn btn-primary" onclick="seedDemoSubscribers()">🌱 Seed Demo Subscribers</button>
-      </div>
     </div>
   </div>
 

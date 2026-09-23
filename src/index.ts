@@ -17,7 +17,7 @@ export type { EmailTheme } from './core'
 export { kvDelete, kvGet, kvPut } from './core'
 export { isPuzzleSynonym, calculateScore } from './game'
 export { resetUserDayState, unsubscribeUser, removeSubscriber } from './services'
-export { buildPuzzleEmailContent, sendDailyPuzzleEmails } from './email'
+export { buildPuzzleEmailContent, sendDailyPuzzleEmails, renderConfirmationEmailHtml, renderConfirmationEmailText } from './email'
 export { isDevelopment } from './routes'
 export {
   getSignupHtml,

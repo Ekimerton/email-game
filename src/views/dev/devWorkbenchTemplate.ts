@@ -837,6 +837,12 @@ export const DEV_WORKBENCH_HTML = `  return \`<!doctype html>
         badge: 'Email Card',
         url: '/dev/fallback?date=' + currentDate + '&email=' + currentEmail
       },
+      confirmEmail: {
+        title: '✉️ Confirmation Email',
+        desc: 'Transactional double opt-in email sent to new subscribers with confirmation link.',
+        badge: 'Email',
+        url: '/dev/email/confirm?email=' + currentEmail
+      },
       invalid: {
         title: '⚠️ Invalid / Expired Token',
         desc: 'Error screen displayed when a confirmation token is expired, tampered with, or malformed.',

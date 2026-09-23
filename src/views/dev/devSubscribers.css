@@ -387,28 +387,6 @@
     .btn-purge:hover {
       background: #fee2e2;
     }
-    /* Empty State */
-    .empty-box {
-      padding: 48px 24px;
-      text-align: center;
-      display: ${total === 0 ? 'block' : 'none'};
-    }
-    .empty-icon {
-      font-size: 36px;
-      margin-bottom: 12px;
-    }
-    .empty-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 6px;
-    }
-    .empty-desc {
-      font-size: 13px;
-      color: #64748b;
-      max-width: 380px;
-      margin: 0 auto 16px auto;
-    }
     /* Toast */
     .toast {
       position: fixed;

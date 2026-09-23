@@ -5,6 +5,8 @@
  * Works natively in Cloudflare Workers and Node.js using standard fetch.
  */
 
+import { escapeHtml } from '../game'
+
 export interface SendEmailOptions {
   apiKey?: string
   domain?: string
@@ -81,10 +83,35 @@ export async function sendMailgunEmail(
   }
 }
 
+export interface ConfirmationEmailOptions {
+  origin?: string
+  playUrl?: string
+  logoUrl?: string
+}
+
 /**
  * Render responsive HTML for the double opt-in confirmation email.
  */
-export function renderConfirmationEmailHtml(confirmUrl: string): string {
+export function renderConfirmationEmailHtml(
+  confirmUrl: string,
+  options?: ConfirmationEmailOptions
+): string {
+  let origin = options?.origin
+  if (!origin) {
+    try {
+      origin = new URL(confirmUrl).origin
+    } catch {
+      origin = 'https://inboxed.fun'
+    }
+  }
+  const cleanOrigin = origin.replace(/\/$/, '')
+  const playUrl = options?.playUrl || cleanOrigin
+  const logoUrl = options?.logoUrl || `${cleanOrigin}/logo.png`
+
+  const safeConfirmUrl = escapeHtml(confirmUrl)
+  const safePlayUrl = escapeHtml(playUrl)
+  const safeLogoUrl = escapeHtml(logoUrl)
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -99,8 +126,10 @@ export function renderConfirmationEmailHtml(confirmUrl: string): string {
         <table role="presentation" width="100%" style="max-width: 480px; background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 32px 24px; text-align: center;" cellpadding="0" cellspacing="0" border="0">
           <tr>
             <td align="center">
-              <div style="font-size: 26px; font-weight: 900; letter-spacing: 2px; margin-bottom: 20px; color: #14532d;">
-                INBOXED
+              <div style="text-align: center; margin: 0 0 20px;">
+                <a href="${safePlayUrl}" style="text-decoration: none; display: inline-block;">
+                  <img src="${safeLogoUrl}" alt="INBOXED" width="160" height="38" style="display: block; margin: 0 auto; width: 160px; height: 38px; border: 0; outline: none; text-decoration: none; font-size: 22px; font-weight: 900; color: #14532d; letter-spacing: 2px;">
+                </a>
               </div>
               <h1 style="font-size: 20px; font-weight: 800; color: #18181b; margin: 0 0 12px 0;">
                 Confirm your subscription
@@ -109,13 +138,13 @@ export function renderConfirmationEmailHtml(confirmUrl: string): string {
                 Thanks for signing up! Please confirm your email address to start receiving daily word puzzles directly inside your inbox every morning at 9:00 AM PST.
               </p>
               <div style="margin: 28px 0;">
-                <a href="${confirmUrl}" style="background-color: #14532d; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 13px 26px; border-radius: 8px; display: inline-block;">
+                <a href="${safeConfirmUrl}" style="background-color: #14532d; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 13px 26px; border-radius: 8px; display: inline-block;">
                   Confirm Subscription
                 </a>
               </div>
               <p style="font-size: 12px; color: #71717a; line-height: 1.5; margin: 20px 0 0 0;">
                 Button not working? Copy and paste this link into your browser:<br>
-                <a href="${confirmUrl}" style="color: #14532d; word-break: break-all;">${confirmUrl}</a>
+                <a href="${safeConfirmUrl}" style="color: #14532d; word-break: break-all;">${safeConfirmUrl}</a>
               </p>
               <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0 16px 0;">
               <p style="font-size: 11px; color: #a1a1aa; margin: 0;">
