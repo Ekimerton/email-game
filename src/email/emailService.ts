@@ -118,6 +118,13 @@ export function renderConfirmationEmailHtml(
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Confirm your Inboxed subscription</title>
+  <style>
+    .btn-confirm:hover {
+      background-color: #bbf4c3 !important;
+      border-color: #76c87c !important;
+      box-shadow: inset 0 2px 0 0 #ddf9df, 0 2px 5px rgba(0, 0, 0, 0.08) !important;
+    }
+  </style>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 32px 16px; color: #18181b;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -138,7 +145,7 @@ export function renderConfirmationEmailHtml(
                 Thanks for signing up! Please confirm your email address to start receiving daily word puzzles directly inside your inbox every morning at 9:00 AM PST.
               </p>
               <div style="margin: 28px 0;">
-                <a href="${safeConfirmUrl}" style="background-color: #14532d; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 700; padding: 13px 26px; border-radius: 8px; display: inline-block;">
+                <a href="${safeConfirmUrl}" class="btn-confirm" style="background-color: #C4F7CA; color: #000000; border: 1.5px solid #7ecc84; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; padding: 11px 24px; display: inline-block; box-shadow: inset 0 2px 0 0 #e8ffea, 0 2px 4px rgba(0, 0, 0, 0.06); -webkit-text-size-adjust: none;">
                   Confirm Subscription
                 </a>
               </div>

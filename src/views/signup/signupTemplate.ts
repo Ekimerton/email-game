@@ -66,7 +66,7 @@ h1 {
 .video-card {
   width: 100%;
   margin: 0 0 12px;
-  aspect-ratio: 998 / 910;
+  aspect-ratio: 1264 / 720;
   background: #f4f4f5;
   border: 1px solid #e4e4e7;
   border-radius: 12px;
@@ -403,7 +403,7 @@ h1 {
 .video-card {
   width: 100%;
   margin: 0 0 12px;
-  aspect-ratio: 998 / 910;
+  aspect-ratio: 1264 / 720;
   background: #f4f4f5;
   border: 1px solid #e4e4e7;
   border-radius: 12px;
@@ -685,9 +685,11 @@ h1 {
     <!-- Looped Sample Game Video Spot -->
     <div class="video-card">
       <video id="demo-video" class="game-video" autoplay loop muted playsinline preload="auto">
+        <source src="/demo-3.mp4" type="video/mp4">
+        <source src="/demo-2.mp4" type="video/mp4">
+        <source src="/demo.mp4" type="video/mp4">
         <source src="/demo-recording.mp4" type="video/mp4">
         <source src="/demo-recording.mov" type="video/quicktime">
-        <source src="/demo.mp4" type="video/mp4">
         Your browser does not support the video tag.
       </video>
       <div id="video-placeholder" class="video-placeholder">

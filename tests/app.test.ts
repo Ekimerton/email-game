@@ -314,6 +314,8 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     const html = await res.text()
     expect(html).toContain('video-card')
     expect(html).toContain('id="demo-video"')
+    expect(html).toContain('src="/demo-3.mp4"')
+    expect(html).toContain('src="/demo-2.mp4"')
     expect(html).toContain('src="/demo.mp4"')
     expect(html).toContain('autoplay')
     expect(html).toContain('loop')
@@ -322,6 +324,14 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(html).toContain('video-placeholder')
     expect(html).toContain("Today's Clues")
     expect(html).toContain('font-size: 16px;')
+
+    const demo3Res = await app.request('/demo-3.mp4')
+    expect(demo3Res.status).toBe(200)
+    expect(demo3Res.headers.get('content-type')).toBe('video/mp4')
+
+    const demo2Res = await app.request('/demo-2.mp4')
+    expect(demo2Res.status).toBe(200)
+    expect(demo2Res.headers.get('content-type')).toBe('video/mp4')
 
     const movRes = await app.request('/demo-recording.mov')
     expect(movRes.status).toBe(200)
@@ -368,6 +378,9 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(html).toContain('height="38"')
     expect(html).toContain('href="https://inboxed.fun"')
     expect(html).toContain('Confirm Subscription')
+    expect(html).toContain('background-color: #C4F7CA')
+    expect(html).toContain('border: 1.5px solid #7ecc84')
+    expect(html).toContain('color: #000000')
     expect(html).toContain(confirmUrl)
 
     // Verify text version as well
