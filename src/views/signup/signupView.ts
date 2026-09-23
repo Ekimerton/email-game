@@ -46,7 +46,7 @@ export function getSignupHtml(c: any): string {
           <div class="success-icon">🎉</div>
           <h2 class="success-title">You're Subscribed!</h2>
           <p class="success-desc">
-            You'll get emails at 9:00 AM PST every day.
+            You'll get emails at 8:00 AM every day.
           </p>
         </div>
     `

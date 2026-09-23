@@ -308,6 +308,30 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(html).not.toContain('Free to play • No spam • One-click unsubscribe anytime')
   })
 
+  it('should include dedicated video card spot for looped demo game and 16px input styling to avoid iOS zoom', async () => {
+    const res = await app.request('/')
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('video-card')
+    expect(html).toContain('id="demo-video"')
+    expect(html).toContain('src="/demo.mp4"')
+    expect(html).toContain('autoplay')
+    expect(html).toContain('loop')
+    expect(html).toContain('muted')
+    expect(html).toContain('playsinline')
+    expect(html).toContain('video-placeholder')
+    expect(html).toContain("Today's Clues")
+    expect(html).toContain('font-size: 16px;')
+
+    const movRes = await app.request('/demo-recording.mov')
+    expect(movRes.status).toBe(200)
+    expect(movRes.headers.get('content-type')).toBe('video/quicktime')
+
+    const mp4Res = await app.request('/demo-recording.mp4')
+    expect(mp4Res.status).toBe(200)
+    expect(mp4Res.headers.get('content-type')).toBe('video/mp4')
+  })
+
   it('should serve AMP game preview on GET /play', async () => {
     const res = await app.request('/play?email=testuser%40company.com')
     expect(res.status).toBe(200)

@@ -36,6 +36,35 @@ export function registerPageRoutes(app: Hono<{ Bindings: Bindings }>) {
     })
   })
 
+  // Serve static demo gameplay video recordings
+  const serveVideo = async (c: any, filename: string, mimeType: string) => {
+    if (c.env?.ASSETS) {
+      try {
+        const assetRes = await c.env.ASSETS.fetch(c.req.raw)
+        if (assetRes.status !== 404) return assetRes
+      } catch (_) {}
+    }
+    try {
+      const fs = await import('fs')
+      const path = await import('path')
+      const filePath = path.resolve('public', filename)
+      if (fs.existsSync(filePath)) {
+        const buffer = fs.readFileSync(filePath)
+        return new Response(buffer, {
+          headers: {
+            'Content-Type': mimeType,
+            'Cache-Control': 'public, max-age=31536000',
+          },
+        })
+      }
+    } catch (_) {}
+    return c.notFound()
+  }
+
+  app.get('/demo-recording.mov', (c) => serveVideo(c, 'demo-recording.mov', 'video/quicktime'))
+  app.get('/demo-recording.mp4', (c) => serveVideo(c, 'demo-recording.mp4', 'video/mp4'))
+  app.get('/demo.mp4', (c) => serveVideo(c, 'demo.mp4', 'video/mp4'))
+
   // Explicit Email Signup Landing Page route
   app.get('/signup', async (c) => {
     return c.html(getSignupHtml(c))

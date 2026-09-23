@@ -7,8 +7,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
+  justify-content: flex-start;
+  padding: 16px 14px 20px;
 }
 .container {
   width: 100%;
@@ -19,88 +19,142 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 .logo-tiles {
   display: inline-flex;
-  padding: 4px 0;
+  padding: 2px 0;
 }
 .logo-tile {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  font-size: 18px;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
   font-weight: 800;
   border-radius: 6px;
   border: 2px solid #18181b;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 .rotate-neg {
   background-color: #D8FFC5;
   color: #18181b;
   transform: rotate(-8deg);
-  margin-right: -4px;
+  margin-right: -3px;
 }
 .rotate-pos {
   background-color: #C4F7CA;
   color: #18181b;
   transform: rotate(8deg);
-  margin-right: -4px;
+  margin-right: -3px;
 }
 h1 {
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 800;
   color: #18181b;
   letter-spacing: -0.5px;
-  line-height: 1.3;
-  margin-bottom: 8px;
+  line-height: 1.25;
+  margin-bottom: 4px;
 }
 .subtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: #52525b;
-  line-height: 1.5;
-  margin-bottom: 24px;
+  line-height: 1.35;
+  margin-bottom: 12px;
+}
+.video-card {
+  width: 100%;
+  margin: 0 0 12px;
+  aspect-ratio: 998 / 910;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.game-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+.video-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #71717a;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 1;
+  pointer-events: none;
+  padding: 10px;
+  text-align: center;
+}
+.video-play-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid #d4d4d8;
+  color: #14532d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  padding-left: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 .preview-card {
   background: #f4f4f5;
   border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 24px;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
   text-align: left;
 }
 .preview-header {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #71717a;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   display: flex;
   justify-content: space-between;
 }
 .preview-clue {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #27272a;
   background: #ffffff;
   border: 1px solid #e4e4e7;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 5px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
+.preview-clue:last-child {
+  margin-bottom: 0;
+}
 .clue-num {
   background: #14532d;
   color: #ffffff;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -113,22 +167,24 @@ h1 {
   color: #a1a1aa;
 }
 .signup-form {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 .input-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 .email-input {
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1.5px solid #d4d4d8;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 16px; /* 16px prevents iOS Safari auto-zooming on focus */
   color: #18181b;
   outline: none;
+  background-color: #ffffff;
   transition: border-color 0.2s ease;
+  -webkit-appearance: none;
 }
 .email-input:focus {
   border-color: #18181b;
@@ -140,7 +196,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 20px;
+  padding: 9px 18px;
   white-space: nowrap;
   background-color: #C4F7CA;
   color: #000000;
@@ -204,14 +260,14 @@ h1 {
   margin-bottom: 16px;
 }
 .disclaimer {
-  margin-top: 18px;
-  padding: 10px 14px;
+  margin-top: 14px;
+  padding: 8px 12px;
   background-color: #fffbeb;
   border: 1px solid #fef3c7;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 11.5px;
   color: #92400e;
-  line-height: 1.5;
+  line-height: 1.4;
   text-align: left;
 }
 .disclaimer a {
@@ -225,23 +281,23 @@ h1 {
 }
 .features {
   border-top: 1px solid #e4e4e7;
-  padding-top: 18px;
-  margin-top: 18px;
+  padding-top: 14px;
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   text-align: left;
 }
 .feature-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   font-size: 12px;
   color: #52525b;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 .feature-icon {
-  font-size: 15px;
+  font-size: 14px;
   flex-shrink: 0;
   margin-top: 1px;
 }
@@ -249,11 +305,11 @@ h1 {
   color: #18181b;
 }
 .footer-text {
-  margin-top: 24px;
-  font-size: 11.5px;
+  margin-top: 16px;
+  font-size: 11px;
   color: #71717a;
   text-align: center;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 .footer-text a {
   color: #14532d;
@@ -288,8 +344,8 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
+  justify-content: flex-start;
+  padding: 16px 14px 20px;
 }
 .container {
   width: 100%;
@@ -300,88 +356,142 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 .logo-tiles {
   display: inline-flex;
-  padding: 4px 0;
+  padding: 2px 0;
 }
 .logo-tile {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  font-size: 18px;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
   font-weight: 800;
   border-radius: 6px;
   border: 2px solid #18181b;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 .rotate-neg {
   background-color: #D8FFC5;
   color: #18181b;
   transform: rotate(-8deg);
-  margin-right: -4px;
+  margin-right: -3px;
 }
 .rotate-pos {
   background-color: #C4F7CA;
   color: #18181b;
   transform: rotate(8deg);
-  margin-right: -4px;
+  margin-right: -3px;
 }
 h1 {
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 800;
   color: #18181b;
   letter-spacing: -0.5px;
-  line-height: 1.3;
-  margin-bottom: 8px;
+  line-height: 1.25;
+  margin-bottom: 4px;
 }
 .subtitle {
-  font-size: 14px;
+  font-size: 13px;
   color: #52525b;
-  line-height: 1.5;
-  margin-bottom: 24px;
+  line-height: 1.35;
+  margin-bottom: 12px;
+}
+.video-card {
+  width: 100%;
+  margin: 0 0 12px;
+  aspect-ratio: 998 / 910;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.game-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+.video-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #71717a;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 1;
+  pointer-events: none;
+  padding: 10px;
+  text-align: center;
+}
+.video-play-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid #d4d4d8;
+  color: #14532d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  padding-left: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 .preview-card {
   background: #f4f4f5;
   border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 24px;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
   text-align: left;
 }
 .preview-header {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #71717a;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   display: flex;
   justify-content: space-between;
 }
 .preview-clue {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #27272a;
   background: #ffffff;
   border: 1px solid #e4e4e7;
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 5px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
+.preview-clue:last-child {
+  margin-bottom: 0;
+}
 .clue-num {
   background: #14532d;
   color: #ffffff;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -394,22 +504,24 @@ h1 {
   color: #a1a1aa;
 }
 .signup-form {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 .input-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 .email-input {
   width: 100%;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1.5px solid #d4d4d8;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 16px; /* 16px prevents iOS Safari auto-zooming on focus */
   color: #18181b;
   outline: none;
+  background-color: #ffffff;
   transition: border-color 0.2s ease;
+  -webkit-appearance: none;
 }
 .email-input:focus {
   border-color: #18181b;
@@ -421,7 +533,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 20px;
+  padding: 9px 18px;
   white-space: nowrap;
   background-color: #C4F7CA;
   color: #000000;
@@ -485,14 +597,14 @@ h1 {
   margin-bottom: 16px;
 }
 .disclaimer {
-  margin-top: 18px;
-  padding: 10px 14px;
+  margin-top: 14px;
+  padding: 8px 12px;
   background-color: #fffbeb;
   border: 1px solid #fef3c7;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 11.5px;
   color: #92400e;
-  line-height: 1.5;
+  line-height: 1.4;
   text-align: left;
 }
 .disclaimer a {
@@ -506,23 +618,23 @@ h1 {
 }
 .features {
   border-top: 1px solid #e4e4e7;
-  padding-top: 18px;
-  margin-top: 18px;
+  padding-top: 14px;
+  margin-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   text-align: left;
 }
 .feature-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   font-size: 12px;
   color: #52525b;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 .feature-icon {
-  font-size: 15px;
+  font-size: 14px;
   flex-shrink: 0;
   margin-top: 1px;
 }
@@ -530,11 +642,11 @@ h1 {
   color: #18181b;
 }
 .footer-text {
-  margin-top: 24px;
-  font-size: 11.5px;
+  margin-top: 16px;
+  font-size: 11px;
   color: #71717a;
   text-align: center;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 .footer-text a {
   color: #14532d;
@@ -569,6 +681,20 @@ h1 {
     <p class="subtitle">
       Guess the hidden word from its definitions. Every morning at 8:00 AM, right inside your email.
     </p>
+
+    <!-- Looped Sample Game Video Spot -->
+    <div class="video-card">
+      <video id="demo-video" class="game-video" autoplay loop muted playsinline preload="auto">
+        <source src="/demo-recording.mp4" type="video/mp4">
+        <source src="/demo-recording.mov" type="video/quicktime">
+        <source src="/demo.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <div id="video-placeholder" class="video-placeholder">
+        <div class="video-play-btn">▶</div>
+        <span>Sample Game Video</span>
+      </div>
+    </div>
 
     <!-- Interactive / Clue Teaser Preview -->
     <div class="preview-card">
@@ -619,6 +745,16 @@ h1 {
   </div>
 
   <script>
+    // Hide placeholder once video starts playing
+    const demoVideo = document.getElementById('demo-video');
+    const placeholder = document.getElementById('video-placeholder');
+    if (demoVideo && placeholder) {
+      const hidePlaceholder = () => { placeholder.style.display = 'none'; };
+      demoVideo.addEventListener('playing', hidePlaceholder);
+      demoVideo.addEventListener('loadeddata', hidePlaceholder);
+      demoVideo.addEventListener('canplay', hidePlaceholder);
+    }
+
     const form = document.getElementById('signup-form');
     if (form) {
       const input = document.getElementById('email-input');

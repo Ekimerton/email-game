@@ -28,6 +28,20 @@
       Guess the hidden word from its definitions. Every morning at 8:00 AM, right inside your email.
     </p>
 
+    <!-- Looped Sample Game Video Spot -->
+    <div class="video-card">
+      <video id="demo-video" class="game-video" autoplay loop muted playsinline preload="auto">
+        <source src="/demo-recording.mp4" type="video/mp4">
+        <source src="/demo-recording.mov" type="video/quicktime">
+        <source src="/demo.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <div id="video-placeholder" class="video-placeholder">
+        <div class="video-play-btn">▶</div>
+        <span>Sample Game Video</span>
+      </div>
+    </div>
+
     <!-- Interactive / Clue Teaser Preview -->
     <div class="preview-card">
       <div class="preview-header">
@@ -77,6 +91,16 @@
   </div>
 
   <script>
+    // Hide placeholder once video starts playing
+    const demoVideo = document.getElementById('demo-video');
+    const placeholder = document.getElementById('video-placeholder');
+    if (demoVideo && placeholder) {
+      const hidePlaceholder = () => { placeholder.style.display = 'none'; };
+      demoVideo.addEventListener('playing', hidePlaceholder);
+      demoVideo.addEventListener('loadeddata', hidePlaceholder);
+      demoVideo.addEventListener('canplay', hidePlaceholder);
+    }
+
     const form = document.getElementById('signup-form');
     if (form) {
       const input = document.getElementById('email-input');
