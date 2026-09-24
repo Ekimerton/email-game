@@ -1,11 +1,24 @@
 // Persistent memory store for development fallback & 429 rate limit protection
 export const MEMORY_STORE = new Map<string, any>()
 
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  let timer: any
+  const timeoutPromise = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), ms)
+  })
+  try {
+    return await Promise.race([promise, timeoutPromise])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
+
 export async function kvGet(kv: KVNamespace | undefined, key: string): Promise<any> {
   if (kv) {
     try {
-      const val = await kv.get(key, { type: 'json' })
-      if (val !== null) {
+      // 2500ms timeout prevents KV cold-start lag from timing out the client
+      const val = await withTimeout(kv.get(key, { type: 'json' }), 2500)
+      if (val !== null && val !== undefined) {
         MEMORY_STORE.set(key, val)
         return val
       }
@@ -20,7 +33,7 @@ export async function kvPut(kv: KVNamespace | undefined, key: string, value: any
   MEMORY_STORE.set(key, value)
   if (kv) {
     try {
-      await kv.put(key, JSON.stringify(value))
+      await withTimeout(kv.put(key, JSON.stringify(value)), 2500)
     } catch (err) {
       console.warn(`[KV 429 Rate Limit Warning] Failed writing ${key} to KV:`, err)
     }

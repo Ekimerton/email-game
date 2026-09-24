@@ -40,7 +40,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const body = await c.req.parseBody()
       const userEmail = await getUserEmail(c, body)
       const guess = (body['user-guess'] as string || '').toUpperCase().trim()
-      const dateParam = c.req.query('date')
+      const dateParam = c.req.query('date') || (body['date'] as string)
       const domain = extractDomain(userEmail)
 
       const { state, puzzle, stateKey } = await getOrCreateGameState(
@@ -157,7 +157,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
     try {
       const body = await c.req.parseBody()
       const userEmail = await getUserEmail(c, body)
-      const dateParam = c.req.query('date')
+      const dateParam = c.req.query('date') || (body['date'] as string)
 
       const { state, puzzle, stateKey } = await getOrCreateGameState(
         c.env?.GAME_STATE_KV,

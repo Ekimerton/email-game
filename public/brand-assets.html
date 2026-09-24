@@ -1,0 +1,1545 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inboxed - Brand Assets (Favicon & Social Share Preview)</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #0b1120;
+      color: #f1f5f9;
+      padding: 32px 20px 80px;
+      line-height: 1.5;
+    }
+
+    .header-bar {
+      max-width: 1280px;
+      margin: 0 auto 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-pill {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #D8FFC5;
+      color: #14532d;
+      padding: 4px 10px;
+      border-radius: 9999px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .nav-btn:hover {
+      background: #334155;
+      color: #ffffff;
+      border-color: #475569;
+    }
+
+    .instructions-card {
+      max-width: 1280px;
+      margin: 0 auto 36px;
+      background: #131d31;
+      border: 1px solid #1e293b;
+      border-left: 4px solid #D8FFC5;
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .instructions-text h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 2px;
+    }
+
+    .instructions-text p {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .section-container {
+      max-width: 1280px;
+      margin: 0 auto 56px;
+    }
+
+    .section-header {
+      margin-bottom: 18px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.3px;
+    }
+
+    .section-meta {
+      font-size: 13px;
+      color: #94a3b8;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-download {
+      background: #D8FFC5;
+      color: #14532d;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #86efac;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s, background 0.15s;
+    }
+
+    .btn-download:hover {
+      background: #bbf7d0;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #f1f5f9;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+    }
+
+    /* -------------------------------------------------------------
+       FAVICON SECTION
+       ------------------------------------------------------------- */
+    .favicon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .asset-card {
+      background: #131d31;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .asset-card h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 4px;
+    }
+
+    .asset-card .card-subtitle {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+
+    .screenshot-box {
+      width: 256px;
+      height: 256px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: repeating-conic-gradient(#1e293b 0% 25%, #0f172a 0% 50%) 50% / 16px 16px;
+      border: 2px dashed #334155;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .tile-master {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 180px;
+      height: 180px;
+      font-size: 108px;
+      font-weight: 900;
+      border-radius: 36px;
+      border: 9px solid #18181b;
+      background-color: #D8FFC5;
+      color: #18181b;
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+      user-select: none;
+    }
+
+    .tile-master.tilted {
+      transform: rotate(-8deg);
+    }
+
+    .tile-master.upright {
+      transform: rotate(0deg);
+    }
+
+    .tab-mockup {
+      width: 100%;
+      background: #09090b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      background: #18181b;
+      padding: 8px 12px 0;
+      gap: 6px;
+      border-bottom: 1px solid #27272a;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 6px;
+      margin-right: 12px;
+      padding-bottom: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot.red { background: #ef4444; }
+    .dot.yellow { background: #eab308; }
+    .dot.green { background: #22c55e; }
+
+    .tab-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #09090b;
+      padding: 6px 14px;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #f4f4f5;
+      border: 1px solid #27272a;
+      border-bottom: none;
+    }
+
+    .tab-icon-small {
+      width: 18px;
+      height: 18px;
+      background: #D8FFC5;
+      color: #18181b;
+      border: 1.5px solid #18181b;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      transform: none;
+    }
+
+    .tab-body-preview {
+      padding: 16px;
+      font-size: 12px;
+      color: #71717a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sizes-row {
+      display: flex;
+      gap: 20px;
+      align-items: flex-end;
+      padding: 16px;
+      background: #0b1120;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .size-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .size-label {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .icon-180 {
+      width: 72px;
+      height: 72px;
+      background: #D8FFC5;
+      color: #18181b;
+      border: 4px solid #18181b;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      font-weight: 900;
+      transform: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .icon-64 {
+      width: 44px;
+      height: 44px;
+      background: #D8FFC5;
+      color: #18181b;
+      border: 2.5px solid #18181b;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 900;
+      transform: none;
+    }
+
+    .icon-32 {
+      width: 28px;
+      height: 28px;
+      background: #D8FFC5;
+      color: #18181b;
+      border: 2px solid #18181b;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 900;
+      transform: none;
+    }
+
+    .icon-16 {
+      width: 18px;
+      height: 18px;
+      background: #D8FFC5;
+      color: #18181b;
+      border: 1.5px solid #18181b;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 900;
+      transform: none;
+    }
+
+    /* -------------------------------------------------------------
+       SOCIAL MEDIA SHARE CARDS (1200 x 630 exact pixels)
+       Minimalist & Uncluttered Edition
+       ------------------------------------------------------------- */
+    .preview-stage-container {
+      width: 100%;
+      overflow-x: auto;
+      padding: 12px 0;
+      margin-bottom: 24px;
+    }
+
+    .social-share-card {
+      width: 1200px;
+      height: 630px;
+      min-width: 1200px;
+      min-height: 630px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 64px 80px;
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      user-select: none;
+    }
+
+    /* Light Theme */
+    .card-light {
+      background: radial-gradient(circle at 10% 15%, #f0fdf4 0%, #ffffff 50%, #f4f4f5 100%);
+      color: #18181b;
+      border: 1px solid #e4e4e7;
+    }
+
+    /* Dark Theme */
+    .card-dark {
+      background: radial-gradient(circle at 12% 15%, #064e3b 0%, #09090b 45%, #000000 100%);
+      color: #ffffff;
+      border: 1px solid #27272a;
+    }
+
+    /* Decorative dots */
+    .card-bg-deco {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 580px;
+      height: 630px;
+      pointer-events: none;
+      background-image: radial-gradient(circle, rgba(34, 197, 94, 0.12) 1.5px, transparent 1.5px);
+      background-size: 32px 32px;
+      opacity: 0.7;
+      mask-image: linear-gradient(to right, transparent, black 35%);
+      -webkit-mask-image: linear-gradient(to right, transparent, black 35%);
+    }
+
+    /* Top Bar */
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Logo lockup in social card */
+    .card-logo-tiles {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .card-tile {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 62px;
+      height: 62px;
+      font-size: 34px;
+      font-weight: 900;
+      border-radius: 12px;
+      border: 3.5px solid #18181b;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-tile.rot-n {
+      background-color: #D8FFC5;
+      color: #18181b;
+      transform: rotate(-8deg);
+      margin-right: -4px;
+    }
+
+    .card-tile.rot-p {
+      background-color: #C4F7CA;
+      color: #18181b;
+      transform: rotate(8deg);
+      margin-right: -4px;
+    }
+
+    .card-domain-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .card-light .card-domain-badge {
+      background: #e8f9eb;
+      color: #166534;
+      border: 1.5px solid #bbf7d0;
+    }
+
+    .card-dark .card-domain-badge {
+      background: rgba(34, 197, 94, 0.15);
+      color: #86efac;
+      border: 1.5px solid rgba(74, 222, 128, 0.3);
+    }
+
+    /* Middle Hero & Gameplay Split */
+    .card-middle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 48px;
+      position: relative;
+      z-index: 2;
+      margin: auto 0;
+    }
+
+    .card-hero-text {
+      flex: 1;
+      max-width: 530px;
+    }
+
+    .card-headline {
+      font-size: 46px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      margin-bottom: 0;
+    }
+
+    .card-headline em {
+      font-style: italic;
+    }
+
+    .card-light .card-headline {
+      color: #09090b;
+    }
+
+    .card-dark .card-headline {
+      color: #ffffff;
+    }
+
+    .card-subheadline {
+      font-size: 21px;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+
+    .card-light .card-subheadline {
+      color: #52525b;
+    }
+
+    .card-dark .card-subheadline {
+      color: #94a3b8;
+    }
+
+    .card-gameplay-preview {
+      width: 530px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .inbox-row-container {
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1.5px solid #e4e4e7;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      background: #ffffff;
+    }
+
+    .card-dark .inbox-row-container {
+      border-color: #27272a;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .inbox-row-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    .clue-quote {
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .card-light .clue-quote {
+      color: #18181b;
+    }
+
+    .card-dark .clue-quote {
+      color: #f4f4f5;
+    }
+
+    /* Word Guess Tiles (In-Game Mask Square Style) */
+    .word-tiles-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .word-tile-slot {
+      width: 52px;
+      height: 52px;
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 800;
+      box-sizing: border-box;
+      text-transform: uppercase;
+      font-family: ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco, Consolas, monospace;
+    }
+
+    /* Light Theme (In-Game Mask & Revealed Letter Styling) */
+    .card-light .slot-revealed {
+      background: #ffffff;
+      border: 2px solid #a1a1aa;
+      color: #52525b;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-light .slot-empty {
+      background: #ffffff;
+      border: 2px solid #d4d4d8;
+      color: transparent;
+    }
+
+    /* Dark Theme (In-Game Mask & Revealed Letter Styling) */
+    .card-dark .slot-revealed {
+      background: #27272a;
+      border: 2px solid #52525b;
+      color: #a1a1aa;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-dark .slot-empty {
+      background: #18181b;
+      border: 2px solid #3f3f46;
+      color: transparent;
+    }
+
+
+
+    /* -------------------------------------------------------------
+       MINIMALIST CENTERED CARD (Ultra-clean, NYT Games style)
+       ------------------------------------------------------------- */
+    .social-share-card.centered-layout {
+      align-items: center;
+      text-align: center;
+      padding: 72px 80px;
+    }
+
+    .centered-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin: auto 0;
+    }
+
+    .centered-headline {
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      max-width: 860px;
+    }
+
+    .centered-headline em {
+      font-style: italic;
+    }
+
+    .card-light .centered-headline {
+      color: #09090b;
+    }
+
+    .card-dark .centered-headline {
+      color: #ffffff;
+    }
+
+    .centered-clue-card {
+      padding: 16px 28px;
+      border-radius: 12px;
+      font-size: 20px;
+      font-weight: 600;
+      margin: 8px 0 16px;
+      max-width: 680px;
+    }
+
+    .card-light .centered-clue-card {
+      background: #f4f4f5;
+      color: #18181b;
+      border: 1px solid #e4e4e7;
+    }
+
+    .card-dark .centered-clue-card {
+      background: #18181b;
+      color: #f4f4f5;
+      border: 1px solid #27272a;
+    }
+
+    .centered-word-tiles {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .centered-word-tiles .word-tile-slot {
+      width: 58px;
+      height: 58px;
+      font-size: 28px;
+      border-radius: 10px;
+    }
+
+    .centered-bottom-url {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .card-light .centered-bottom-url {
+      color: #14532d;
+    }
+
+    .card-dark .centered-bottom-url {
+      color: #86efac;
+    }
+
+    .guide-text {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .code-box {
+      background: #09090b;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: #cbd5e1;
+      overflow-x: auto;
+      margin-top: 12px;
+      position: relative;
+    }
+
+    .code-copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .code-copy-btn:hover {
+      background: #334155;
+    }
+
+    #downloadCanvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="header-bar">
+    <div class="brand-title">
+      <div class="card-logo-tiles">
+        <span class="logo-tile" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:#D8FFC5;color:#18181b;font-weight:900;border:2.5px solid #18181b;border-radius:8px;transform:rotate(-8deg);margin-right:-3px;">I</span>
+        <span class="logo-tile" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:#C4F7CA;color:#18181b;font-weight:900;border:2.5px solid #18181b;border-radius:8px;transform:rotate(8deg);">N</span>
+      </div>
+      <span>Inboxed Brand Kit</span>
+      <span class="brand-pill">Clean Media Kit</span>
+    </div>
+
+    <nav class="nav-buttons">
+      <a href="#favicon" class="nav-btn">Favicon & Icon</a>
+      <a href="#social-split-light" class="nav-btn">Split Card (Light)</a>
+      <a href="#social-split-dark" class="nav-btn">Split Card (Dark)</a>
+      <a href="#social-centered" class="nav-btn">Centered Card</a>
+      <a href="/" class="nav-btn" style="border-color:#22c55e;color:#86efac;">Open Inboxed ↗</a>
+    </nav>
+  </header>
+
+  <!-- Instructions Notice -->
+  <div class="instructions-card">
+    <div class="instructions-text">
+      <h3>Clean, Screenshot-Ready Brand Assets</h3>
+      <p>Simplified and decluttered social preview cards (1200 × 630 px) and master favicons. Screenshot any frame directly or click the download button for instant crisp PNGs.</p>
+    </div>
+    <div>
+      <span style="font-size:12px;color:#94a3b8;background:#09090b;padding:6px 12px;border-radius:6px;border:1px solid #1e293b;">
+        Social Cards: 1200 × 630 px (1.91:1)
+      </span>
+    </div>
+  </div>
+
+  <!-- SECTION 1: FAVICON & APP ICON -->
+  <section id="favicon" class="section-container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">1. Favicon & App Icon ("I" Tile)</h2>
+        <p class="section-meta">Designed from the official logo first tile: Mint green #D8FFC5, solid #18181b border, bold typography.</p>
+      </div>
+      <div class="action-row">
+        <button class="btn-download" onclick="downloadFaviconPng(512, false)">
+          ⬇ Download Official 512×512 PNG (Upright)
+        </button>
+        <button class="btn-secondary" onclick="downloadFaviconPng(512, true)">
+          ⬇ Download 512×512 PNG (Tilted)
+        </button>
+      </div>
+    </div>
+
+    <div class="favicon-grid">
+      <!-- Option A: Tilted (-8 deg) -->
+      <div class="asset-card">
+        <h4>Signature Tilted Tile (-8°)</h4>
+        <span class="card-subtitle">Exact character match to the INBOXED logo</span>
+        
+        <div id="faviconTiltedScreenshot" class="screenshot-box">
+          <div class="tile-master tilted">
+            <span>I</span>
+          </div>
+        </div>
+
+        <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;text-align:center;">
+          Alternative styled icon matching rotated logo typography.
+        </p>
+
+        <button class="btn-secondary" onclick="downloadFaviconPng(512, true)" style="width:100%;">
+          Download Tilted 512×512 PNG
+        </button>
+      </div>
+
+      <!-- Option B: Upright (0 deg) -->
+      <div class="asset-card" style="border: 2px solid #22c55e;">
+        <h4>Clean Upright Tile (0°) <span style="font-size:11px;padding:2px 7px;border-radius:10px;background:#22c55e;color:#052e16;font-weight:700;margin-left:6px;vertical-align:middle;">Selected Official</span></h4>
+        <span class="card-subtitle">Maximized pixel clarity at tiny 16px/32px dimensions</span>
+        
+        <div id="faviconUprightScreenshot" class="screenshot-box">
+          <div class="tile-master upright">
+            <span>I</span>
+          </div>
+        </div>
+
+        <p style="font-size:12px;color:#94a3b8;margin-bottom:12px;text-align:center;">
+          Official favicon active across site, bookmark bars, mobile icons, and desktop shortcuts.
+        </p>
+
+        <button class="btn-download" onclick="downloadFaviconPng(512, false)" style="width:100%;">
+          Download Upright 512×512 PNG (Official)
+        </button>
+      </div>
+
+      <!-- Real World Size Previews -->
+      <div class="asset-card" style="grid-column: span 1 / -1;">
+        <h4 style="align-self: flex-start;">Real-World Browser & Device Scale Previews</h4>
+        <span class="card-subtitle" style="align-self: flex-start;">Simulating 180px Apple Touch Icon, 64px, 32px, and 16px browser tab</span>
+
+        <div class="sizes-row" style="width:100%; justify-content:space-around;">
+          <div class="size-item">
+            <div class="icon-180">I</div>
+            <span class="size-label">180×180 (Apple)</span>
+          </div>
+          <div class="size-item">
+            <div class="icon-64">I</div>
+            <span class="size-label">64×64 (Retina)</span>
+          </div>
+          <div class="size-item">
+            <div class="icon-32">I</div>
+            <span class="size-label">32×32 (Standard)</span>
+          </div>
+          <div class="size-item">
+            <div class="icon-16">I</div>
+            <span class="size-label">16×16 (Tab)</span>
+          </div>
+        </div>
+
+        <!-- Realistic Browser Tab Mockup -->
+        <div class="tab-mockup">
+          <div class="tab-bar">
+            <div class="window-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="tab-item">
+              <span class="tab-icon-small">I</span>
+              <span>Inboxed - The Daily Word Game that Lives in Your Email</span>
+              <span style="margin-left: 8px; color: #71717a; font-size: 10px;">✕</span>
+            </div>
+          </div>
+          <div class="tab-body-preview">
+            <span>https://inboxed.fun</span>
+            <span>Tab favicon preview rendering live in active session</span>
+          </div>
+        </div>
+
+        <!-- Code Snippet -->
+        <div style="width: 100%; margin-top: 20px;">
+          <span style="font-size:12px;font-weight:700;color:#94a3b8;">HTML Favicon Embed Tags:</span>
+          <div class="code-box">
+            <button class="code-copy-btn" onclick="copySnippet()">Copy</button>
+            <pre id="codeSnippet">&lt;!-- Modern SVG Favicon --&gt;
+&lt;link rel="icon" type="image/svg+xml" href="/favicon.svg"&gt;
+&lt;!-- PNG Fallback --&gt;
+&lt;link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"&gt;
+&lt;!-- Apple Touch Icon --&gt;
+&lt;link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"&gt;</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: SOCIAL MEDIA SHARE CARD (LIGHT THEME - CLEAN SPLIT) -->
+  <section id="social-split-light" class="section-container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">2. Social Media Share Card — Light Theme (1200 × 630 px) <span style="font-size:12px;padding:2px 8px;border-radius:10px;background:#22c55e;color:#052e16;font-weight:700;margin-left:8px;vertical-align:middle;">Selected Official</span></h2>
+        <p class="section-meta">Official OpenGraph / Twitter share image for inboxed.fun. Clean, high-impact, and uncluttered.</p>
+      </div>
+      <div class="action-row">
+        <button class="btn-download" onclick="downloadSplitSocialCard('socialCardLight', 'og-image.png')">
+          ⬇ Download og-image.png (Official)
+        </button>
+        <button class="btn-secondary" onclick="downloadSplitSocialCard('socialCardLight', 'inboxed-social-share-light.png')">
+          ⬇ Download inboxed-social-share-light.png
+        </button>
+      </div>
+    </div>
+
+    <div class="preview-stage-container">
+      <!-- 1200x630 Card Container (Light) -->
+      <div id="socialCardLight" class="social-share-card card-light">
+        <div class="card-bg-deco"></div>
+
+        <!-- Top row: Logo -->
+        <div class="card-top">
+          <div class="card-logo-tiles" aria-label="INBOXED">
+            <span class="card-tile rot-n">I</span>
+            <span class="card-tile rot-p">N</span>
+            <span class="card-tile rot-n">B</span>
+            <span class="card-tile rot-p">O</span>
+            <span class="card-tile rot-n">X</span>
+            <span class="card-tile rot-p">E</span>
+            <span class="card-tile rot-n">D</span>
+          </div>
+        </div>
+
+        <!-- Middle Hero Content -->
+        <div class="card-middle">
+          <div class="card-hero-text">
+            <h1 class="card-headline">
+              The Daily Word Game that Lives <em>in Your Email</em>
+            </h1>
+          </div>
+
+          <!-- Gameplay Preview with Inbox Row -->
+          <div class="card-gameplay-preview">
+            <!-- Uploaded Gmail Inbox Row -->
+            <div class="inbox-row-container">
+              <img src="inbox-row.png" alt="Inboxed in Gmail: Inboxed #38 - Sept 23, 2026" class="inbox-row-image">
+            </div>
+
+            <!-- Single crisp clue -->
+            <div class="clue-quote">
+              “Intensely bright, lively, or full of energy”
+            </div>
+
+            <!-- Word tiles: square mask tiles with gray revealed letters and empty slots -->
+            <div class="word-tiles-row">
+              <div class="word-tile-slot slot-revealed">V</div>
+              <div class="word-tile-slot slot-revealed">I</div>
+              <div class="word-tile-slot slot-empty"></div>
+              <div class="word-tile-slot slot-revealed">R</div>
+              <div class="word-tile-slot slot-revealed">A</div>
+              <div class="word-tile-slot slot-empty"></div>
+              <div class="word-tile-slot slot-revealed">T</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="guide-text">
+      <span>Container dimensions: 1200px width × 630px height (Exact 1.91:1 ratio)</span>
+      <span>Screenshot this frame directly or click "Download 1200×630 PNG"</span>
+    </div>
+  </section>
+
+  <!-- SECTION 3: SOCIAL MEDIA SHARE CARD (DARK THEME - CLEAN SPLIT) -->
+  <section id="social-split-dark" class="section-container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">3. Social Media Share Card — Dark Theme (1200 × 630 px)</h2>
+        <p class="section-meta">High-contrast dark edition optimized for Twitter/X dark mode, Discord, and Slack.</p>
+      </div>
+      <div class="action-row">
+        <button class="btn-download" onclick="downloadSplitSocialCard('socialCardDark', 'inboxed-social-share-dark.png')">
+          ⬇ Download 1200×630 PNG (Dark)
+        </button>
+      </div>
+    </div>
+
+    <div class="preview-stage-container">
+      <!-- 1200x630 Card Container (Dark) -->
+      <div id="socialCardDark" class="social-share-card card-dark">
+        <div class="card-bg-deco"></div>
+
+        <!-- Top row: Logo -->
+        <div class="card-top">
+          <div class="card-logo-tiles" aria-label="INBOXED">
+            <span class="card-tile rot-n">I</span>
+            <span class="card-tile rot-p">N</span>
+            <span class="card-tile rot-n">B</span>
+            <span class="card-tile rot-p">O</span>
+            <span class="card-tile rot-n">X</span>
+            <span class="card-tile rot-p">E</span>
+            <span class="card-tile rot-n">D</span>
+          </div>
+        </div>
+
+        <!-- Middle Hero Content -->
+        <div class="card-middle">
+          <div class="card-hero-text">
+            <h1 class="card-headline">
+              The Daily Word Game that Lives <em>in Your Email</em>
+            </h1>
+          </div>
+
+          <!-- Gameplay Preview with Inbox Row -->
+          <div class="card-gameplay-preview">
+            <!-- Uploaded Gmail Inbox Row -->
+            <div class="inbox-row-container">
+              <img src="inbox-row.png" alt="Inboxed in Gmail: Inboxed #38 - Sept 23, 2026" class="inbox-row-image">
+            </div>
+
+            <!-- Single crisp clue -->
+            <div class="clue-quote">
+              “Intensely bright, lively, or full of energy”
+            </div>
+
+            <!-- Word tiles: square mask tiles with gray revealed letters and empty slots -->
+            <div class="word-tiles-row">
+              <div class="word-tile-slot slot-revealed">V</div>
+              <div class="word-tile-slot slot-revealed">I</div>
+              <div class="word-tile-slot slot-empty"></div>
+              <div class="word-tile-slot slot-revealed">R</div>
+              <div class="word-tile-slot slot-revealed">A</div>
+              <div class="word-tile-slot slot-empty"></div>
+              <div class="word-tile-slot slot-revealed">T</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="guide-text">
+      <span>Container dimensions: 1200px width × 630px height (Exact 1.91:1 ratio)</span>
+      <span>Screenshot this frame directly or click "Download 1200×630 PNG"</span>
+    </div>
+  </section>
+
+  <!-- SECTION 4: MINIMALIST CENTERED EDITION (NYT GAMES / WORDLE STYLE) -->
+  <section id="social-centered" class="section-container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">4. Minimalist Centered Edition (Alternative Layout)</h2>
+        <p class="section-meta">Clean centered layout focusing purely on the logo, the core hook, and the letter tiles.</p>
+      </div>
+      <div class="action-row">
+        <button class="btn-download" onclick="downloadCenteredSocialCard(false, 'inboxed-social-centered-light.png')">
+          ⬇ Download Light (Centered)
+        </button>
+        <button class="btn-download" onclick="downloadCenteredSocialCard(true, 'inboxed-social-centered-dark.png')">
+          ⬇ Download Dark (Centered)
+        </button>
+      </div>
+    </div>
+
+    <!-- Centered Card Preview (Dark Edition) -->
+    <div class="preview-stage-container">
+      <div id="socialCardCenteredDark" class="social-share-card card-dark centered-layout">
+        <div class="card-bg-deco" style="right: auto; left: 50%; transform: translateX(-50%); width: 1000px; mask-image: radial-gradient(circle, black 30%, transparent 70%);"></div>
+
+        <!-- Centered Logo Tiles -->
+        <div class="card-logo-tiles" aria-label="INBOXED">
+          <span class="card-tile rot-n">I</span>
+          <span class="card-tile rot-p">N</span>
+          <span class="card-tile rot-n">B</span>
+          <span class="card-tile rot-p">O</span>
+          <span class="card-tile rot-n">X</span>
+          <span class="card-tile rot-p">E</span>
+          <span class="card-tile rot-n">D</span>
+        </div>
+
+        <!-- Centered Core Content -->
+        <div class="centered-hero">
+          <h1 class="centered-headline">
+            The Daily Word Game that Lives <em>in Your Email</em>
+          </h1>
+
+          <!-- Uploaded Gmail Inbox Row -->
+          <div class="inbox-row-container" style="width: 720px; max-width: 100%; margin: 12px auto 20px;">
+            <img src="inbox-row.png" alt="Inboxed in Gmail: Inboxed #38 - Sept 23, 2026" class="inbox-row-image">
+          </div>
+
+          <div class="clue-quote" style="margin-bottom: 22px;">
+            “Intensely bright, lively, or full of energy”
+          </div>
+
+          <div class="centered-word-tiles">
+            <div class="word-tile-slot slot-revealed">V</div>
+            <div class="word-tile-slot slot-revealed">I</div>
+            <div class="word-tile-slot slot-empty"></div>
+            <div class="word-tile-slot slot-revealed">R</div>
+            <div class="word-tile-slot slot-revealed">A</div>
+            <div class="word-tile-slot slot-empty"></div>
+            <div class="word-tile-slot slot-revealed">T</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="guide-text">
+      <span>Container dimensions: 1200px width × 630px height (Exact 1.91:1 ratio)</span>
+      <span>Screenshot this frame directly or click "Download Dark (Centered)"</span>
+    </div>
+  </section>
+
+  <!-- Hidden canvas for downloads -->
+  <canvas id="downloadCanvas" width="1200" height="630"></canvas>
+
+  <script>
+    // Preload the user's uploaded Gmail inbox row image for instant canvas rendering
+    const inboxRowImg = new Image();
+    inboxRowImg.src = 'inbox-row.png';
+
+    function copySnippet() {
+      const code = document.getElementById('codeSnippet').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Favicon link tags copied to clipboard!');
+      });
+    }
+
+    // Client-side instant generator for Favicon PNG
+    function downloadFaviconPng(size, isTilted) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      ctx.clearRect(0, 0, size, size);
+
+      ctx.save();
+      ctx.translate(size / 2, size / 2);
+
+      if (isTilted) {
+        ctx.rotate(-8 * Math.PI / 180);
+      }
+
+      const tileSize = size * 0.78;
+      const radius = size * 0.16;
+      const half = tileSize / 2;
+
+      // Rounded rectangle
+      ctx.beginPath();
+      ctx.roundRect(-half, -half, tileSize, tileSize, radius);
+
+      // Shadow
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+      ctx.shadowBlur = size * 0.05;
+      ctx.shadowOffsetY = size * 0.02;
+
+      // Fill tile color: #D8FFC5
+      ctx.fillStyle = '#D8FFC5';
+      ctx.fill();
+
+      // Reset shadow for stroke
+      ctx.shadowColor = 'transparent';
+
+      // Border: #18181b
+      ctx.lineWidth = size * 0.045;
+      ctx.strokeStyle = '#18181b';
+      ctx.stroke();
+
+      // Text "I"
+      ctx.fillStyle = '#18181b';
+      ctx.font = `900 ${size * 0.52}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('I', 0, size * 0.02);
+
+      ctx.restore();
+
+      const link = document.createElement('a');
+      link.download = `favicon-${isTilted ? 'tilted' : 'upright'}-${size}x${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Client-side generator for Clean Split Card
+    function downloadSplitSocialCard(cardElementId, filename) {
+      const isDark = cardElementId.includes('Dark');
+      const canvas = document.getElementById('downloadCanvas');
+      canvas.width = 1200;
+      canvas.height = 630;
+      const ctx = canvas.getContext('2d');
+
+      // 1. Background
+      if (!isDark) {
+        const bgGrad = ctx.createLinearGradient(0, 0, 1200, 630);
+        bgGrad.addColorStop(0, '#f0fdf4');
+        bgGrad.addColorStop(0.5, '#ffffff');
+        bgGrad.addColorStop(1, '#f4f4f5');
+        ctx.fillStyle = bgGrad;
+      } else {
+        const bgGrad = ctx.createLinearGradient(0, 0, 1200, 630);
+        bgGrad.addColorStop(0, '#064e3b');
+        bgGrad.addColorStop(0.42, '#09090b');
+        bgGrad.addColorStop(1, '#000000');
+        ctx.fillStyle = bgGrad;
+      }
+      ctx.fillRect(0, 0, 1200, 630);
+
+      // Subtle decorative dots
+      ctx.fillStyle = isDark ? 'rgba(74, 222, 128, 0.08)' : 'rgba(22, 101, 52, 0.06)';
+      for (let x = 650; x < 1200; x += 32) {
+        for (let y = 0; y < 630; y += 32) {
+          ctx.beginPath();
+          ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // 2. Top Bar: Logo tiles (I N B O X E D)
+      const letters = ['I', 'N', 'B', 'O', 'X', 'E', 'D'];
+      const tileStartX = 80;
+      const tileStartY = 64;
+      const tileSize = 60;
+
+      letters.forEach((char, i) => {
+        ctx.save();
+        const curX = tileStartX + i * 58;
+        const curY = tileStartY;
+        const rot = (i % 2 === 0 ? -8 : 8) * Math.PI / 180;
+        const bg = (i % 2 === 0 ? '#D8FFC5' : '#C4F7CA');
+
+        ctx.translate(curX + tileSize / 2, curY + tileSize / 2);
+        ctx.rotate(rot);
+
+        ctx.beginPath();
+        ctx.roundRect(-tileSize / 2, -tileSize / 2, tileSize, tileSize, 12);
+        ctx.fillStyle = bg;
+        ctx.shadowColor = 'rgba(0,0,0,0.15)';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 4;
+        ctx.fill();
+
+        ctx.shadowColor = 'transparent';
+        ctx.lineWidth = 3.5;
+        ctx.strokeStyle = '#18181b';
+        ctx.stroke();
+
+        ctx.fillStyle = '#18181b';
+        ctx.font = '900 34px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(char, 0, 2);
+
+        ctx.restore();
+      });
+
+      // 3. Main Headline (one color, less weight, italicized "in Your Email")
+      ctx.save();
+      ctx.textAlign = 'left';
+      ctx.fillStyle = isDark ? '#ffffff' : '#09090b';
+      ctx.font = '700 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('The Daily Word Game', 80, 290);
+
+      const splitPart1 = 'that Lives ';
+      const splitPart2 = 'in Your Email';
+      ctx.fillText(splitPart1, 80, 355);
+      const splitPart1Width = ctx.measureText(splitPart1).width;
+      ctx.font = 'italic 700 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(splitPart2, 80 + splitPart1Width, 355);
+      ctx.restore();
+
+      // 4. Gameplay Preview (Direct Inbox Row + Clue + Tiles, no fake browser card)
+      const mockX = 640;
+      const mockY = 200;
+      const mockW = 480;
+
+      // Inbox Row Image
+      const rowW = mockW;
+      const rowH = Math.round(rowW * (76 / 994)); // ~37px
+      const rowX = mockX;
+      const rowY = mockY;
+
+      ctx.save();
+      if (inboxRowImg && inboxRowImg.complete && inboxRowImg.naturalWidth > 0) {
+        ctx.drawImage(inboxRowImg, rowX, rowY, rowW, rowH);
+      } else {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.roundRect(rowX, rowY, rowW, rowH, 6); ctx.fill();
+      }
+      ctx.strokeStyle = isDark ? '#27272a' : '#e4e4e7';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(rowX, rowY, rowW, rowH, 6); ctx.stroke();
+
+      // Clue Quote
+      ctx.textAlign = 'center';
+      ctx.fillStyle = isDark ? '#f4f4f5' : '#18181b';
+      ctx.font = '600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('“Intensely bright, lively, or full of energy”', mockX + mockW / 2, rowY + rowH + 46);
+
+      // Word Tiles (In-Game Mask Style: squares, some empty, gray revealed letters)
+      const slots = ['V', 'I', '', 'R', 'A', '', 'T'];
+      const slotSize = 52;
+      const slotGap = 10;
+      const slotsTotalW = slots.length * slotSize + (slots.length - 1) * slotGap;
+      const startSlotX = mockX + (mockW - slotsTotalW) / 2;
+      const slotY = rowY + rowH + 80;
+
+      slots.forEach((letter, idx) => {
+        const sx = startSlotX + idx * (slotSize + slotGap);
+        const isRevealed = letter !== '';
+
+        ctx.beginPath();
+        ctx.roundRect(sx, slotY, slotSize, slotSize, 8);
+        if (isRevealed) {
+          ctx.fillStyle = isDark ? '#27272a' : '#ffffff';
+          ctx.fill();
+          ctx.strokeStyle = isDark ? '#52525b' : '#a1a1aa';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.fillStyle = isDark ? '#a1a1aa' : '#52525b';
+          ctx.font = '800 26px ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco, Consolas, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(letter, sx + slotSize / 2, slotY + slotSize / 2 + 1);
+        } else {
+          ctx.fillStyle = isDark ? '#18181b' : '#ffffff';
+          ctx.fill();
+          ctx.strokeStyle = isDark ? '#3f3f46' : '#d4d4d8';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      });
+      ctx.restore();
+
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Client-side generator for Centered Card
+    function downloadCenteredSocialCard(isDark, filename) {
+      const canvas = document.getElementById('downloadCanvas');
+      canvas.width = 1200;
+      canvas.height = 630;
+      const ctx = canvas.getContext('2d');
+
+      // 1. Background
+      if (!isDark) {
+        const bgGrad = ctx.createRadialGradient(600, 315, 50, 600, 315, 600);
+        bgGrad.addColorStop(0, '#ffffff');
+        bgGrad.addColorStop(0.6, '#f8fafc');
+        bgGrad.addColorStop(1, '#f1f5f9');
+        ctx.fillStyle = bgGrad;
+      } else {
+        const bgGrad = ctx.createRadialGradient(600, 315, 50, 600, 315, 600);
+        bgGrad.addColorStop(0, '#064e3b');
+        bgGrad.addColorStop(0.5, '#09090b');
+        bgGrad.addColorStop(1, '#000000');
+        ctx.fillStyle = bgGrad;
+      }
+      ctx.fillRect(0, 0, 1200, 630);
+
+      // 2. Centered Logo: I N B O X E D
+      const letters = ['I', 'N', 'B', 'O', 'X', 'E', 'D'];
+      const tileSize = 60;
+      const totalW = letters.length * 58;
+      const startX = (1200 - totalW) / 2;
+      const startY = 56;
+
+      letters.forEach((char, i) => {
+        ctx.save();
+        const curX = startX + i * 58;
+        const curY = startY;
+        const rot = (i % 2 === 0 ? -8 : 8) * Math.PI / 180;
+        const bg = (i % 2 === 0 ? '#D8FFC5' : '#C4F7CA');
+
+        ctx.translate(curX + tileSize / 2, curY + tileSize / 2);
+        ctx.rotate(rot);
+
+        ctx.beginPath();
+        ctx.roundRect(-tileSize / 2, -tileSize / 2, tileSize, tileSize, 12);
+        ctx.fillStyle = bg;
+        ctx.shadowColor = 'rgba(0,0,0,0.18)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetY = 4;
+        ctx.fill();
+
+        ctx.shadowColor = 'transparent';
+        ctx.lineWidth = 3.5;
+        ctx.strokeStyle = '#18181b';
+        ctx.stroke();
+
+        ctx.fillStyle = '#18181b';
+        ctx.font = '900 34px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(char, 0, 2);
+
+        ctx.restore();
+      });
+
+      // 3. Centered Headline (one color, less weight, italicized "in Your Email")
+      ctx.save();
+      ctx.fillStyle = isDark ? '#ffffff' : '#09090b';
+      ctx.font = '700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('The Daily Word Game', 600, 205);
+
+      const centerPart1 = 'that Lives ';
+      const centerPart2 = 'in Your Email';
+      ctx.font = '700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const cW1 = ctx.measureText(centerPart1).width;
+      ctx.font = 'italic 700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const cW2 = ctx.measureText(centerPart2).width;
+      const cTotalW = cW1 + cW2;
+      const cStartX = (1200 - cTotalW) / 2;
+
+      ctx.textAlign = 'left';
+      ctx.font = '700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(centerPart1, cStartX, 265);
+      ctx.font = 'italic 700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText(centerPart2, cStartX + cW1, 265);
+      ctx.restore();
+
+      // 4. Centered Inbox Row (direct, no fake browser card)
+      const rowW = 720;
+      const rowH = Math.round(rowW * (76 / 994)); // ~55px
+      const rowX = (1200 - rowW) / 2;
+      const rowY = 300;
+
+      ctx.save();
+      if (inboxRowImg && inboxRowImg.complete && inboxRowImg.naturalWidth > 0) {
+        ctx.drawImage(inboxRowImg, rowX, rowY, rowW, rowH);
+      } else {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.roundRect(rowX, rowY, rowW, rowH, 8); ctx.fill();
+      }
+      ctx.strokeStyle = isDark ? '#27272a' : '#e4e4e7';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(rowX, rowY, rowW, rowH, 8); ctx.stroke();
+
+      // Clue Quote
+      const clueText = '“Intensely bright, lively, or full of energy”';
+      ctx.font = '600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = isDark ? '#f4f4f5' : '#18181b';
+      ctx.textAlign = 'center';
+      ctx.fillText(clueText, 600, rowY + rowH + 46);
+
+      // Centered Word Tiles (In-Game Mask Style: squares, some empty, gray revealed letters)
+      const slots = ['V', 'I', '', 'R', 'A', '', 'T'];
+      const slotSize = 58;
+      const slotGap = 12;
+      const slotsTotalW = slots.length * slotSize + (slots.length - 1) * slotGap;
+      const startSlotX = (1200 - slotsTotalW) / 2;
+      const slotY = rowY + rowH + 78;
+
+      slots.forEach((letter, idx) => {
+        const sx = startSlotX + idx * (slotSize + slotGap);
+        const isRevealed = letter !== '';
+
+        ctx.beginPath();
+        ctx.roundRect(sx, slotY, slotSize, slotSize, 10);
+        if (isRevealed) {
+          ctx.fillStyle = isDark ? '#27272a' : '#ffffff';
+          ctx.fill();
+          ctx.strokeStyle = isDark ? '#52525b' : '#a1a1aa';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.fillStyle = isDark ? '#a1a1aa' : '#52525b';
+          ctx.font = '800 28px ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco, Consolas, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(letter, sx + slotSize / 2, slotY + slotSize / 2 + 1);
+        } else {
+          ctx.fillStyle = isDark ? '#18181b' : '#ffffff';
+          ctx.fill();
+          ctx.strokeStyle = isDark ? '#3f3f46' : '#d4d4d8';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      });
+      ctx.restore();
+
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  </script>
+</body>
+</html>

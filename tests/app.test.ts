@@ -267,7 +267,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     const res = await app.request('/')
     expect(res.status).toBe(200)
     const html = await res.text()
-    expect(html).toContain('The Daily Word Game in Your Inbox')
+    expect(html).toContain('The Daily Word Game that Lives in Your Email')
     expect(html).toContain('action="/api/subscribe"')
     expect(html).toContain('Enter your email address')
     expect(html).toContain('Subscribe to Daily Puzzles')
@@ -278,7 +278,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     const res = await app.request('/signup')
     expect(res.status).toBe(200)
     const html = await res.text()
-    expect(html).toContain('The Daily Word Game in Your Inbox')
+    expect(html).toContain('The Daily Word Game that Lives in Your Email')
     expect(html).toContain('action="/api/subscribe"')
   })
 
@@ -496,6 +496,70 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(res.headers.get('content-type')).toBe('image/png')
     const buffer = await res.arrayBuffer()
     expect(buffer.byteLength).toBe(18686)
+  })
+
+  it('should serve the inbox row image at GET /inbox-row.png', async () => {
+    const res = await app.request('/inbox-row.png')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('image/png')
+    const buffer = await res.arrayBuffer()
+    expect(buffer.byteLength).toBeGreaterThan(10000)
+  })
+
+  it('should serve the official light social share image at GET /og-image.png', async () => {
+    const res = await app.request('/og-image.png')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('image/png')
+    const buffer = await res.arrayBuffer()
+    expect(buffer.byteLength).toBeGreaterThan(50000)
+  })
+
+  it('should serve the upright favicon PNG at GET /favicon.png', async () => {
+    const res = await app.request('/favicon.png')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toBe('image/png')
+    const buffer = await res.arrayBuffer()
+    expect(buffer.byteLength).toBeGreaterThan(5000)
+  })
+
+  it('should serve the SVG favicon at GET /favicon.svg and /favicon.ico', async () => {
+    const svgRes = await app.request('/favicon.svg')
+    expect(svgRes.status).toBe(200)
+    expect(svgRes.headers.get('content-type')).toContain('image/svg+xml')
+    const svgText = await svgRes.text()
+    expect(svgText).toContain('<svg')
+    expect(svgText).toContain('#D8FFC5')
+    expect(svgText).toContain('>I<')
+    expect(svgText).not.toContain('rotate')
+
+    const icoRes = await app.request('/favicon.ico')
+    expect(icoRes.status).toBe(200)
+    expect(icoRes.headers.get('content-type')).toContain('image/svg+xml')
+  })
+
+  it('should serve the Brand Assets showcase page at GET /brand-assets', async () => {
+    const res = await app.request('/brand-assets')
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/html')
+    const html = await res.text()
+    expect(html).toContain('Inboxed Brand Kit')
+    expect(html).toContain('Favicon & App Icon')
+    expect(html).toContain('Social Media Share Card')
+    expect(html).toContain('1200 × 630')
+    expect(html).toContain('socialCardLight')
+    expect(html).toContain('socialCardDark')
+    expect(html).toContain('inbox-row.png')
+  })
+
+  it('should include favicon link and OpenGraph tags in signup landing page', async () => {
+    const res = await app.request('/signup')
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('<link rel="icon" type="image/svg+xml" href="/favicon.svg">')
+    expect(html).toContain('property="og:title"')
+    expect(html).toContain('property="og:image" content="https://inboxed.fun/og-image.png"')
+    expect(html).toContain('name="twitter:card" content="summary_large_image"')
+    expect(html).toContain('name="twitter:image" content="https://inboxed.fun/og-image.png"')
   })
 
   it('should render the privacy policy at GET /privacy', async () => {
@@ -736,6 +800,63 @@ describe('Email Signup Landing Page & Subscribe API', () => {
       })
       expect(prodRemoveRes.status).toBe(404)
     })
+  })
+})
+
+describe('Cold Start & Network Resilience Handling', () => {
+  it('should parse date from POST body in /api/guess when query date is missing', async () => {
+    const testEmail = `body_date_user_${Date.now()}@example.com`
+    const res = await app.request('/api/guess', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        email: testEmail,
+        date: '2026-08-05',
+        'user-guess': 'RESILIENT',
+      }).toString(),
+    })
+
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as any
+    // Aug 5 2026 puzzle target word is VIBRANT (7 letters), RESILIENT is 9 letters so should trigger invalidLength(7)
+    expect(data.wordLength).toBe(7)
+    expect(data.lastMessage).toContain('7-letter')
+  })
+
+  it('should parse date from POST body in /api/hint when query date is missing', async () => {
+    const testEmail = `body_hint_user_${Date.now()}@example.com`
+    const res = await app.request('/api/hint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        email: testEmail,
+        date: '2026-08-05',
+      }).toString(),
+    })
+
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as any
+    expect(data.hintsUsed).toBe(1)
+    expect(data.wordLength).toBe(7)
+  })
+
+  it('should include diffable and fallback on amp-list components in EMAIL_HTML', () => {
+    expect(EMAIL_HTML).toContain('<amp-list id="stateList" width="auto" height="204" layout="fixed-height" diffable')
+    expect(EMAIL_HTML).toContain('<amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" diffable')
+    expect(EMAIL_HTML).toContain('on="tap:stateList.refresh"')
+    expect(EMAIL_HTML).toContain('on="tap:leaderboardList.refresh"')
+  })
+
+  it('should render resilient submit-error handler preserving gameState without blanking stateList', () => {
+    // Must NOT clobber gameState or call stateList.refresh on error
+    expect(EMAIL_HTML).not.toContain('submit-error:AMP.setState({ gameState: event.response }),stateList.refresh')
+    expect(EMAIL_HTML).toContain('submit-error:AMP.setState({ gameState: { lastMessage:')
+  })
+
+  it('should include submitting feedback CSS and hidden date inputs in forms', () => {
+    expect(EMAIL_HTML).toContain('form.amp-form-submitting .btn-primary')
+    expect(EMAIL_HTML).toContain('btn-text-submitting')
+    expect(EMAIL_HTML).toContain('<input type="hidden" name="date" value="USER_DATE_PLACEHOLDER">')
   })
 })
 

@@ -76,7 +76,7 @@ export async function buildPuzzleEmailContent(
   }).join('')
 
   const placeholderDefsHtml = `<div class="active-clue-card">${placeholderClueCardsHtml}</div><div class="clue-tabs-bar">${placeholderTabsHtml}</div>`
-  ampHtml = ampHtml.replace('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
+  ampHtml = ampHtml.replaceAll('__PLACEHOLDER_DEFS__', placeholderDefsHtml)
 
   const placeholderMaskHtml = state.letterMask.map((char, index) => {
     const isRevealed = char !== '_' && char !== ''
@@ -84,7 +84,7 @@ export async function buildPuzzleEmailContent(
     const revClass = isRevealed ? ' tile-revealed' : ''
     return `<span class="mask-tile${revClass}" [class]="'mask-tile ' + ((typed.word || '').slice(${index}, ${index + 1}) ? 'tile-typed' : '${isRevealed ? 'tile-revealed' : ''}')" [text]="(typed.word || '').slice(${index}, ${index + 1}) || '${displayedChar}'">${displayedChar}</span>`
   }).join('')
-  ampHtml = ampHtml.replace('__PLACEHOLDER_MASK_TILES__', placeholderMaskHtml)
+  ampHtml = ampHtml.replaceAll('__PLACEHOLDER_MASK_TILES__', placeholderMaskHtml)
 
   const coworkerCount = await getCoworkerCount(kv, domain, userEmail)
   const playerCount = await getPlayerCount(kv)

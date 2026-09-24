@@ -63,6 +63,51 @@ export function registerPageRoutes(app: Hono<{ Bindings: Bindings }>) {
 
   app.get('/demo-4.mp4', (c) => serveVideo(c, 'demo-4.mp4', 'video/mp4'))
   app.get('/demo.mp4', (c) => serveVideo(c, 'demo.mp4', 'video/mp4'))
+  app.get('/inbox-row.png', (c) => serveVideo(c, 'inbox-row.png', 'image/png'))
+  app.get('/og-image.png', (c) => serveVideo(c, 'og-image.png', 'image/png'))
+  app.get('/inboxed-social-share-light.png', (c) => serveVideo(c, 'inboxed-social-share-light.png', 'image/png'))
+  app.get('/favicon-upright-512x512.png', (c) => serveVideo(c, 'favicon-upright-512x512.png', 'image/png'))
+  app.get('/favicon.png', (c) => serveVideo(c, 'favicon.png', 'image/png'))
+
+  // Serve static SVG favicon based on the 'I' tile from the logo (Upright tile)
+  const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="6" y="6" width="88" height="88" rx="20" fill="#D8FFC5" stroke="#18181b" stroke-width="7"/><text x="50" y="69" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="62" font-weight="900" fill="#18181b" text-anchor="middle">I</text></svg>`
+
+  app.get('/favicon.svg', (c) => {
+    return new Response(FAVICON_SVG, {
+      headers: {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'public, max-age=86400',
+      },
+    })
+  })
+
+  app.get('/favicon.ico', (c) => {
+    return new Response(FAVICON_SVG, {
+      headers: {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'public, max-age=86400',
+      },
+    })
+  })
+
+  // Serve Brand Assets showcase page (Favicon & Social Share Preview)
+  app.get('/brand-assets', async (c) => {
+    if (c.env?.ASSETS) {
+      try {
+        const assetRes = await c.env.ASSETS.fetch(new Request(new URL('/brand-assets.html', c.req.url).toString(), c.req.raw))
+        if (assetRes.status !== 404) return assetRes
+      } catch (_) {}
+    }
+    try {
+      const fs = await import('fs')
+      const path = await import('path')
+      const filePath = path.resolve('public', 'brand-assets.html')
+      if (fs.existsSync(filePath)) {
+        return c.html(fs.readFileSync(filePath, 'utf-8'))
+      }
+    } catch (_) {}
+    return c.notFound()
+  })
 
   // Explicit Email Signup Landing Page route
   app.get('/signup', async (c) => {

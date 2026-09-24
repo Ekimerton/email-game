@@ -724,6 +724,7 @@ export const DEV_WORKBENCH_HTML = `  return \`<!doctype html>
       <button type="button" class="page-tab-btn" data-page="invalid">⚠️ Invalid / Expired Token</button>
       <button type="button" class="page-tab-btn" data-page="privacy">🔒 Privacy Policy</button>
       <button type="button" class="page-tab-btn" data-page="subscribers">👥 Subscribed Emails</button>
+      <button type="button" class="page-tab-btn" data-page="brand">🎨 Brand Assets</button>
     </div>
   </nav>
 
@@ -860,6 +861,12 @@ export const DEV_WORKBENCH_HTML = `  return \`<!doctype html>
         desc: 'Live directory of confirmed email subscribers fetched directly from the production database at https://inboxed.fun.',
         badge: 'Production DB',
         url: '/dev/page/subscribers?source=prod'
+      },
+      brand: {
+        title: '🎨 Brand Assets (Favicon & Social Share Cards)',
+        desc: 'Pixel-perfect master favicon (512×512) and 1200×630 social share cards ready for screenshots or 1-click export.',
+        badge: 'Assets',
+        url: '/brand-assets'
       }
     };
 

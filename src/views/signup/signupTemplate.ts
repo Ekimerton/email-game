@@ -19,7 +19,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 .logo-tiles {
   display: inline-flex;
@@ -56,12 +56,14 @@ h1 {
   letter-spacing: -0.5px;
   line-height: 1.25;
   margin-bottom: 4px;
+  text-align: center;
 }
 .subtitle {
   font-size: 13px;
   color: #52525b;
   line-height: 1.35;
   margin-bottom: 12px;
+  text-align: center;
 }
 .video-card {
   width: 100%;
@@ -113,6 +115,41 @@ h1 {
   font-size: 14px;
   padding-left: 2px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+.video-replay-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(24, 24, 27, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  font-family: inherit;
+}
+.video-replay-btn:hover {
+  background: rgba(24, 24, 27, 0.98);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+.video-replay-btn:active {
+  transform: translate(-50%, -50%) scale(0.96);
+}
+.replay-icon {
+  font-size: 16px;
+  line-height: 1;
 }
 .preview-card {
   background: #fafafa;
@@ -332,8 +369,21 @@ export const SIGNUP_HTML = `<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inboxed - The Daily Word Game in Your Inbox</title>
+  <title>Inboxed - The Daily Word Game that Lives in Your Email</title>
   <meta name="description" content="A daily synonym word-guessing game right inside your email. Misses unlock new definitions. Compete with coworkers on your company leaderboard.">
+  <meta property="og:title" content="Inboxed - The Daily Word Game that Lives in Your Email">
+  <meta property="og:description" content="A daily synonym word-guessing game right inside your email. Misses unlock new definitions. Compete with coworkers on your company leaderboard.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://inboxed.fun">
+  <meta property="og:image" content="https://inboxed.fun/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Inboxed - The Daily Word Game that Lives in Your Email">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Inboxed - The Daily Word Game that Lives in Your Email">
+  <meta name="twitter:description" content="A daily synonym word-guessing game right inside your email. Misses unlock new definitions. Compete with coworkers on your company leaderboard.">
+  <meta name="twitter:image" content="https://inboxed.fun/og-image.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&display=swap">
   <style>* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -356,7 +406,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 .logo-tiles {
   display: inline-flex;
@@ -393,12 +443,14 @@ h1 {
   letter-spacing: -0.5px;
   line-height: 1.25;
   margin-bottom: 4px;
+  text-align: center;
 }
 .subtitle {
   font-size: 13px;
   color: #52525b;
   line-height: 1.35;
   margin-bottom: 12px;
+  text-align: center;
 }
 .video-card {
   width: 100%;
@@ -450,6 +502,41 @@ h1 {
   font-size: 14px;
   padding-left: 2px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+.video-replay-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(24, 24, 27, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  font-family: inherit;
+}
+.video-replay-btn:hover {
+  background: rgba(24, 24, 27, 0.98);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+.video-replay-btn:active {
+  transform: translate(-50%, -50%) scale(0.96);
+}
+.replay-icon {
+  font-size: 16px;
+  line-height: 1;
 }
 .preview-card {
   background: #fafafa;
@@ -677,7 +764,7 @@ h1 {
       </div>
     </div>
 
-    <h1>The Daily Word Game in Your Inbox</h1>
+    <h1>The Daily Word Game that Lives in Your Email</h1>
     <p class="subtitle">
       Guess the hidden word from its definitions. Every morning at 9:00 AM, right inside your email.
     </p>
@@ -693,6 +780,10 @@ h1 {
         <div class="video-play-btn">▶</div>
         <span>Sample Game Video</span>
       </div>
+      <button type="button" id="video-replay-btn" class="video-replay-btn" aria-label="Replay video" style="display: none;">
+        <span class="replay-icon">↻</span>
+        <span class="replay-text">Replay</span>
+      </button>
     </div>
 
     <!-- Interactive / Clue Teaser Preview -->
@@ -741,23 +832,49 @@ h1 {
   </div>
 
   <script>
-    // Hide placeholder once video starts playing
+    // Video controls: hide placeholder on play, show replay button when ended
     const demoVideo = document.getElementById('demo-video');
     const placeholder = document.getElementById('video-placeholder');
-    if (demoVideo && placeholder) {
-      const hidePlaceholder = () => { placeholder.style.display = 'none'; };
-      demoVideo.addEventListener('playing', hidePlaceholder);
-      demoVideo.addEventListener('loadeddata', hidePlaceholder);
-      demoVideo.addEventListener('canplay', hidePlaceholder);
-      // Ensure video sits on last frame when finished
+    const replayBtn = document.getElementById('video-replay-btn');
+
+    if (demoVideo) {
+      if (placeholder) {
+        const hidePlaceholder = () => { placeholder.style.display = 'none'; };
+        demoVideo.addEventListener('playing', hidePlaceholder);
+        demoVideo.addEventListener('loadeddata', hidePlaceholder);
+        demoVideo.addEventListener('canplay', hidePlaceholder);
+      }
+
+      const showReplay = () => {
+        if (replayBtn) replayBtn.style.display = 'flex';
+      };
+      const hideReplay = () => {
+        if (replayBtn) replayBtn.style.display = 'none';
+      };
+
+      const replayVideo = () => {
+        hideReplay();
+        demoVideo.currentTime = 0;
+        demoVideo.play();
+      };
+
+      // Ensure video sits on last frame when finished and shows replay button
       demoVideo.addEventListener('ended', () => {
         demoVideo.pause();
+        showReplay();
       });
+
+      if (replayBtn) {
+        replayBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          replayVideo();
+        });
+      }
+
       // Allow tapping video to replay from start if finished
       demoVideo.addEventListener('click', () => {
         if (demoVideo.ended) {
-          demoVideo.currentTime = 0;
-          demoVideo.play();
+          replayVideo();
         }
       });
     }

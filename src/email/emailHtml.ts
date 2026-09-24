@@ -472,6 +472,31 @@ export const EMAIL_HTML = `<!doctype html>
             opacity: 0.5;
         }
 
+        .btn-text-submitting {
+            display: none;
+        }
+
+        form.amp-form-submitting .btn-primary {
+            opacity: 0.6;
+        }
+
+        form.amp-form-submitting .btn-hint {
+            opacity: 0.5;
+        }
+
+        form.amp-form-submitting .btn-text-default {
+            display: none;
+        }
+
+        form.amp-form-submitting .btn-text-submitting {
+            display: inline;
+        }
+
+        .message-banner-retry {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
         /* Stats Bar */
         .stats-bar {
             display: flex;
@@ -758,7 +783,7 @@ export const EMAIL_HTML = `<!doctype html>
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="204" layout="fixed-height"
+                <amp-list id="stateList" width="auto" height="204" layout="fixed-height" diffable
                     src="https://inboxed.fun/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
@@ -784,7 +809,9 @@ export const EMAIL_HTML = `<!doctype html>
                                 </div>
                             </div>
 
-                            <div class="message-banner {{#hasWon}}message-banner-win{{/hasWon}}">{{lastMessage}}</div>
+                            <div class="message-banner {{#hasWon}}message-banner-win{{/hasWon}}"
+                                [class]="'message-banner' + (gameState.hasWon ? ' message-banner-win' : '')"
+                                [text]="gameState.lastMessage || '{{lastMessage}}'">{{lastMessage}}</div>
 
                             <div class="revealed-letters-section">
                                 <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
@@ -802,7 +829,20 @@ export const EMAIL_HTML = `<!doctype html>
                             <div class="definitions-section">
                                 __PLACEHOLDER_DEFS__
                             </div>
-                            <div class="message-banner">Guess the word!</div>
+                            <div class="message-banner" [text]="gameState.lastMessage || 'Guess the word!'">Guess the word!</div>
+                            <div class="revealed-letters-section">
+                                <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                    __PLACEHOLDER_MASK_TILES__
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div fallback>
+                        <div class="state-container">
+                            <div class="definitions-section">
+                                __PLACEHOLDER_DEFS__
+                            </div>
+                            <div class="message-banner message-banner-retry" role="button" tabindex="0" on="tap:stateList.refresh" [text]="gameState.lastMessage || 'Connection issue &bull; Tap to reconnect'">Connection issue &bull; Tap to reconnect</div>
                             <div class="revealed-letters-section">
                                 <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
                                     __PLACEHOLDER_MASK_TILES__
@@ -817,9 +857,10 @@ export const EMAIL_HTML = `<!doctype html>
                     <form id="guess-form" method="POST"
                         action-xhr="https://inboxed.fun/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
                         on="submit-success:AMP.setState({ gameState: event.response, clueView: { activeClue: event.response.revealedCount }, typed: { word: '' } }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
-                            submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
+                            submit-error:AMP.setState({ gameState: { lastMessage: (event.response && (event.response.lastMessage || event.response.error)) ? (event.response.lastMessage || event.response.error) : 'Connection issue — tap Submit Guess to try again.' } })">
 
                         <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
+                        <input type="hidden" name="date" value="USER_DATE_PLACEHOLDER">
 
                         <div class="wordle-input-wrapper">
                             <input type="text" id="guess-input" name="user-guess" class="hidden-guess-input"
@@ -833,7 +874,8 @@ export const EMAIL_HTML = `<!doctype html>
                                 Letter Hint
                             </button>
                             <button type="submit" class="btn btn-primary">
-                                Submit Guess
+                                <span class="btn-text-default">Submit Guess</span>
+                                <span class="btn-text-submitting">Submitting...</span>
                             </button>
                         </div>
                     </form>
@@ -842,8 +884,9 @@ export const EMAIL_HTML = `<!doctype html>
                     <form id="hint-form" method="POST"
                         action-xhr="https://inboxed.fun/api/hint?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
                         hidden on="submit-success:AMP.setState({ gameState: event.response }),stateList.refresh;
-                            submit-error:AMP.setState({ gameState: event.response }),stateList.refresh">
+                            submit-error:AMP.setState({ gameState: { lastMessage: (event.response && (event.response.lastMessage || event.response.error)) ? (event.response.lastMessage || event.response.error) : 'Connection issue — tap Letter Hint to try again.' } })">
                         <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
+                        <input type="hidden" name="date" value="USER_DATE_PLACEHOLDER">
                     </form>
                 </div>
             </div>
@@ -860,7 +903,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         <!-- 2. Organization Leaderboard -->
         <div class="leaderboard-section">
-            <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height"
+            <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" diffable
                 src="https://inboxed.fun/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                 <template type="amp-mustache">
                     <div class="leaderboard-container">
@@ -917,6 +960,13 @@ export const EMAIL_HTML = `<!doctype html>
                                 <span class="player-email">michael@company.com</span>
                                 <span class="player-score">650 points &bull; 5 guesses</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div fallback>
+                    <div class="leaderboard-container">
+                        <div class="leaderboard-lock-banner message-banner-retry" role="button" tabindex="0" on="tap:leaderboardList.refresh">
+                            Connection issue &bull; Tap to load leaderboard
                         </div>
                     </div>
                 </div>

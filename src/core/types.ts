@@ -59,6 +59,7 @@ export type Bindings = {
   TEST_EMAILS?: string
   TEST_EMAIL?: string
   ENVIRONMENT?: string
+  ASSETS?: any
 }
 
 export interface DailyEmailDispatchResult {

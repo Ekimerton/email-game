@@ -19,7 +19,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 .logo-tiles {
   display: inline-flex;
@@ -56,12 +56,14 @@ h1 {
   letter-spacing: -0.5px;
   line-height: 1.25;
   margin-bottom: 4px;
+  text-align: center;
 }
 .subtitle {
   font-size: 13px;
   color: #52525b;
   line-height: 1.35;
   margin-bottom: 12px;
+  text-align: center;
 }
 .video-card {
   width: 100%;
@@ -113,6 +115,41 @@ h1 {
   font-size: 14px;
   padding-left: 2px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+.video-replay-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(24, 24, 27, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  font-family: inherit;
+}
+.video-replay-btn:hover {
+  background: rgba(24, 24, 27, 0.98);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+.video-replay-btn:active {
+  transform: translate(-50%, -50%) scale(0.96);
+}
+.replay-icon {
+  font-size: 16px;
+  line-height: 1;
 }
 .preview-card {
   background: #fafafa;
