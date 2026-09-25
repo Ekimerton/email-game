@@ -673,23 +673,49 @@
     .social-share-card.centered-layout {
       align-items: center;
       text-align: center;
-      padding: 72px 80px;
+      padding: 50px 80px 0;
+      justify-content: space-between;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .social-share-card.centered-layout.card-dark {
+      background: #09090b;
     }
 
     .centered-hero {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      margin: auto 0;
+      width: 100%;
+      height: 100%;
+      justify-content: space-between;
+    }
+
+    .centered-header-group {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin-top: -40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 28px;
+      width: 100%;
+      max-width: 900px;
+      z-index: 1;
     }
 
     .centered-headline {
-      font-size: 48px;
+      font-size: 46px;
       font-weight: 700;
-      line-height: 1.15;
+      line-height: 1.18;
       letter-spacing: -1px;
       max-width: 860px;
+      margin: 0;
     }
 
     .centered-headline em {
@@ -704,52 +730,65 @@
       color: #ffffff;
     }
 
-    .centered-clue-card {
-      padding: 16px 28px;
-      border-radius: 12px;
-      font-size: 20px;
+    /* Bottom Email Box (Pushed up against the bottom of the social image so it looks cut off) */
+    .centered-email-box {
+      width: 860px;
+      max-width: 92%;
+      background: #ffffff;
+      border: 1.5px solid #e4e4e7;
+      border-bottom: none;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.08), 0 -2px 10px rgba(0, 0, 0, 0.03);
+      padding: 28px 44px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: auto;
+      margin-bottom: -20px; /* moved down 10px */
+      position: relative;
+      z-index: 2;
+    }
+
+    .card-dark .centered-email-box {
+      background: #121316;
+      border-color: #27272a;
+      box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.5);
+    }
+
+    .sheet-inbox-row {
+      width: 100%;
+      max-width: 740px;
+      margin: 0 auto 28px;
+    }
+
+    .sheet-clue-quote {
+      font-size: 23px;
       font-weight: 600;
-      margin: 8px 0 16px;
-      max-width: 680px;
+      line-height: 1.35;
+      text-align: center;
+      margin-bottom: 22px;
     }
 
-    .card-light .centered-clue-card {
-      background: #f4f4f5;
-      color: #18181b;
-      border: 1px solid #e4e4e7;
+    .card-light .sheet-clue-quote {
+      color: #3f3f46;
     }
 
-    .card-dark .centered-clue-card {
-      background: #18181b;
-      color: #f4f4f5;
-      border: 1px solid #27272a;
+    .card-dark .sheet-clue-quote {
+      color: #d4d4d8;
     }
 
-    .centered-word-tiles {
+    .sheet-word-tiles {
       display: flex;
       gap: 12px;
       justify-content: center;
+      margin-bottom: -22px; /* letter tiles overflow and get cut off by card bottom */
     }
 
-    .centered-word-tiles .word-tile-slot {
-      width: 58px;
-      height: 58px;
-      font-size: 28px;
+    .sheet-word-tiles .word-tile-slot {
+      width: 64px;
+      height: 64px;
+      font-size: 32px;
       border-radius: 10px;
-    }
-
-    .centered-bottom-url {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.3px;
-    }
-
-    .card-light .centered-bottom-url {
-      color: #14532d;
-    }
-
-    .card-dark .centered-bottom-url {
-      color: #86efac;
     }
 
     .guide-text {
@@ -1096,69 +1135,79 @@
     </div>
   </section>
 
-  <!-- SECTION 4: MINIMALIST CENTERED EDITION (NYT GAMES / WORDLE STYLE) -->
+  <!-- SECTION 4: MINIMALIST CENTERED EDITION (LIGHT MODE & COMPACT) -->
   <section id="social-centered" class="section-container">
     <div class="section-header">
       <div>
-        <h2 class="section-title">4. Minimalist Centered Edition (Alternative Layout)</h2>
-        <p class="section-meta">Clean centered layout focusing purely on the logo, the core hook, and the letter tiles.</p>
+        <h2 class="section-title">4. Minimalist Centered Edition — Light Theme (Compact)</h2>
+        <p class="section-meta">Centered layout in light mode with scaled-down email inbox preview and compact puzzle tiles.</p>
       </div>
       <div class="action-row">
         <button class="btn-download" onclick="downloadCenteredSocialCard(false, 'inboxed-social-centered-light.png')">
-          ⬇ Download Light (Centered)
+          ⬇ Download Light (Centered - Compact)
         </button>
-        <button class="btn-download" onclick="downloadCenteredSocialCard(true, 'inboxed-social-centered-dark.png')">
-          ⬇ Download Dark (Centered)
+        <button class="btn-secondary" onclick="downloadCenteredSocialCard(true, 'inboxed-social-centered-dark.png')">
+          ⬇ Download Dark (Centered - Compact)
+        </button>
+        <button class="btn-secondary" onclick="toggleCenteredPreviewTheme()">
+          🌗 Toggle Dark/Light Preview
         </button>
       </div>
     </div>
 
-    <!-- Centered Card Preview (Dark Edition) -->
+    <!-- Centered Card Preview (Light Edition - Compact) -->
     <div class="preview-stage-container">
-      <div id="socialCardCenteredDark" class="social-share-card card-dark centered-layout">
-        <div class="card-bg-deco" style="right: auto; left: 50%; transform: translateX(-50%); width: 1000px; mask-image: radial-gradient(circle, black 30%, transparent 70%);"></div>
-
-        <!-- Centered Logo Tiles -->
-        <div class="card-logo-tiles" aria-label="INBOXED">
-          <span class="card-tile rot-n">I</span>
-          <span class="card-tile rot-p">N</span>
-          <span class="card-tile rot-n">B</span>
-          <span class="card-tile rot-p">O</span>
-          <span class="card-tile rot-n">X</span>
-          <span class="card-tile rot-p">E</span>
-          <span class="card-tile rot-n">D</span>
-        </div>
+      <div id="socialCardCenteredLight" class="social-share-card card-light centered-layout">
+        <div class="card-bg-deco" style="right: auto; left: 50%; transform: translateX(-50%); width: 1000px; mask-image: radial-gradient(circle, black 30%, transparent 70%); -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);"></div>
 
         <!-- Centered Core Content -->
         <div class="centered-hero">
-          <h1 class="centered-headline">
-            The Daily Word Game that Lives <em>in Your Email</em>
-          </h1>
+          <div class="centered-header-group">
+            <!-- Centered Logo Tiles -->
+            <div class="card-logo-tiles" aria-label="INBOXED">
+              <span class="card-tile rot-n">I</span>
+              <span class="card-tile rot-p">N</span>
+              <span class="card-tile rot-n">B</span>
+              <span class="card-tile rot-p">O</span>
+              <span class="card-tile rot-n">X</span>
+              <span class="card-tile rot-p">E</span>
+              <span class="card-tile rot-n">D</span>
+            </div>
 
-          <!-- Uploaded Gmail Inbox Row -->
-          <div class="inbox-row-container" style="width: 720px; max-width: 100%; margin: 12px auto 20px;">
-            <img src="inbox-row.png" alt="Inboxed in Gmail: Inboxed #38 - Sept 23, 2026" class="inbox-row-image">
+            <h1 class="centered-headline">
+              The Daily Word Game that Lives <em>in Your Email</em>
+            </h1>
           </div>
 
-          <div class="clue-quote" style="margin-bottom: 22px;">
-            “Intensely bright, lively, or full of energy”
-          </div>
+          <!-- Bottom Email Box (Peeking & Cut Off at Bottom) -->
+          <div class="centered-email-box">
+            <!-- 1. Uploaded Gmail Inbox Row -->
+            <div class="inbox-row-container sheet-inbox-row">
+              <img src="inbox-row.png" alt="Inboxed in Gmail: Inboxed #38 - Sept 23, 2026" class="inbox-row-image">
+            </div>
 
-          <div class="centered-word-tiles">
-            <div class="word-tile-slot slot-revealed">V</div>
-            <div class="word-tile-slot slot-revealed">I</div>
-            <div class="word-tile-slot slot-empty"></div>
-            <div class="word-tile-slot slot-revealed">R</div>
-            <div class="word-tile-slot slot-revealed">A</div>
-            <div class="word-tile-slot slot-empty"></div>
-            <div class="word-tile-slot slot-revealed">T</div>
+            <!-- 2. Puzzle Teaser: Clue Quote -->
+            <div class="clue-quote sheet-clue-quote">
+              “Intensely bright, lively, or full of energy”
+            </div>
+
+            <!-- 3. Puzzle Teaser: Letter Tiles -->
+            <div class="centered-word-tiles sheet-word-tiles">
+              <div class="word-tile-slot slot-revealed">V</div>
+              <div class="word-tile-slot slot-revealed">I</div>
+              <div class="word-tile-slot slot-empty"></div>
+              <div class="word-tile-slot slot-revealed">R</div>
+              <div class="word-tile-slot slot-revealed">A</div>
+              <div class="word-tile-slot slot-empty"></div>
+              <div class="word-tile-slot slot-revealed">T</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <div class="guide-text">
       <span>Container dimensions: 1200px width × 630px height (Exact 1.91:1 ratio)</span>
-      <span>Screenshot this frame directly or click "Download Dark (Centered)"</span>
+      <span>Screenshot this frame directly or click "Download Light (Centered - Compact)"</span>
     </div>
   </section>
 
@@ -1397,28 +1446,29 @@
       canvas.height = 630;
       const ctx = canvas.getContext('2d');
 
-      // 1. Background
-      if (!isDark) {
-        const bgGrad = ctx.createRadialGradient(600, 315, 50, 600, 315, 600);
-        bgGrad.addColorStop(0, '#ffffff');
-        bgGrad.addColorStop(0.6, '#f8fafc');
-        bgGrad.addColorStop(1, '#f1f5f9');
-        ctx.fillStyle = bgGrad;
-      } else {
-        const bgGrad = ctx.createRadialGradient(600, 315, 50, 600, 315, 600);
-        bgGrad.addColorStop(0, '#064e3b');
-        bgGrad.addColorStop(0.5, '#09090b');
-        bgGrad.addColorStop(1, '#000000');
-        ctx.fillStyle = bgGrad;
-      }
+      // 1. Background (Solid clean color, no gradient)
+      ctx.fillStyle = isDark ? '#09090b' : '#ffffff';
       ctx.fillRect(0, 0, 1200, 630);
 
-      // 2. Centered Logo: I N B O X E D
+      // Subtle decorative dots
+      ctx.fillStyle = isDark ? 'rgba(74, 222, 128, 0.08)' : 'rgba(22, 101, 52, 0.05)';
+      for (let x = 160; x <= 1040; x += 32) {
+        for (let y = 60; y <= 570; y += 32) {
+          const dist = Math.hypot(x - 600, y - 315);
+          if (dist < 460) {
+            ctx.beginPath();
+            ctx.arc(x, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      // 2. Logo & Subtitle absolute centered in the card with -40px vertical offset (Canvas center Y = 315 - 40 = 275)
       const letters = ['I', 'N', 'B', 'O', 'X', 'E', 'D'];
       const tileSize = 60;
       const totalW = letters.length * 58;
       const startX = (1200 - totalW) / 2;
-      const startY = 56;
+      const startY = 174;
 
       letters.forEach((char, i) => {
         ctx.save();
@@ -1452,12 +1502,12 @@
         ctx.restore();
       });
 
-      // 3. Centered Headline (one color, less weight, italicized "in Your Email")
+      // 3. Headline (offset by -40px)
       ctx.save();
       ctx.fillStyle = isDark ? '#ffffff' : '#09090b';
       ctx.font = '700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('The Daily Word Game', 600, 205);
+      ctx.fillText('The Daily Word Game', 600, 302);
 
       const centerPart1 = 'that Lives ';
       const centerPart2 = 'in Your Email';
@@ -1470,18 +1520,39 @@
 
       ctx.textAlign = 'left';
       ctx.font = '700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(centerPart1, cStartX, 265);
+      ctx.fillText(centerPart1, cStartX, 362);
       ctx.font = 'italic 700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(centerPart2, cStartX + cW1, 265);
+      ctx.fillText(centerPart2, cStartX + cW1, 362);
       ctx.restore();
 
-      // 4. Centered Inbox Row (direct, no fake browser card)
-      const rowW = 720;
-      const rowH = Math.round(rowW * (76 / 994)); // ~55px
-      const rowX = (1200 - rowW) / 2;
-      const rowY = 300;
+      // 4. Bottom Email Box (Peeking & Cut-Off at Bottom, moved down 10px)
+      const boxW = 860;
+      const boxX = (1200 - boxW) / 2;
+      const boxY = 425;
+      const boxH = 630 - boxY + 40; // Extends past bottom edge of canvas
 
       ctx.save();
+      ctx.shadowColor = isDark ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.08)';
+      ctx.shadowBlur = 36;
+      ctx.shadowOffsetY = -12;
+      ctx.fillStyle = isDark ? '#121316' : '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(boxX, boxY, boxW, boxH, [20, 20, 0, 0]);
+      ctx.fill();
+
+      ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = isDark ? '#27272a' : '#e4e4e7';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(boxX, boxY, boxW, boxH, [20, 20, 0, 0]);
+      ctx.stroke();
+
+      // 4a. Uploaded Gmail Inbox Row inside box
+      const rowW = 740;
+      const rowH = Math.round(rowW * (76 / 994)); // ~57px
+      const rowX = (1200 - rowW) / 2;
+      const rowY = boxY + 24;
+
       if (inboxRowImg && inboxRowImg.complete && inboxRowImg.naturalWidth > 0) {
         ctx.drawImage(inboxRowImg, rowX, rowY, rowW, rowH);
       } else {
@@ -1492,20 +1563,21 @@
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.roundRect(rowX, rowY, rowW, rowH, 8); ctx.stroke();
 
-      // Clue Quote
+      // 4b. Clue Quote inside box (Larger hint + extra top spacing)
       const clueText = '“Intensely bright, lively, or full of energy”';
-      ctx.font = '600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillStyle = isDark ? '#f4f4f5' : '#18181b';
+      ctx.font = '600 23px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = isDark ? '#d4d4d8' : '#3f3f46';
       ctx.textAlign = 'center';
-      ctx.fillText(clueText, 600, rowY + rowH + 46);
+      const clueY = rowY + rowH + 42;
+      ctx.fillText(clueText, 600, clueY);
 
-      // Centered Word Tiles (In-Game Mask Style: squares, some empty, gray revealed letters)
+      // 4c. Word Tiles inside box (overflowing and cut off at bottom edge Y = 630)
       const slots = ['V', 'I', '', 'R', 'A', '', 'T'];
-      const slotSize = 58;
+      const slotSize = 64;
       const slotGap = 12;
       const slotsTotalW = slots.length * slotSize + (slots.length - 1) * slotGap;
       const startSlotX = (1200 - slotsTotalW) / 2;
-      const slotY = rowY + rowH + 78;
+      const slotY = 592; // Moved down 10px, cuts off more prominently at 630
 
       slots.forEach((letter, idx) => {
         const sx = startSlotX + idx * (slotSize + slotGap);
@@ -1521,7 +1593,7 @@
           ctx.stroke();
 
           ctx.fillStyle = isDark ? '#a1a1aa' : '#52525b';
-          ctx.font = '800 28px ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco, Consolas, monospace';
+          ctx.font = '800 32px ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco, Consolas, monospace';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(letter, sx + slotSize / 2, slotY + slotSize / 2 + 1);
@@ -1533,12 +1605,25 @@
           ctx.stroke();
         }
       });
+
       ctx.restore();
 
       const link = document.createElement('a');
       link.download = filename;
       link.href = canvas.toDataURL('image/png');
       link.click();
+    }
+
+    function toggleCenteredPreviewTheme() {
+      const card = document.getElementById('socialCardCenteredLight');
+      if (!card) return;
+      if (card.classList.contains('card-light')) {
+        card.classList.remove('card-light');
+        card.classList.add('card-dark');
+      } else {
+        card.classList.remove('card-dark');
+        card.classList.add('card-light');
+      }
     }
   </script>
 </body>

@@ -370,9 +370,10 @@ export const SIGNUP_HTML = `<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inboxed - The Daily Word Game that Lives in Your Email</title>
-  <meta name="description" content="A daily synonym word-guessing game right inside your email. Misses unlock new definitions. Compete with coworkers on your company leaderboard.">
+  <meta name="description" content="Inboxed - The Daily Word Game that Lives in Your Email">
+  <meta property="og:site_name" content="Inboxed - The Daily Word Game that Lives in Your Email">
   <meta property="og:title" content="Inboxed - The Daily Word Game that Lives in Your Email">
-  <meta property="og:description" content="A daily synonym word-guessing game right inside your email. Misses unlock new definitions. Compete with coworkers on your company leaderboard.">
+  <meta property="og:description" content="Inboxed - The Daily Word Game that Lives in Your Email">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://inboxed.fun">
   <meta property="og:image" content="https://inboxed.fun/og-image.png">
@@ -381,7 +382,7 @@ export const SIGNUP_HTML = `<!doctype html>
   <meta property="og:image:alt" content="Inboxed - The Daily Word Game that Lives in Your Email">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Inboxed - The Daily Word Game that Lives in Your Email">
-  <meta name="twitter:description" content="A daily synonym word-guessing game right inside your email. Misses unlock new definitions. Compete with coworkers on your company leaderboard.">
+  <meta name="twitter:description" content="Inboxed - The Daily Word Game that Lives in Your Email">
   <meta name="twitter:image" content="https://inboxed.fun/og-image.png">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&display=swap">
