@@ -1,12 +1,14 @@
-import { getDailyPuzzle, escapeHtml } from '../../game'
+import { getDailyPuzzle, getPuzzleDateForSendCron, escapeHtml } from '../../game'
 import { SIGNUP_HTML } from './signupTemplate'
 
-export function getSignupHtml(c: any): string {
-  const queryEmail = c.req.query('email') || ''
-  const isSubscribed = c.req.query('subscribed') === 'true'
-  const isPending = c.req.query('pending') === 'true'
+export function getSignupHtml(c: any, dateOverride?: string, nowOverride?: Date): string {
+  const queryEmail = c?.req?.query ? (c.req.query('email') || '') : ''
+  const isSubscribed = c?.req?.query ? (c.req.query('subscribed') === 'true') : false
+  const isPending = c?.req?.query ? (c.req.query('pending') === 'true') : false
   const safeEmail = escapeHtml(queryEmail)
-  const puzzle = getDailyPuzzle()
+  const cronStr = c?.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
+  const targetDate = dateOverride || (c?.req?.query ? c.req.query('date') : undefined) || getPuzzleDateForSendCron(nowOverride || new Date(), cronStr)
+  const puzzle = getDailyPuzzle(targetDate)
 
   let statusContent = `
         <form id="signup-form" class="signup-form" method="POST" action="/api/subscribe">

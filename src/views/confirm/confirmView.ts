@@ -1,8 +1,10 @@
-import { getDailyPuzzle, escapeHtml } from '../../game'
+import { getDailyPuzzle, getPuzzleDateForSendCron, escapeHtml } from '../../game'
 import { CONFIRM_HTML } from './confirmTemplate'
 
 export function getConfirmationPageHtml(c: any, email: string, token: string): string {
-  const puzzle = getDailyPuzzle()
+  const cronStr = c?.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
+  const targetDate = (c?.req?.query ? c.req.query('date') : undefined) || getPuzzleDateForSendCron(new Date(), cronStr)
+  const puzzle = getDailyPuzzle(targetDate)
   const safeEmail = escapeHtml(email)
   const safeToken = escapeHtml(token)
 

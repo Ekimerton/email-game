@@ -15,7 +15,7 @@
 
 import 'dotenv/config'
 import nodemailer from 'nodemailer'
-import { getDailyPuzzle, formatPrettyDate } from '../src/game'
+import { getDailyPuzzle, getPuzzleDateForSendCron, formatPrettyDate } from '../src/game'
 
 const args = process.argv.slice(2)
 const isDryRun = args.includes('--dry-run')
@@ -76,7 +76,9 @@ async function getEmailContent(email: string, dateStr?: string): Promise<{ ampHt
 }
 
 async function main() {
-  const puzzle = getDailyPuzzle(dateArg)
+  const cronStr = process.env.SEND_CRON || '0 15 * * *'
+  const targetDate = dateArg || getPuzzleDateForSendCron(new Date(), cronStr)
+  const puzzle = getDailyPuzzle(targetDate)
   const today = puzzle.date
   const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(today)}`
 
@@ -113,8 +115,8 @@ async function main() {
 
   for (const email of subscribers) {
     try {
-      const { ampHtml, fallbackHtml } = await getEmailContent(email, dateArg)
-      const dateQuery = dateArg ? `?date=${encodeURIComponent(dateArg)}` : ''
+      const { ampHtml, fallbackHtml } = await getEmailContent(email, targetDate)
+      const dateQuery = `?date=${encodeURIComponent(targetDate)}`
 
       const info = await transporter.sendMail({
         from: SENDER_EMAIL,

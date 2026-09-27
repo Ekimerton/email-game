@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { PUZZLES, getDailyPuzzle, formatPrettyDate, getTodayDateString } from '../src/game'
+import { PUZZLES, getDailyPuzzle, formatPrettyDate, getTodayDateString, getPuzzleDateForSendCron } from '../src/game'
 import {
   definitionMentionsWordOrStem,
   areDefinitionsTooSimilar,
@@ -80,10 +80,15 @@ describe('Daily Puzzles Module', () => {
     expect(puzzle.word).toBe(PUZZLES[0].word)
   })
 
-  it('should return today\'s puzzle based on EST (America/New_York)', () => {
-    const estDate = getTodayDateString('America/New_York')
+  it('should return today\'s puzzle based on send cron switchover time (5 min before 15:00 UTC)', () => {
+    const cronDate = getPuzzleDateForSendCron()
     const puzzle = getDailyPuzzle()
-    expect(puzzle.date).toBe(estDate)
+    expect(puzzle.date).toBe(cronDate)
+  })
+
+  it('should format today\'s date for a given timezone via getTodayDateString', () => {
+    const estDate = getTodayDateString('America/New_York')
+    expect(estDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
   it('should fallback deterministically for an unknown future date', () => {

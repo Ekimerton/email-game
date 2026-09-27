@@ -2,7 +2,7 @@ import type { Hono } from 'hono'
 import { generateConfirmationToken, verifyConfirmationToken, type Bindings } from '../core'
 import { sendMailgunEmail, renderConfirmationEmailHtml, renderConfirmationEmailText, buildPuzzleEmailContent, sendDailyPuzzleEmails } from '../email'
 import { getSubscribers, addSubscriber, removeSubscriber, unsubscribeUser, ensureSubscribedOnOpen, getUserEmail, resetUserDayState } from '../services'
-import { getDailyPuzzle } from '../game'
+import { getDailyPuzzle, getPuzzleDateForSendCron } from '../game'
 import { getUnsubscribeHtml } from '../views'
 
 export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) {
@@ -89,10 +89,13 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
       const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
       const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
 
+      const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
+      const targetDate = getPuzzleDateForSendCron(new Date(), cronStr)
+
       const emailContent = await buildPuzzleEmailContent(
         c.env?.GAME_STATE_KV,
         email,
-        undefined,
+        targetDate,
         currentOrigin,
         authSecret
       )
@@ -185,7 +188,8 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
       }
 
       if (!date) {
-        date = getDailyPuzzle().date
+        const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
+        date = getPuzzleDateForSendCron(new Date(), cronStr)
       }
 
       const result = await resetUserDayState(c.env?.GAME_STATE_KV, email, date)
@@ -211,6 +215,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
     const emailParam = c.req.query('email') || c.req.query('to')
     const dateParam = c.req.query('date')
     const modeParam = c.req.query('mode') as 'subscribers' | 'test' | 'all' | undefined
+    const cronParam = c.req.query('cron') || c.env?.SEND_CRON || '0 15 * * *'
 
     const targetEmails = emailParam ? emailParam.split(/[,;\s]+/).map((e: string) => e.trim()).filter(Boolean) : undefined
     const result = await sendDailyPuzzleEmails(c.env || {}, {
@@ -218,6 +223,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
       dateStr: dateParam,
       isDryRun: dryRun,
       mode: modeParam,
+      cronStr: cronParam,
     })
 
     return c.json({ success: true, ...result })

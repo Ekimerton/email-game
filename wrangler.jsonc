@@ -30,6 +30,7 @@
     "PUBLIC_HTTPS_URL": "https://inboxed.fun",
     "SENDER_EMAIL": "Inboxed <game@inboxed.fun>",
     "MAILGUN_DOMAIN": "inboxed.fun",
-    "TEST_EMAILS": "ekim0252@gmail.com"
+    "TEST_EMAILS": "ekim0252@gmail.com",
+    "SEND_CRON": "0 15 * * *"
   }
 }

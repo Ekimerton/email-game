@@ -1,6 +1,6 @@
 import type { Hono } from 'hono'
 import { LOGO_PNG_BASE64, verifyConfirmationToken, getAccountUrl, type Bindings } from '../core'
-import { getDailyPuzzle } from '../game'
+import { getDailyPuzzle, getPuzzleDateForSendCron } from '../game'
 import { addSubscriber, getUserEmail, extractDomain, recordUserActivity, getCoworkerCount, getPlayerCount } from '../services'
 import { renderAmpGame, type EmailTheme } from '../email'
 import {
@@ -147,7 +147,8 @@ export function registerPageRoutes(app: Hono<{ Bindings: Bindings }>) {
   // Fallback view route
   app.get('/fallback', async (c) => {
     const userEmail = await getUserEmail(c)
-    const dateParam = c.req.query('date')
+    const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
+    const dateParam = c.req.query('date') || getPuzzleDateForSendCron(new Date(), cronStr)
     const themeParam = c.req.query('theme') as EmailTheme | undefined
     const puzzle = getDailyPuzzle(dateParam)
     const domain = extractDomain(userEmail)

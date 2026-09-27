@@ -15,7 +15,7 @@ export type { EmailTheme } from './core'
 
 // Explicit function re-exports for tests and helper scripts
 export { kvDelete, kvGet, kvPut } from './core'
-export { isPuzzleSynonym, calculateScore } from './game'
+export { isPuzzleSynonym, calculateScore, getPuzzleDateForSendCron, getSendDailyPuzzle } from './game'
 export { resetUserDayState, unsubscribeUser, removeSubscriber } from './services'
 export { buildPuzzleEmailContent, sendDailyPuzzleEmails, renderConfirmationEmailHtml, renderConfirmationEmailText } from './email'
 export { isDevelopment } from './routes'
@@ -95,6 +95,6 @@ export default {
   fetch: app.fetch,
   async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext) {
     console.log(`[Cloudflare Cron] Executing daily 9:00 AM Cron Dispatch at ${event.scheduledTime} (cron: "${event.cron}")`)
-    await sendDailyPuzzleEmails(env, { mode: 'subscribers' })
+    await sendDailyPuzzleEmails(env, { mode: 'subscribers', cronStr: event.cron })
   }
 }

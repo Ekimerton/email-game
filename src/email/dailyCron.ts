@@ -1,4 +1,4 @@
-import { getDailyPuzzle, formatPrettyDate, getRedactedText, getOrCreateGameState, GAME_MESSAGES, type DailyPuzzle } from '../game'
+import { getDailyPuzzle, getPuzzleDateForSendCron, formatPrettyDate, getRedactedText, getOrCreateGameState, GAME_MESSAGES, type DailyPuzzle } from '../game'
 import { EMAIL_HTML } from './emailHtml'
 import { generateAccountToken, getAccountUrl, extractEmailDomain, type Bindings, type DailyEmailDispatchResult } from '../core'
 import { sendMailgunEmail } from './emailService'
@@ -111,7 +111,8 @@ export async function buildPuzzleEmailContent(
 // Serve AMP HTML preview page helper
 export async function renderAmpGame(c: any) {
   const userEmail = await getUserEmail(c)
-  const dateParam = c.req.query('date')
+  const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
+  const dateParam = c.req.query('date') || getPuzzleDateForSendCron(new Date(), cronStr)
   const themeParam = c.req.query('theme') as EmailTheme | undefined
   const reqUrl = new URL(c.req.url)
   const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
@@ -135,9 +136,18 @@ export async function sendDailyPuzzleEmails(
     targetEmails?: string[]
     isDryRun?: boolean
     mode?: 'subscribers' | 'test' | 'all'
+    cronStr?: string
+    leadTimeMinutes?: number
+    now?: Date
   }
 ): Promise<DailyEmailDispatchResult> {
-  const puzzle = getDailyPuzzle(options?.dateStr)
+  const cronStr = options?.cronStr || env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
+  const targetDate = options?.dateStr || getPuzzleDateForSendCron(
+    options?.now || new Date(),
+    cronStr,
+    options?.leadTimeMinutes ?? 5
+  )
+  const puzzle = getDailyPuzzle(targetDate)
   const prodOrigin = (env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
   const authSecret = env?.AUTH_SECRET || process.env.AUTH_SECRET
   const mode = options?.mode || 'all'
@@ -201,7 +211,7 @@ export async function sendDailyPuzzleEmails(
       const emailContent = await buildPuzzleEmailContent(
         env?.GAME_STATE_KV,
         email,
-        options?.dateStr,
+        targetDate,
         prodOrigin,
         authSecret
       )
@@ -239,5 +249,5 @@ export async function sendDailyPuzzleEmails(
   }
 
   console.log(`[Daily Cron] Finished dispatch. ${sent} sent, ${failed} failed.`)
-  return { total: recipients.length, sent, failed, recipients, errors }
+  return { total: recipients.length, sent, failed, recipients, errors, puzzleDate: puzzle.date, puzzleId: puzzle.id }
 }

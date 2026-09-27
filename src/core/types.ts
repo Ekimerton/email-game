@@ -60,6 +60,7 @@ export type Bindings = {
   TEST_EMAIL?: string
   ENVIRONMENT?: string
   ASSETS?: any
+  SEND_CRON?: string
 }
 
 export interface DailyEmailDispatchResult {
@@ -68,4 +69,7 @@ export interface DailyEmailDispatchResult {
   failed: number
   recipients: string[]
   errors: Record<string, string>
+  puzzleDate?: string
+  puzzleId?: string
 }
+

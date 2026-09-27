@@ -14,7 +14,7 @@
 
 import 'dotenv/config'
 import nodemailer from 'nodemailer'
-import { getDailyPuzzle, formatPrettyDate } from '../src/game'
+import { getDailyPuzzle, getPuzzleDateForSendCron, formatPrettyDate } from '../src/game'
 
 function parseEmailList(raw: string | undefined): string[] {
   if (!raw) return []
@@ -108,7 +108,9 @@ async function sendTestEmail() {
   const senderEmail = senderArg || process.env.SENDER_EMAIL || 'Inboxed <game@inboxed.fun>'
   const publicHttpsUrl = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
 
-  const puzzle = getDailyPuzzle(dateArg)
+  const cronStr = process.env.SEND_CRON || '0 15 * * *'
+  const targetDate = dateArg || getPuzzleDateForSendCron(new Date(), cronStr)
+  const puzzle = getDailyPuzzle(targetDate)
   const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(puzzle.date)}`
 
   console.log('Preparing test AMP Email via Mailgun SMTP...')
@@ -121,7 +123,7 @@ async function sendTestEmail() {
     console.log(`\n🏃 DRY RUN MODE — No actual emails will be sent.`)
     console.log(`  Subject: ${subject}`)
     for (const targetEmail of targetEmails) {
-      const { ampHtml, fallbackHtml } = await getEmailContent(targetEmail, dateArg)
+      const { ampHtml, fallbackHtml } = await getEmailContent(targetEmail, targetDate)
       console.log(`  Rendered for ${targetEmail}: AMP (${ampHtml.length} bytes), Fallback (${fallbackHtml.length} bytes)`)
     }
     console.log(`\n🏁 Dry run complete.`)
@@ -154,8 +156,8 @@ async function sendTestEmail() {
 
   for (const targetEmail of targetEmails) {
     try {
-      const { ampHtml, fallbackHtml } = await getEmailContent(targetEmail, dateArg)
-      const dateQuery = dateArg ? `&date=${encodeURIComponent(dateArg)}` : ''
+      const { ampHtml, fallbackHtml } = await getEmailContent(targetEmail, targetDate)
+      const dateQuery = `&date=${encodeURIComponent(targetDate)}`
       const info = await transporter.sendMail({
         from: senderEmail,
         to: targetEmail,
