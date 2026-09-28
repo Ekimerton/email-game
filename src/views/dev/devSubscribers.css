@@ -402,3 +402,124 @@
       display: none;
       z-index: 9999;
     }
+
+    /* Dev Prescreen Management Card & Badges */
+    .dev-prescreen-card {
+      background: #ffffff;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .dev-prescreen-header {
+      margin-bottom: 12px;
+    }
+    .dev-prescreen-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #14532d;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge-dev-prescreen {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+    .dev-prescreen-desc {
+      font-size: 12px;
+      color: #475569;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .dev-prescreen-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .dev-add-form {
+      display: flex;
+      gap: 8px;
+      max-width: 440px;
+    }
+    .btn-dev-add {
+      background: #15803d;
+      color: #ffffff;
+      border: 1px solid #166534;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-dev-add:hover {
+      background: #166534;
+    }
+    .dev-chips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .dev-team-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #166534;
+    }
+    .btn-chip-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .btn-chip-remove:hover {
+      color: #dc2626;
+    }
+    .dev-empty-notice {
+      font-size: 12px;
+      font-style: italic;
+      color: #94a3b8;
+    }
+    .badge-dev-pill {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+    .btn-dev-toggle {
+      border-color: #86efac;
+      background: #f0fdf4;
+      color: #166534;
+    }
+    .btn-dev-toggle:hover {
+      background: #dcfce7;
+    }
+    .btn-dev-active {
+      background: #dcfce7;
+      color: #15803d;
+      font-weight: 700;
+      border-color: #4ade80;
+    }

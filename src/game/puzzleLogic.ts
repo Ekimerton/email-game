@@ -46,28 +46,52 @@ export function getPuzzleDateForSendCron(
   return effectiveTime.toISOString().slice(0, 10)
 }
 
+export const LAUNCH_DATE = '2026-09-27'
+export const DEV_PUZZLE_OFFSET = 41
+
 /**
  * Convenience helper to get the active puzzle based on the daily send cron switchover time.
  */
 export function getSendDailyPuzzle(
   now: Date = new Date(),
   cronStr: string = '0 15 * * *',
-  leadTimeMinutes: number = 5
+  leadTimeMinutes: number = 5,
+  options?: { isDev?: boolean }
 ): DailyPuzzle {
   const dateStr = getPuzzleDateForSendCron(now, cronStr, leadTimeMinutes)
-  return getDailyPuzzle(dateStr)
+  return getDailyPuzzle(dateStr, options)
 }
 
-export function getDailyPuzzle(dateStr?: string): DailyPuzzle {
+export function getDailyPuzzle(dateStr?: string, options?: { isDev?: boolean }): DailyPuzzle {
   const targetDate = dateStr || getPuzzleDateForSendCron()
-  const puzzle = PUZZLES.find(p => p.date === targetDate)
 
-  if (puzzle) return puzzle
+  // For historical dates before the official launch date ('2026-09-27'):
+  // Retain exact historical behavior and deterministic hash fallback for tests.
+  if (targetDate < LAUNCH_DATE) {
+    const historicalPuzzle = PUZZLES.find(p => p.date === targetDate)
+    if (historicalPuzzle) return historicalPuzzle
 
-  // Fallback: cycle through puzzles if date beyond predefined list
-  const idx = Math.abs(hashCode(targetDate)) % PUZZLES.length
+    const idx = Math.abs(hashCode(targetDate)) % PUZZLES.length
+    return {
+      ...PUZZLES[idx],
+      date: targetDate
+    }
+  }
+
+  // Calculate days since launch date (2026-09-27)
+  const [ty, tm, td] = targetDate.split('-').map(Number)
+  const [ly, lm, ld] = LAUNCH_DATE.split('-').map(Number)
+  const targetUtc = Date.UTC(ty, tm - 1, td)
+  const launchUtc = Date.UTC(ly, lm - 1, ld)
+  const daysSinceLaunch = Math.round((targetUtc - launchUtc) / 86400000)
+
+  // Dev testers prescreen puzzles 41 days in advance (Puzzle #42 today, #43 tomorrow, etc.)
+  const offset = options?.isDev ? DEV_PUZZLE_OFFSET : 0
+  const puzzleIndex = Math.abs(daysSinceLaunch + offset) % PUZZLES.length
+  const basePuzzle = PUZZLES[puzzleIndex]
+
   return {
-    ...PUZZLES[idx],
+    ...basePuzzle,
     date: targetDate
   }
 }

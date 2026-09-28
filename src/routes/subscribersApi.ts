@@ -1,7 +1,19 @@
 import type { Hono } from 'hono'
 import { generateConfirmationToken, verifyConfirmationToken, type Bindings } from '../core'
 import { sendMailgunEmail, renderConfirmationEmailHtml, renderConfirmationEmailText, buildPuzzleEmailContent, sendDailyPuzzleEmails } from '../email'
-import { getSubscribers, addSubscriber, removeSubscriber, unsubscribeUser, ensureSubscribedOnOpen, getUserEmail, resetUserDayState } from '../services'
+import {
+  getSubscribers,
+  addSubscriber,
+  removeSubscriber,
+  unsubscribeUser,
+  ensureSubscribedOnOpen,
+  getUserEmail,
+  resetUserDayState,
+  getDevTesters,
+  isDevTester,
+  addDevTester,
+  removeDevTester
+} from '../services'
 import { getDailyPuzzle, getPuzzleDateForSendCron } from '../game'
 import { getUnsubscribeHtml } from '../views'
 
@@ -279,6 +291,113 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
       return c.json(result)
     } catch (err: any) {
       return c.json({ success: false, error: err.message || 'Failed to unsubscribe user' }, 500)
+    }
+  })
+
+  // Helper to authenticate admin requests
+  const verifyAdmin = (c: any) => {
+    const authHeader = c.req.header('Authorization')
+    const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+    if (adminSecret && authHeader !== `Bearer ${adminSecret}`) {
+      return false
+    }
+    return true
+  }
+
+  // Admin: Get all Dev Testers
+  app.get('/api/admin/dev-testers', async (c) => {
+    if (!verifyAdmin(c)) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+    const devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+    return c.json({ success: true, devTesters })
+  })
+
+  // Admin: Add Dev Tester
+  app.post('/api/admin/dev-testers/add', async (c) => {
+    if (!verifyAdmin(c)) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+    try {
+      let email = c.req.query('email')
+      if (!email) {
+        const body = (await c.req.json().catch(() => ({}))) as Record<string, any>
+        email = body.email
+      }
+      if (!email || !email.includes('@')) {
+        return c.json({ success: false, error: 'A valid email address is required.' }, 400)
+      }
+      const cleanEmail = email.toLowerCase().trim()
+      const devTesters = await addDevTester(c.env?.GAME_STATE_KV, cleanEmail)
+      return c.json({
+        success: true,
+        message: `Added ${cleanEmail} to Dev Prescreen list (41 days ahead)!`,
+        devTesters
+      })
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message || 'Failed to add dev tester' }, 500)
+    }
+  })
+
+  // Admin: Remove Dev Tester
+  app.post('/api/admin/dev-testers/remove', async (c) => {
+    if (!verifyAdmin(c)) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+    try {
+      let email = c.req.query('email')
+      if (!email) {
+        const body = (await c.req.json().catch(() => ({}))) as Record<string, any>
+        email = body.email
+      }
+      if (!email || !email.includes('@')) {
+        return c.json({ success: false, error: 'A valid email address is required.' }, 400)
+      }
+      const cleanEmail = email.toLowerCase().trim()
+      const devTesters = await removeDevTester(c.env?.GAME_STATE_KV, cleanEmail)
+      return c.json({
+        success: true,
+        message: `Removed ${cleanEmail} from Dev Prescreen list.`,
+        devTesters
+      })
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message || 'Failed to remove dev tester' }, 500)
+    }
+  })
+
+  // Admin: Toggle Dev Tester
+  app.post('/api/admin/dev-testers/toggle', async (c) => {
+    if (!verifyAdmin(c)) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+    try {
+      let email = c.req.query('email')
+      if (!email) {
+        const body = (await c.req.json().catch(() => ({}))) as Record<string, any>
+        email = body.email
+      }
+      if (!email || !email.includes('@')) {
+        return c.json({ success: false, error: 'A valid email address is required.' }, 400)
+      }
+      const cleanEmail = email.toLowerCase().trim()
+      const currentlyDev = await isDevTester(c.env?.GAME_STATE_KV, cleanEmail)
+      let devTesters: string[] = []
+      if (currentlyDev) {
+        devTesters = await removeDevTester(c.env?.GAME_STATE_KV, cleanEmail)
+      } else {
+        devTesters = await addDevTester(c.env?.GAME_STATE_KV, cleanEmail)
+      }
+      const isDev = !currentlyDev
+      return c.json({
+        success: true,
+        isDev,
+        message: isDev
+          ? `🧪 Added ${cleanEmail} to Dev Prescreen list (Puzzle #42 today, #43 tomorrow)!`
+          : `Removed ${cleanEmail} from Dev Prescreen list.`,
+        devTesters
+      })
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message || 'Failed to toggle dev tester' }, 500)
     }
   })
 }

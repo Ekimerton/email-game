@@ -3,7 +3,7 @@ import { EMAIL_HTML } from './emailHtml'
 import { generateAccountToken, getAccountUrl, extractEmailDomain, type Bindings, type DailyEmailDispatchResult } from '../core'
 import { sendMailgunEmail } from './emailService'
 import { applyEmailTheme, type EmailTheme } from './emailThemes'
-import { recordUserActivity, getCoworkerCount, getPlayerCount, getUserEmail, getSubscribers } from '../services'
+import { recordUserActivity, getCoworkerCount, getPlayerCount, getUserEmail, getSubscribers, isDevTester, getDevTesters } from '../services'
 import { getFallbackHtml } from '../views'
 
 // Helper to build full AMP + Fallback HTML content for daily puzzle emails
@@ -13,9 +13,11 @@ export async function buildPuzzleEmailContent(
   dateParam?: string,
   currentOrigin?: string,
   authSecret?: string,
-  themeOverride?: EmailTheme
+  themeOverride?: EmailTheme,
+  options?: { isDev?: boolean }
 ): Promise<{ ampHtml: string; fallbackHtml: string; subject: string; text: string; puzzle: DailyPuzzle; theme: EmailTheme }> {
-  const { state, puzzle } = await getOrCreateGameState(kv, userEmail, dateParam)
+  const isDev = options?.isDev !== undefined ? options.isDev : await isDevTester(kv, userEmail)
+  const { state, puzzle } = await getOrCreateGameState(kv, userEmail, dateParam, { isDev })
   const domain = extractEmailDomain(userEmail)
   const secret = authSecret || process.env.AUTH_SECRET
   const userToken = generateAccountToken(userEmail, secret)
@@ -196,24 +198,32 @@ export async function sendDailyPuzzleEmails(
 
   console.log(`[Daily Cron] Dispatching Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${recipients.length} recipient(s): ${recipients.join(', ')}`)
 
+  const devList = await getDevTesters(env?.GAME_STATE_KV)
+  const devSet = new Set(devList.map(e => e.toLowerCase().trim()))
+
   const errors: Record<string, string> = {}
   let sent = 0
   let failed = 0
 
   for (const email of recipients) {
     try {
+      const cleanEmail = email.toLowerCase().trim()
+      const isDev = devSet.has(cleanEmail)
+
       if (options?.isDryRun) {
-        console.log(`[Daily Cron] [DRY RUN] Would send to ${email}`)
+        console.log(`[Daily Cron] [DRY RUN] Would send to ${cleanEmail}`)
         sent++
         continue
       }
 
       const emailContent = await buildPuzzleEmailContent(
         env?.GAME_STATE_KV,
-        email,
+        cleanEmail,
         targetDate,
         prodOrigin,
-        authSecret
+        authSecret,
+        undefined,
+        { isDev }
       )
 
       const res = await sendMailgunEmail({

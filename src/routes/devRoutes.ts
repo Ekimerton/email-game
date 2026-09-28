@@ -1,7 +1,7 @@
 import type { Hono } from 'hono'
 import { generateConfirmationToken, generateAccountToken, kvPut, withKeyLock, type Bindings, type SubscriberEntry } from '../core'
 import { buildPuzzleEmailContent, renderConfirmationEmailHtml } from '../email'
-import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser } from '../services'
+import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser, getDevTesters, addDevTester, removeDevTester, isDevTester } from '../services'
 import {
   getDevWorkbenchHtml,
   getDevSubscribersPageHtml,
@@ -137,11 +137,32 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
       } else {
         subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
       }
+      let devTesters: string[] = []
+      if (dataSource === 'prod') {
+        try {
+          const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+          const headers: Record<string, string> = { 'Accept': 'application/json' }
+          if (adminSecret) headers['Authorization'] = `Bearer ${adminSecret}`
+          const prodDevRes = await fetch(`${prodOrigin}/api/admin/dev-testers`, { headers })
+          if (prodDevRes.ok) {
+            const devData = (await prodDevRes.json().catch(() => ({}))) as any
+            devTesters = Array.isArray(devData?.devTesters) ? devData.devTesters : []
+          } else {
+            devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+          }
+        } catch {
+          devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+        }
+      } else {
+        devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+      }
+
       html = getDevSubscribersPageHtml({
         subscribers,
         source: dataSource,
         prodOrigin,
-        fetchError
+        fetchError,
+        devTesters
       })
     } else {
       const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret)
@@ -277,11 +298,32 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
       subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
     }
 
+    let devTesters: string[] = []
+    if (dataSource === 'prod') {
+      try {
+        const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+        const headers: Record<string, string> = { 'Accept': 'application/json' }
+        if (adminSecret) headers['Authorization'] = `Bearer ${adminSecret}`
+        const prodDevRes = await fetch(`${prodOrigin}/api/admin/dev-testers`, { headers })
+        if (prodDevRes.ok) {
+          const devData = (await prodDevRes.json().catch(() => ({}))) as any
+          devTesters = Array.isArray(devData?.devTesters) ? devData.devTesters : []
+        } else {
+          devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+        }
+      } catch {
+        devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+      }
+    } else {
+      devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+    }
+
     return c.html(getDevSubscribersPageHtml({
       subscribers,
       source: dataSource,
       prodOrigin,
-      fetchError
+      fetchError,
+      devTesters
     }))
   })
 
@@ -529,6 +571,212 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
       })
     } catch (err: any) {
       return c.json({ success: false, error: err.message || 'Failed to seed demo subscribers' }, 500)
+    }
+  })
+
+  // Development-only API to get all dev testers
+  app.get('/dev/api/dev-testers', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+    const target = c.req.query('target') || 'local'
+    if (target === 'prod') {
+      const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+      const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+      const headers: Record<string, string> = { 'Accept': 'application/json' }
+      if (adminSecret) headers['Authorization'] = `Bearer ${adminSecret}`
+      try {
+        const prodRes = await fetch(`${prodOrigin}/api/admin/dev-testers`, { headers })
+        if (prodRes.ok) {
+          const data = (await prodRes.json().catch(() => ({}))) as any
+          return c.json({ success: true, target: 'prod', devTesters: data.devTesters || [] })
+        }
+      } catch (err: any) {
+        return c.json({ success: false, error: err.message || 'Failed to fetch dev testers from prod' }, 500)
+      }
+    }
+    const devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+    return c.json({ success: true, target: 'local', devTesters })
+  })
+
+  // Development-only API to add an email to the dev prescreen list
+  app.post('/dev/api/dev-testers/add', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+    try {
+      const body = (await c.req.json().catch(() => ({}))) as Record<string, any>
+      const email = (body.email as string || c.req.query('email') || '').toLowerCase().trim()
+      const target = (body.target as string) || c.req.query('target') || 'local'
+
+      if (!email || !email.includes('@')) {
+        return c.json({ success: false, error: 'A valid email address is required.' }, 400)
+      }
+
+      let devTesters: string[] = []
+      let message = `Added ${email} to Dev Prescreen list (41 days ahead)!`
+
+      if (target === 'prod') {
+        const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+        const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+        const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        if (adminSecret) headers['Authorization'] = `Bearer ${adminSecret}`
+
+        const prodRes = await fetch(`${prodOrigin}/api/admin/dev-testers/add`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ email })
+        })
+
+        if (!prodRes.ok) {
+          const errData = (await prodRes.json().catch(() => ({}))) as any
+          throw new Error(errData.error || `Production returned HTTP ${prodRes.status}`)
+        }
+
+        const data = (await prodRes.json().catch(() => ({}))) as any
+        devTesters = Array.isArray(data?.devTesters) ? data.devTesters : []
+        message = data.message || `Added ${email} to Production Dev Prescreen list!`
+
+        // Also update local KV for consistency
+        await addDevTester(c.env?.GAME_STATE_KV, email)
+      } else {
+        devTesters = await addDevTester(c.env?.GAME_STATE_KV, email)
+      }
+
+      return c.json({
+        success: true,
+        target,
+        message,
+        devTesters
+      })
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message || 'Failed to add dev tester' }, 500)
+    }
+  })
+
+  // Development-only API to remove an email from the dev prescreen list
+  app.post('/dev/api/dev-testers/remove', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+    try {
+      const body = (await c.req.json().catch(() => ({}))) as Record<string, any>
+      const email = (body.email as string || c.req.query('email') || '').toLowerCase().trim()
+      const target = (body.target as string) || c.req.query('target') || 'local'
+
+      if (!email || !email.includes('@')) {
+        return c.json({ success: false, error: 'A valid email address is required.' }, 400)
+      }
+
+      let devTesters: string[] = []
+      let message = `Removed ${email} from Dev Prescreen list.`
+
+      if (target === 'prod') {
+        const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+        const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+        const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        if (adminSecret) headers['Authorization'] = `Bearer ${adminSecret}`
+
+        const prodRes = await fetch(`${prodOrigin}/api/admin/dev-testers/remove`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ email })
+        })
+
+        if (!prodRes.ok) {
+          const errData = (await prodRes.json().catch(() => ({}))) as any
+          throw new Error(errData.error || `Production returned HTTP ${prodRes.status}`)
+        }
+
+        const data = (await prodRes.json().catch(() => ({}))) as any
+        devTesters = Array.isArray(data?.devTesters) ? data.devTesters : []
+        message = data.message || `Removed ${email} from Production Dev Prescreen list.`
+
+        // Also update local KV for consistency
+        await removeDevTester(c.env?.GAME_STATE_KV, email)
+      } else {
+        devTesters = await removeDevTester(c.env?.GAME_STATE_KV, email)
+      }
+
+      return c.json({
+        success: true,
+        target,
+        message,
+        devTesters
+      })
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message || 'Failed to remove dev tester' }, 500)
+    }
+  })
+
+  // Development-only API to toggle dev prescreen status for any subscriber
+  app.post('/dev/api/dev-testers/toggle', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+    try {
+      const body = (await c.req.json().catch(() => ({}))) as Record<string, any>
+      const email = (body.email as string || c.req.query('email') || '').toLowerCase().trim()
+      const target = (body.target as string) || c.req.query('target') || 'local'
+
+      if (!email) {
+        return c.json({ success: false, error: 'Email is required.' }, 400)
+      }
+
+      let devTesters: string[] = []
+      let isDev = false
+      let message = ''
+
+      if (target === 'prod') {
+        const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+        const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+        const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        if (adminSecret) headers['Authorization'] = `Bearer ${adminSecret}`
+
+        const prodRes = await fetch(`${prodOrigin}/api/admin/dev-testers/toggle`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ email })
+        })
+
+        if (!prodRes.ok) {
+          const errData = (await prodRes.json().catch(() => ({}))) as any
+          throw new Error(errData.error || `Production returned HTTP ${prodRes.status}`)
+        }
+
+        const data = (await prodRes.json().catch(() => ({}))) as any
+        devTesters = Array.isArray(data?.devTesters) ? data.devTesters : []
+        isDev = Boolean(data.isDev)
+        message = data.message || (isDev ? `Added ${email} to Production Dev Prescreen list!` : `Removed ${email} from Production Dev Prescreen list.`)
+
+        // Mirror locally
+        if (isDev) {
+          await addDevTester(c.env?.GAME_STATE_KV, email)
+        } else {
+          await removeDevTester(c.env?.GAME_STATE_KV, email)
+        }
+      } else {
+        const currentlyDev = await isDevTester(c.env?.GAME_STATE_KV, email)
+        if (currentlyDev) {
+          devTesters = await removeDevTester(c.env?.GAME_STATE_KV, email)
+        } else {
+          devTesters = await addDevTester(c.env?.GAME_STATE_KV, email)
+        }
+        isDev = !currentlyDev
+        message = isDev
+          ? `🧪 Added ${email} to Dev Prescreen list (Puzzle #42 today, #43 tomorrow)!`
+          : `Removed ${email} from Dev Prescreen list (Standard Puzzle #1 schedule).`
+      }
+
+      return c.json({
+        success: true,
+        target,
+        isDev,
+        message,
+        devTesters
+      })
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message || 'Failed to toggle dev tester status' }, 500)
     }
   })
 }

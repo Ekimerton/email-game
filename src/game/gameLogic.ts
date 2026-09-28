@@ -137,13 +137,14 @@ export function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?:
 export async function getOrCreateGameState(
   kv: KVNamespace | undefined,
   userEmail: string,
-  dateStr?: string
+  dateStr?: string,
+  options?: { isDev?: boolean }
 ): Promise<{ state: GameState; puzzle: DailyPuzzle; stateKey: string }> {
-  const puzzle = getDailyPuzzle(dateStr)
+  const puzzle = getDailyPuzzle(dateStr, options)
   const stateKey = `game:${puzzle.date}:${userEmail}`
 
   const stored = await kvGet(kv, stateKey)
-  if (stored) {
+  if (stored && (!stored.puzzleId || stored.puzzleId === puzzle.id)) {
     if (!stored.guessesHistory) {
       stored.guessesHistory = []
     }

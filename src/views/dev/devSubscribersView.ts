@@ -7,12 +7,15 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
   source?: 'prod' | 'local'
   prodOrigin?: string
   fetchError?: string
+  devTesters?: string[]
 } = []): string {
   const isArray = Array.isArray(paramsOrSubscribers)
   const subscribers = isArray ? paramsOrSubscribers : (paramsOrSubscribers.subscribers || [])
   const source = (!isArray && paramsOrSubscribers.source) ? paramsOrSubscribers.source : 'prod'
   const prodOrigin = (!isArray && paramsOrSubscribers.prodOrigin) ? paramsOrSubscribers.prodOrigin : 'https://inboxed.fun'
   const fetchError = (!isArray && paramsOrSubscribers.fetchError) ? paramsOrSubscribers.fetchError : ''
+  const devTesters = (!isArray && paramsOrSubscribers.devTesters) ? paramsOrSubscribers.devTesters : []
+  const devSet = new Set(devTesters.map(e => e.toLowerCase().trim()))
   const isProd = source === 'prod'
 
   const total = subscribers.length
@@ -25,8 +28,10 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
     const safeEmail = escapeHtml(sub.email)
     const safeDomain = escapeHtml(sub.domain || '')
     const isActive = sub.status === 'active'
+    const isDev = devSet.has(sub.email.toLowerCase().trim())
     const statusClass = isActive ? 'status-active' : 'status-unsubscribed'
     const statusText = isActive ? 'Active' : 'Unsubscribed'
+    const devBadge = isDev ? `<span class="badge-dev-pill" title="Dev tester prescreening puzzles 41 days in advance">🧪 Dev</span>` : ''
     const dateFormatted = sub.subscribedAt ? new Date(sub.subscribedAt).toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -43,6 +48,7 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
             <span class="avatar-circle">${initial}</span>
             <div class="email-info">
               <span class="email-text" title="${safeEmail}">${safeEmail}</span>
+              ${devBadge}
               <button type="button" class="btn-copy" onclick="copyText('${safeEmail}', this)" title="Copy email address">📋</button>
             </div>
           </div>
@@ -62,6 +68,7 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
         <td>
           <div class="row-actions">
             <button type="button" class="btn-action btn-workbench" onclick="selectInWorkbench('${safeEmail}')" title="Test this user in Dev Workbench">🎮 Workbench</button>
+            <button type="button" class="btn-action btn-dev-toggle ${isDev ? 'btn-dev-active' : ''}" onclick="toggleDevStatus('${safeEmail}', this)" title="${isDev ? 'Remove from dev prescreen list' : 'Add to dev prescreen list (41 days ahead)'}">${isDev ? '🧪 Remove Dev' : '🧪 Make Dev'}</button>
             <a href="/dev/page/account?email=${encodeURIComponent(sub.email)}" target="_blank" class="btn-action btn-account" title="Open user account preferences">⚙️ Account</a>
             <button type="button" class="btn-action btn-toggle" onclick="toggleStatus('${safeEmail}', this)" title="Toggle active/unsubscribed">${isActive ? 'Deactivate' : 'Activate'}</button>
             <button type="button" class="btn-action btn-purge" onclick="purgeSubscriber('${safeEmail}', this)" title="Permanently delete subscriber from KV">🗑️</button>
@@ -111,6 +118,36 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
           ℹ️ <strong>Note:</strong> ${escapeHtml(fetchError)}
         </div>
       ` : ''}
+    </div>
+
+    <!-- Dev Prescreen Team Management Card -->
+    <div class="dev-prescreen-card">
+      <div class="dev-prescreen-header">
+        <div class="dev-prescreen-title">
+          <span>🧪 Dev Tester Prescreen Team (${devTesters.length})</span>
+          <span class="badge-dev-prescreen">41 Days Ahead (#42 today, #43 tomorrow)</span>
+          <span class="badge-kv ${isProd ? 'badge-prod' : 'badge-local-source'}">
+            ${isProd ? '🟢 Production KV' : '💻 Local Dev KV'}
+          </span>
+        </div>
+        <p class="dev-prescreen-desc">
+          Emails on this prescreen list receive future puzzles 41 days in advance to verify and prescreen clues, letter hints, and mechanics before general subscribers receive them. ${isProd ? `Saved directly to <strong>Production KV</strong> (<code>${escapeHtml(prodOrigin)}</code>).` : 'Saved to local KV.'}
+        </p>
+      </div>
+      <div class="dev-prescreen-body">
+        <form class="dev-add-form" onsubmit="handleAddDevTester(event)">
+          <input type="email" id="dev-email-input" class="email-input" placeholder="tester@example.com" required>
+          <button type="submit" id="btn-add-dev" class="btn-dev-add">+ Add Dev Tester</button>
+        </form>
+        <div class="dev-chips-list">
+          ${devTesters.length === 0 ? '<span class="dev-empty-notice">No dev testers configured in ' + (isProd ? 'Production KV' : 'Local KV') + '. Puzzles will only be prescreened by standard schedule.</span>' : devTesters.map(tEmail => `
+            <span class="dev-team-chip">
+              <span>${escapeHtml(tEmail)}</span>
+              <button type="button" class="btn-chip-remove" onclick="removeDevTester('${escapeHtml(tEmail)}')" title="Remove ${escapeHtml(tEmail)} from dev prescreen list">×</button>
+            </span>
+          `).join('')}
+        </div>
+      </div>
     </div>
 
     <!-- Stats Cards -->
@@ -389,6 +426,86 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       showToast('Exported subscribers JSON');
+    }
+
+    async function toggleDevStatus(email, btn) {
+      btn.disabled = true;
+      btn.textContent = '...';
+      try {
+        var res = await fetch('/dev/api/dev-testers/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, target: currentSource })
+        });
+        var data = await res.json();
+        if (data.success) {
+          showToast(data.message || 'Dev tester status updated!');
+          setTimeout(function() { window.location.reload(); }, 600);
+        } else {
+          showToast('Error: ' + (data.error || 'Failed to update dev tester status'));
+          btn.disabled = false;
+          btn.textContent = '🧪 Make Dev';
+        }
+      } catch (err) {
+        showToast('Network error updating dev tester status');
+        btn.disabled = false;
+        btn.textContent = '🧪 Make Dev';
+      }
+    }
+
+    async function handleAddDevTester(e) {
+      e.preventDefault();
+      var input = document.getElementById('dev-email-input');
+      var email = input.value.trim();
+      if (!email) return;
+
+      var btn = document.getElementById('btn-add-dev');
+      btn.disabled = true;
+      btn.textContent = 'Adding...';
+
+      try {
+        var res = await fetch('/dev/api/dev-testers/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, target: currentSource })
+        });
+        var data = await res.json();
+        if (data.success) {
+          showToast(data.message || ('Added ' + email + ' to dev testers!'));
+          input.value = '';
+          setTimeout(function() { window.location.reload(); }, 600);
+        } else {
+          showToast('Error: ' + (data.error || 'Failed to add dev tester'));
+        }
+      } catch (err) {
+        showToast('Network error adding dev tester');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '+ Add Dev Tester';
+      }
+    }
+
+    async function removeDevTester(email) {
+      var sourceName = currentSource === 'prod' ? 'PRODUCTION database' : 'local KV';
+      if (!confirm('Remove ' + email + ' from the dev tester prescreen list in ' + sourceName + '?')) {
+        return;
+      }
+      try {
+        var res = await fetch('/dev/api/dev-testers/remove', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, target: currentSource })
+        });
+        var data = await res.json();
+        if (data.success) {
+          showToast(data.message || ('Removed ' + email + ' from dev testers'));
+          setTimeout(function() { window.location.reload(); }, 600);
+        } else {
+          showToast('Error: ' + (data.error || 'Failed to remove dev tester'));
+        }
+      } catch (err) {
+        showToast('Network error removing dev tester');
+      }
     }
   </script>
 </body>

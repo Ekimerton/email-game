@@ -16,7 +16,8 @@ import {
   formatDisplayEmail,
   getUserSettings,
   getDomainLeaderboard,
-  updateDomainLeaderboard
+  updateDomainLeaderboard,
+  isDevTester
 } from '../services'
 
 export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
@@ -25,11 +26,12 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
     try {
       const userEmail = await getUserEmail(c)
       const dateParam = c.req.query('date')
-      const puzzle = getDailyPuzzle(dateParam)
+      const isDev = await isDevTester(c.env?.GAME_STATE_KV, userEmail)
+      const puzzle = getDailyPuzzle(dateParam, { isDev })
       const stateKey = `game:${puzzle.date}:${userEmail}`
 
       const payload = await withKeyLock(stateKey, async () => {
-        const { state } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam)
+        const { state } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam, { isDev })
         return buildStatePayload(state, puzzle)
       })
 
@@ -48,14 +50,16 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const guess = (body['user-guess'] as string || '').toUpperCase().trim()
       const dateParam = c.req.query('date') || (body['date'] as string)
       const domain = extractDomain(userEmail)
-      const puzzle = getDailyPuzzle(dateParam)
+      const isDev = await isDevTester(c.env?.GAME_STATE_KV, userEmail)
+      const puzzle = getDailyPuzzle(dateParam, { isDev })
       const stateKey = `game:${puzzle.date}:${userEmail}`
 
       const payload = await withKeyLock(stateKey, async () => {
         const { state } = await getOrCreateGameState(
           c.env?.GAME_STATE_KV,
           userEmail,
-          dateParam
+          dateParam,
+          { isDev }
         )
 
         if (state.hasWon) {
@@ -175,14 +179,16 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const body = await c.req.parseBody()
       const userEmail = await getUserEmail(c, body)
       const dateParam = c.req.query('date') || (body['date'] as string)
-      const puzzle = getDailyPuzzle(dateParam)
+      const isDev = await isDevTester(c.env?.GAME_STATE_KV, userEmail)
+      const puzzle = getDailyPuzzle(dateParam, { isDev })
       const stateKey = `game:${puzzle.date}:${userEmail}`
 
       const payload = await withKeyLock(stateKey, async () => {
         const { state } = await getOrCreateGameState(
           c.env?.GAME_STATE_KV,
           userEmail,
-          dateParam
+          dateParam,
+          { isDev }
         )
 
         if (state.hasWon) {

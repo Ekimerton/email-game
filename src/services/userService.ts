@@ -145,3 +145,46 @@ export async function getPlayerCount(kv: KVNamespace | undefined): Promise<numbe
   const subscribers = await getSubscribers(kv)
   return subscribers.filter(subscriber => subscriber.status === 'active').length
 }
+
+export const DEV_TESTERS_KEY = 'dev:testers:list'
+
+export async function getDevTesters(kv: KVNamespace | undefined): Promise<string[]> {
+  const data = await kvGet(kv, DEV_TESTERS_KEY)
+  if (Array.isArray(data)) {
+    return Array.from(new Set(data.map((e: any) => String(e).toLowerCase().trim()).filter(Boolean)))
+  }
+  return []
+}
+
+export async function isDevTester(kv: KVNamespace | undefined, email: string): Promise<boolean> {
+  if (!email) return false
+  const cleanEmail = email.toLowerCase().trim()
+  const list = await getDevTesters(kv)
+  return list.includes(cleanEmail)
+}
+
+export async function addDevTester(kv: KVNamespace | undefined, email: string): Promise<string[]> {
+  if (!email) return getDevTesters(kv)
+  const cleanEmail = email.toLowerCase().trim()
+  return withKeyLock(DEV_TESTERS_KEY, async () => {
+    const list = await getDevTesters(kv)
+    if (!list.includes(cleanEmail)) {
+      list.push(cleanEmail)
+      await kvPut(kv, DEV_TESTERS_KEY, list)
+    }
+    return list
+  })
+}
+
+export async function removeDevTester(kv: KVNamespace | undefined, email: string): Promise<string[]> {
+  if (!email) return getDevTesters(kv)
+  const cleanEmail = email.toLowerCase().trim()
+  return withKeyLock(DEV_TESTERS_KEY, async () => {
+    let list = await getDevTesters(kv)
+    if (list.includes(cleanEmail)) {
+      list = list.filter(e => e !== cleanEmail)
+      await kvPut(kv, DEV_TESTERS_KEY, list)
+    }
+    return list
+  })
+}

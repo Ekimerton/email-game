@@ -1,6 +1,12 @@
 import type { Hono } from 'hono'
 import { verifyAccountToken, type Bindings, type EmailTheme } from '../core'
-import { getUserSettings, updateUserSettings, getSubscribers, addSubscriber, removeSubscriber } from '../services'
+import {
+  getUserSettings,
+  updateUserSettings,
+  getSubscribers,
+  addSubscriber,
+  removeSubscriber
+} from '../services'
 
 export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
   app.get('/api/account', async (c) => {
