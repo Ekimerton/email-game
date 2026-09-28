@@ -1,4 +1,4 @@
-import { getDailyPuzzle, getPuzzleDateForSendCron, escapeHtml } from '../../game'
+import { getDailyPuzzle, getPuzzleDateForSendCron, escapeHtml, LAUNCH_DATE } from '../../game'
 import { SIGNUP_HTML } from './signupTemplate'
 
 export function getSignupHtml(c: any, dateOverride?: string, nowOverride?: Date): string {
@@ -8,7 +8,13 @@ export function getSignupHtml(c: any, dateOverride?: string, nowOverride?: Date)
   const safeEmail = escapeHtml(queryEmail)
   const cronStr = c?.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
   const targetDate = dateOverride || (c?.req?.query ? c.req.query('date') : undefined) || getPuzzleDateForSendCron(nowOverride || new Date(), cronStr)
-  const puzzle = getDailyPuzzle(targetDate)
+
+  // Landing page always shows the puzzle of the normal track (never dev prescreen track).
+  // For dates prior to official launch (LAUNCH_DATE = '2026-09-28'), showcase the launch puzzle (Puzzle #1).
+  const effectiveDate = (!targetDate || (targetDate < LAUNCH_DATE && !dateOverride && !nowOverride))
+    ? LAUNCH_DATE
+    : targetDate
+  const puzzle = getDailyPuzzle(effectiveDate, { isDev: false })
 
   let statusContent = `
         <form id="signup-form" class="signup-form" method="POST" action="/api/subscribe">

@@ -300,4 +300,23 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
       expect(devEmail.subject).toContain('Inboxed #43')
     })
   })
+
+  describe('Landing Page Normal Track Puzzle Display', () => {
+    it('should display Puzzle #1 (LOAD) on the landing page and not dev prescreen puzzles', async () => {
+      const resRoot = await app.request('/')
+      expect(resRoot.status).toBe(200)
+      const htmlRoot = await resRoot.text()
+      expect(htmlRoot).toContain('Puzzle #1')
+      expect(htmlRoot).toContain('The volume of work required to be performed.')
+      expect(htmlRoot).not.toContain('Puzzle #42')
+      expect(htmlRoot).not.toContain('Puzzle #43')
+
+      const resSignup = await app.request('/signup')
+      expect(resSignup.status).toBe(200)
+      const htmlSignup = await resSignup.text()
+      expect(htmlSignup).toContain('Puzzle #1')
+      expect(htmlSignup).not.toContain('Puzzle #42')
+      expect(htmlSignup).not.toContain('Puzzle #43')
+    })
+  })
 })
