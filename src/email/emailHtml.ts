@@ -932,9 +932,7 @@ export const EMAIL_HTML = `<!doctype html>
                         </div>
                         {{/hasWon}}
 
-                        <div
-                            class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}"
-                            [class]="gameState.hasWon ? 'leaderboard-items' : 'leaderboard-blur-content'">
+                        <div class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
                             {{#players}}
                             <div class="leaderboard-item {{#isCurrentPlayer}}current-player{{/isCurrentPlayer}}">
                                 <span class="rank-number">#{{rank}}</span>

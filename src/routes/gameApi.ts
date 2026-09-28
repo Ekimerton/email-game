@@ -277,10 +277,12 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
 
       const { state: userState } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateStr, { isDev })
 
+      const hasWon = Boolean(userState.hasWon || currentPlayerItem)
+
       const payload = {
         domain,
         date: dateStr,
-        hasWon: userState.hasWon,
+        hasWon,
         players: items
       }
 
