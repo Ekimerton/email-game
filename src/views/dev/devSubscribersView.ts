@@ -31,7 +31,7 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
     const isDev = devSet.has(sub.email.toLowerCase().trim())
     const statusClass = isActive ? 'status-active' : 'status-unsubscribed'
     const statusText = isActive ? 'Active' : 'Unsubscribed'
-    const devBadge = isDev ? `<span class="badge-dev-pill" title="Dev tester prescreening puzzles 41 days in advance">🧪 Dev</span>` : ''
+    const devBadge = isDev ? `<span class="badge-dev-pill" title="Dev tester prescreening puzzles 42 days in advance">🧪 Dev</span>` : ''
     const dateFormatted = sub.subscribedAt ? new Date(sub.subscribedAt).toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -68,7 +68,7 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
         <td>
           <div class="row-actions">
             <button type="button" class="btn-action btn-workbench" onclick="selectInWorkbench('${safeEmail}')" title="Test this user in Dev Workbench">🎮 Workbench</button>
-            <button type="button" class="btn-action btn-dev-toggle ${isDev ? 'btn-dev-active' : ''}" onclick="toggleDevStatus('${safeEmail}', this)" title="${isDev ? 'Remove from dev prescreen list' : 'Add to dev prescreen list (41 days ahead)'}">${isDev ? '🧪 Remove Dev' : '🧪 Make Dev'}</button>
+            <button type="button" class="btn-action btn-dev-toggle ${isDev ? 'btn-dev-active' : ''}" onclick="toggleDevStatus('${safeEmail}', this)" title="${isDev ? 'Remove from dev prescreen list' : 'Add to dev prescreen list (42 days ahead)'}">${isDev ? '🧪 Remove Dev' : '🧪 Make Dev'}</button>
             <a href="/dev/page/account?email=${encodeURIComponent(sub.email)}" target="_blank" class="btn-action btn-account" title="Open user account preferences">⚙️ Account</a>
             <button type="button" class="btn-action btn-toggle" onclick="toggleStatus('${safeEmail}', this)" title="Toggle active/unsubscribed">${isActive ? 'Deactivate' : 'Activate'}</button>
             <button type="button" class="btn-action btn-purge" onclick="purgeSubscriber('${safeEmail}', this)" title="Permanently delete subscriber from KV">🗑️</button>
@@ -125,13 +125,13 @@ export function getDevSubscribersPageHtml(paramsOrSubscribers: SubscriberEntry[]
       <div class="dev-prescreen-header">
         <div class="dev-prescreen-title">
           <span>🧪 Dev Tester Prescreen Team (${devTesters.length})</span>
-          <span class="badge-dev-prescreen">41 Days Ahead (#42 today, #43 tomorrow)</span>
+          <span class="badge-dev-prescreen">42 Days Ahead (#43 on Sept 28, #44 next)</span>
           <span class="badge-kv ${isProd ? 'badge-prod' : 'badge-local-source'}">
             ${isProd ? '🟢 Production KV' : '💻 Local Dev KV'}
           </span>
         </div>
         <p class="dev-prescreen-desc">
-          Emails on this prescreen list receive future puzzles 41 days in advance to verify and prescreen clues, letter hints, and mechanics before general subscribers receive them. ${isProd ? `Saved directly to <strong>Production KV</strong> (<code>${escapeHtml(prodOrigin)}</code>).` : 'Saved to local KV.'}
+          Emails on this prescreen list receive future puzzles 42 days in advance to verify and prescreen clues, letter hints, and mechanics before general subscribers receive them. ${isProd ? `Saved directly to <strong>Production KV</strong> (<code>${escapeHtml(prodOrigin)}</code>).` : 'Saved to local KV.'}
         </p>
       </div>
       <div class="dev-prescreen-body">

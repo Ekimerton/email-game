@@ -46,8 +46,8 @@ export function getPuzzleDateForSendCron(
   return effectiveTime.toISOString().slice(0, 10)
 }
 
-export const LAUNCH_DATE = '2026-09-27'
-export const DEV_PUZZLE_OFFSET = 41
+export const LAUNCH_DATE = '2026-09-28'
+export const DEV_PUZZLE_OFFSET = 42
 
 /**
  * Convenience helper to get the active puzzle based on the daily send cron switchover time.
@@ -65,7 +65,7 @@ export function getSendDailyPuzzle(
 export function getDailyPuzzle(dateStr?: string, options?: { isDev?: boolean }): DailyPuzzle {
   const targetDate = dateStr || getPuzzleDateForSendCron()
 
-  // For historical dates before the official launch date ('2026-09-27'):
+  // For historical dates before the official launch date ('2026-09-28'):
   // Retain exact historical behavior and deterministic hash fallback for tests.
   if (targetDate < LAUNCH_DATE) {
     const historicalPuzzle = PUZZLES.find(p => p.date === targetDate)
@@ -78,14 +78,14 @@ export function getDailyPuzzle(dateStr?: string, options?: { isDev?: boolean }):
     }
   }
 
-  // Calculate days since launch date (2026-09-27)
+  // Calculate days since launch date (2026-09-28)
   const [ty, tm, td] = targetDate.split('-').map(Number)
   const [ly, lm, ld] = LAUNCH_DATE.split('-').map(Number)
   const targetUtc = Date.UTC(ty, tm - 1, td)
   const launchUtc = Date.UTC(ly, lm - 1, ld)
   const daysSinceLaunch = Math.round((targetUtc - launchUtc) / 86400000)
 
-  // Dev testers prescreen puzzles 41 days in advance (Puzzle #42 today, #43 tomorrow, etc.)
+  // Dev testers prescreen puzzles 42 days in advance (Puzzle #43 "DIGEST" on Sept 28 launch, #44 tomorrow, etc.)
   const offset = options?.isDev ? DEV_PUZZLE_OFFSET : 0
   const puzzleIndex = Math.abs(daysSinceLaunch + offset) % PUZZLES.length
   const basePuzzle = PUZZLES[puzzleIndex]

@@ -11,38 +11,31 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
   })
 
   describe('Puzzle Schedule & Dev Offset', () => {
-    it('should assign Puzzle #1 to standard subscribers on launch day (2026-09-27)', () => {
+    it('should assign Puzzle #42 to all users on pre-launch day (2026-09-27)', () => {
       const standardPuzzle = getDailyPuzzle('2026-09-27')
-      expect(standardPuzzle.id).toBe('1')
-      expect(standardPuzzle.word).toBe('LOAD')
+      expect(standardPuzzle.id).toBe('42')
+      expect(standardPuzzle.word).toBe('BROWSE')
       expect(standardPuzzle.date).toBe('2026-09-27')
     })
 
-    it('should assign Puzzle #42 to dev testers on launch day (2026-09-27)', () => {
-      const devPuzzle = getDailyPuzzle('2026-09-27', { isDev: true })
-      expect(devPuzzle.id).toBe('42')
-      expect(devPuzzle.word).toBe('BROWSE')
-      expect(devPuzzle.date).toBe('2026-09-27')
-    })
-
-    it('should advance standard subscribers to Puzzle #2 on 2026-09-28', () => {
+    it('should assign Puzzle #1 to standard subscribers on launch day (2026-09-28)', () => {
       const standardPuzzle = getDailyPuzzle('2026-09-28')
-      expect(standardPuzzle.id).toBe('2')
-      expect(standardPuzzle.word).toBe('CONVERT')
+      expect(standardPuzzle.id).toBe('1')
+      expect(standardPuzzle.word).toBe('LOAD')
       expect(standardPuzzle.date).toBe('2026-09-28')
     })
 
-    it('should advance dev testers to Puzzle #43 on 2026-09-28', () => {
+    it('should assign Puzzle #43 (DIGEST) to dev testers on launch day (2026-09-28)', () => {
       const devPuzzle = getDailyPuzzle('2026-09-28', { isDev: true })
       expect(devPuzzle.id).toBe('43')
       expect(devPuzzle.word).toBe('DIGEST')
       expect(devPuzzle.date).toBe('2026-09-28')
     })
 
-    it('should advance standard subscribers to Puzzle #3 on 2026-09-29', () => {
+    it('should advance standard subscribers to Puzzle #2 on 2026-09-29', () => {
       const standardPuzzle = getDailyPuzzle('2026-09-29')
-      expect(standardPuzzle.id).toBe('3')
-      expect(standardPuzzle.word).toBe('ENTRANCE')
+      expect(standardPuzzle.id).toBe('2')
+      expect(standardPuzzle.word).toBe('CONVERT')
       expect(standardPuzzle.date).toBe('2026-09-29')
     })
 
@@ -51,6 +44,13 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
       expect(devPuzzle.id).toBe('44')
       expect(devPuzzle.word).toBe('CODE')
       expect(devPuzzle.date).toBe('2026-09-29')
+    })
+
+    it('should advance standard subscribers to Puzzle #3 on 2026-09-30', () => {
+      const standardPuzzle = getDailyPuzzle('2026-09-30')
+      expect(standardPuzzle.id).toBe('3')
+      expect(standardPuzzle.word).toBe('ENTRANCE')
+      expect(standardPuzzle.date).toBe('2026-09-30')
     })
   })
 
@@ -162,7 +162,7 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
       expect(res.status).toBe(200)
       const html = await res.text()
       expect(html).toContain('Dev Tester Prescreen Team')
-      expect(html).toContain('41 Days Ahead')
+      expect(html).toContain('42 Days Ahead')
       expect(html).toContain(devEmail)
       expect(html).toContain('removeDevTester')
       expect(html).toContain('toggleDevStatus')
@@ -247,24 +247,24 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
   })
 
   describe('Gameplay with Dev Tester Prescreen', () => {
-    it('should serve Puzzle #1 (LOAD) to standard user and Puzzle #42 (BROWSE) to dev tester', async () => {
+    it('should serve Puzzle #1 (LOAD) to standard user and Puzzle #43 (DIGEST) to dev tester on launch day', async () => {
       const standardUser = 'standard@firm.com'
       const devUser = 'dev@firm.com'
       await addDevTester(undefined, devUser)
 
-      // 1. GET /api/state for both users on 2026-09-27
-      const stdStateRes = await app.request(`/api/state?email=${encodeURIComponent(standardUser)}&date=2026-09-27`)
+      // 1. GET /api/state for both users on 2026-09-28
+      const stdStateRes = await app.request(`/api/state?email=${encodeURIComponent(standardUser)}&date=2026-09-28`)
       expect(stdStateRes.status).toBe(200)
       const stdState = await stdStateRes.json() as any
       expect(stdState.wordLength).toBe(4) // LOAD = 4 letters
 
-      const devStateRes = await app.request(`/api/state?email=${encodeURIComponent(devUser)}&date=2026-09-27`)
+      const devStateRes = await app.request(`/api/state?email=${encodeURIComponent(devUser)}&date=2026-09-28`)
       expect(devStateRes.status).toBe(200)
       const devState = await devStateRes.json() as any
-      expect(devState.wordLength).toBe(6) // BROWSE = 6 letters
+      expect(devState.wordLength).toBe(6) // DIGEST = 6 letters
 
       // 2. Submit guess for standard user (LOAD)
-      const stdGuessRes = await app.request(`/api/guess?email=${encodeURIComponent(standardUser)}&date=2026-09-27`, {
+      const stdGuessRes = await app.request(`/api/guess?email=${encodeURIComponent(standardUser)}&date=2026-09-28`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ 'user-guess': 'LOAD' }).toString()
@@ -272,11 +272,11 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
       const stdGuessData = await stdGuessRes.json() as any
       expect(stdGuessData.hasWon).toBe(true)
 
-      // 3. Submit guess for dev tester (BROWSE)
-      const devGuessRes = await app.request(`/api/guess?email=${encodeURIComponent(devUser)}&date=2026-09-27`, {
+      // 3. Submit guess for dev tester (DIGEST)
+      const devGuessRes = await app.request(`/api/guess?email=${encodeURIComponent(devUser)}&date=2026-09-28`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ 'user-guess': 'BROWSE' }).toString()
+        body: new URLSearchParams({ 'user-guess': 'DIGEST' }).toString()
       })
       const devGuessData = await devGuessRes.json() as any
       expect(devGuessData.hasWon).toBe(true)
@@ -284,20 +284,20 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
   })
 
   describe('Email Content & Dispatch with Dev List', () => {
-    it('should build Puzzle #1 email for standard user and Puzzle #42 email for dev tester today', async () => {
+    it('should build Puzzle #1 email for standard user and Puzzle #43 email for dev tester on launch day', async () => {
       const stdUser = 'std_email@firm.com'
       const devUser = 'dev_email@firm.com'
       await addDevTester(undefined, devUser)
 
-      const stdEmail = await buildPuzzleEmailContent(undefined, stdUser, '2026-09-27')
+      const stdEmail = await buildPuzzleEmailContent(undefined, stdUser, '2026-09-28')
       expect(stdEmail.puzzle.id).toBe('1')
       expect(stdEmail.puzzle.word).toBe('LOAD')
       expect(stdEmail.subject).toContain('Inboxed #1')
 
-      const devEmail = await buildPuzzleEmailContent(undefined, devUser, '2026-09-27')
-      expect(devEmail.puzzle.id).toBe('42')
-      expect(devEmail.puzzle.word).toBe('BROWSE')
-      expect(devEmail.subject).toContain('Inboxed #42')
+      const devEmail = await buildPuzzleEmailContent(undefined, devUser, '2026-09-28')
+      expect(devEmail.puzzle.id).toBe('43')
+      expect(devEmail.puzzle.word).toBe('DIGEST')
+      expect(devEmail.subject).toContain('Inboxed #43')
     })
   })
 })
