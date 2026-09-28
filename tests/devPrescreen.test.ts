@@ -158,7 +158,7 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
       const devEmail = 'prescreener@domain.com'
       await addDevTester(undefined, devEmail)
 
-      const res = await app.request('/dev/page/subscribers')
+      const res = await app.request('/dev/page/subscribers?source=local')
       expect(res.status).toBe(200)
       const html = await res.text()
       expect(html).toContain('Dev Tester Prescreen Team')

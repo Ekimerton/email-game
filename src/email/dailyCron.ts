@@ -62,21 +62,9 @@ export async function buildPuzzleEmailContent(
   const initialMsg = GAME_MESSAGES.initialPrompt(puzzle.word.length)
   ampHtml = ampHtml.replace('Guess the word!', initialMsg)
 
-  const initialPayload = buildStatePayload(state, puzzle)
-  const initialGameStateJson = JSON.stringify({
-    hasWon: state.hasWon,
-    wordLength: puzzle.word.length,
-    version: state.version || 0,
-    revealedCount: initialPayload.revealedCount,
-    definitions: initialPayload.definitions,
-    letterMask: state.letterMask,
-    lastMessage: state.lastMessage || initialMsg,
-  }, null, 16)
-
-  ampHtml = ampHtml.replace(
-    /<amp-state id="gameState">\s*<script type="application\/json">[\s\S]*?<\/script>\s*<\/amp-state>/,
-    `<amp-state id="gameState">\n            <script type="application/json">\n${initialGameStateJson}\n            </script>\n        </amp-state>`
-  )
+  if (state.hasWon) {
+    ampHtml = ampHtml.replaceAll('"hasWon": false', '"hasWon": true')
+  }
 
   const placeholderTabsHtml = puzzle.definitions.map((_, i) => {
     const isFirst = i === 0
@@ -90,7 +78,7 @@ export async function buildPuzzleEmailContent(
     const hiddenAttr = isFirst ? '' : ' hidden'
     const textClass = isRevealed ? 'clue-text' : 'clue-text blurred'
     const text = isRevealed ? def : getRedactedText(def)
-    return `<div class="clue-content"${hiddenAttr}><div class="${textClass}" [class]="'clue-text' + ((gameState.revealedCount || 1) >= ${i + 1} ? '' : ' blurred')" [text]="gameState.definitions[${i}].text">${text}</div></div>`
+    return `<div class="clue-content"${hiddenAttr}><div class="${textClass}" [class]="'clue-text' + ((gameState.revealedCount || 1) >= ${i + 1} ? '' : ' blurred')">${text}</div></div>`
   }).join('')
 
   const placeholderDefsHtml = `<div class="active-clue-card">${placeholderClueCardsHtml}</div><div class="clue-tabs-bar">${placeholderTabsHtml}</div>`

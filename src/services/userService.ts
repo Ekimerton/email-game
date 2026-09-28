@@ -150,10 +150,14 @@ export const DEV_TESTERS_KEY = 'dev:testers:list'
 
 export async function getDevTesters(kv: KVNamespace | undefined): Promise<string[]> {
   const data = await kvGet(kv, DEV_TESTERS_KEY)
-  if (Array.isArray(data)) {
-    return Array.from(new Set(data.map((e: any) => String(e).toLowerCase().trim()).filter(Boolean)))
-  }
-  return []
+  const list = Array.isArray(data)
+    ? data.map((e: any) => String(e).toLowerCase().trim()).filter(Boolean)
+    : []
+  const envDevList = (process.env.DEV_TESTERS || '')
+    .split(/[,;\s]+/)
+    .map(e => e.toLowerCase().trim())
+    .filter(Boolean)
+  return Array.from(new Set([...list, ...envDevList]))
 }
 
 export async function isDevTester(kv: KVNamespace | undefined, email: string): Promise<boolean> {

@@ -69,10 +69,39 @@ function parseArgs(args: string[]) {
     }
   }
 
-  return { isDryRun, senderArg, targetArg, dateArg }
+  const isDevArg = args.includes('--dev')
+
+  return { isDryRun, senderArg, targetArg, dateArg, isDevArg }
 }
 
-async function getEmailContent(email: string, dateStr?: string): Promise<{ ampHtml: string; fallbackHtml: string }> {
+async function checkIsDevTester(email: string, publicUrl: string, forceDev?: boolean): Promise<boolean> {
+  if (forceDev) return true
+  const cleanEmail = email.toLowerCase().trim()
+  const envDevList = (process.env.DEV_TESTERS || '')
+    .split(/[,;\s]+/)
+    .map(e => e.toLowerCase().trim())
+    .filter(Boolean)
+  if (envDevList.includes(cleanEmail)) {
+    return true
+  }
+  try {
+    const res = await fetch(`${publicUrl}/api/state?email=${encodeURIComponent(cleanEmail)}`)
+    if (res.ok) {
+      const data = await res.json() as any
+      if (data.isDev !== undefined) return Boolean(data.isDev)
+      if (data.shareText && data.shareText.includes('#43')) return true
+      if (data.items && data.items[0] && (data.items[0].isDev || (data.items[0].shareText && data.items[0].shareText.includes('#43')))) return true
+    }
+  } catch (_) {}
+  return false
+}
+
+async function getEmailContent(
+  email: string,
+  dateStr?: string,
+  origin = 'https://inboxed.fun',
+  options?: { isDev?: boolean }
+): Promise<{ ampHtml: string; fallbackHtml: string; subject: string; text: string; puzzle: any }> {
   const dateQuery = dateStr ? `&date=${encodeURIComponent(dateStr)}` : ''
   try {
     const localRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
@@ -80,24 +109,30 @@ async function getEmailContent(email: string, dateStr?: string): Promise<{ ampHt
     if (localRes.ok && fallbackRes.ok) {
       const ampHtml = await localRes.text()
       const fallbackHtml = await fallbackRes.text()
-      return { ampHtml, fallbackHtml }
-    } else {
-      throw new Error('Localhost server returned non-ok status')
+      const puzzle = getDailyPuzzle(dateStr, options)
+      const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(puzzle.date)}`
+      const text = `Play today's Inboxed puzzle (#${puzzle.id}): ${origin}/?email=${encodeURIComponent(email)}`
+      return { ampHtml, fallbackHtml, subject, text, puzzle }
     }
-  } catch (err) {
-    // Dev server not running — render via Hono app in-process
-    const { app } = await import('../src/index')
-    const ampRes = await app.request(`/?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
-    const ampHtml = await ampRes.text()
-    const fbRes = await app.request(`/fallback?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
-    const fallbackHtml = await fbRes.text()
-    return { ampHtml, fallbackHtml }
-  }
+  } catch (_) {}
+
+  // In-process rendering using buildPuzzleEmailContent
+  const { buildPuzzleEmailContent } = await import('../src/email/dailyCron')
+  const content = await buildPuzzleEmailContent(
+    undefined,
+    email,
+    dateStr,
+    origin,
+    process.env.AUTH_SECRET,
+    undefined,
+    options
+  )
+  return content
 }
 
 async function sendTestEmail() {
   const args = process.argv.slice(2)
-  const { isDryRun, senderArg, targetArg, dateArg } = parseArgs(args)
+  const { isDryRun, senderArg, targetArg, dateArg, isDevArg } = parseArgs(args)
 
   const rawTargets = targetArg || process.env.TEST_EMAILS || process.env.TEST_EMAIL || 'ekim0252@gmail.com'
   const targetEmails = parseEmailList(rawTargets)
@@ -110,21 +145,23 @@ async function sendTestEmail() {
 
   const cronStr = process.env.SEND_CRON || '0 15 * * *'
   const targetDate = dateArg || getPuzzleDateForSendCron(new Date(), cronStr)
-  const puzzle = getDailyPuzzle(targetDate)
-  const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(puzzle.date)}`
 
   console.log('Preparing test AMP Email via Mailgun SMTP...')
-  console.log(`  Date:          ${puzzle.date} (Puzzle #${puzzle.id}: ${puzzle.word})`)
+  console.log(`  Date:          ${targetDate}`)
   console.log(`  Sender (From): ${senderEmail}`)
   console.log(`  Target (To):   ${targetEmails.join(', ')} (${targetEmails.length} recipient${targetEmails.length > 1 ? 's' : ''})`)
   console.log(`  Public Origin: ${publicHttpsUrl}`)
 
   if (isDryRun) {
     console.log(`\n🏃 DRY RUN MODE — No actual emails will be sent.`)
-    console.log(`  Subject: ${subject}`)
     for (const targetEmail of targetEmails) {
-      const { ampHtml, fallbackHtml } = await getEmailContent(targetEmail, targetDate)
-      console.log(`  Rendered for ${targetEmail}: AMP (${ampHtml.length} bytes), Fallback (${fallbackHtml.length} bytes)`)
+      const isDev = await checkIsDevTester(targetEmail, publicHttpsUrl, isDevArg)
+      const emailContent = await getEmailContent(targetEmail, targetDate, publicHttpsUrl, { isDev })
+      console.log(`\n  Target:        ${targetEmail}`)
+      console.log(`  Dev Track:     ${isDev ? 'YES' : 'NO'}`)
+      console.log(`  Puzzle:        #${emailContent.puzzle.id} (${emailContent.puzzle.word}, ${emailContent.puzzle.word.length} letters, ${emailContent.puzzle.date})`)
+      console.log(`  Subject:       ${emailContent.subject}`)
+      console.log(`  Rendered:      AMP (${emailContent.ampHtml.length} bytes), Fallback (${emailContent.fallbackHtml.length} bytes)`)
     }
     console.log(`\n🏁 Dry run complete.`)
     return
@@ -156,18 +193,18 @@ async function sendTestEmail() {
 
   for (const targetEmail of targetEmails) {
     try {
-      const { ampHtml, fallbackHtml } = await getEmailContent(targetEmail, targetDate)
-      const dateQuery = `&date=${encodeURIComponent(targetDate)}`
+      const isDev = await checkIsDevTester(targetEmail, publicHttpsUrl, isDevArg)
+      const emailContent = await getEmailContent(targetEmail, targetDate, publicHttpsUrl, { isDev })
       const info = await transporter.sendMail({
         from: senderEmail,
         to: targetEmail,
-        subject,
-        text: `Play today's Inboxed puzzle: ${publicHttpsUrl}/?email=${encodeURIComponent(targetEmail)}${dateQuery}`,
-        html: fallbackHtml,
+        subject: emailContent.subject,
+        text: emailContent.text,
+        html: emailContent.fallbackHtml,
         alternatives: [
           {
             contentType: 'text/x-amp-html; charset=utf-8',
-            content: ampHtml,
+            content: emailContent.ampHtml,
             contentTransferEncoding: false
           }
         ],
@@ -175,7 +212,7 @@ async function sendTestEmail() {
           'List-Unsubscribe': `<${publicHttpsUrl}/unsubscribe?email=${encodeURIComponent(targetEmail)}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           'Feedback-ID': `word-game-daily:mailgun`,
-          'X-Entity-Ref-ID': `puzzle-${puzzle.id}-${puzzle.date}`,
+          'X-Entity-Ref-ID': `puzzle-${emailContent.puzzle.id}-${emailContent.puzzle.date}`,
         },
       })
 

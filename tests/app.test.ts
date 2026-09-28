@@ -866,16 +866,16 @@ describe('Cold Start & Network Resilience Handling', () => {
     expect(EMAIL_HTML).toContain('<input type="hidden" name="date" value="USER_DATE_PLACEHOLDER">')
   })
 
-  it('should include dynamic victory reveal bindings for definitions, leaderboard, and form hiding', async () => {
+  it('should include dynamic victory reveal bindings for leaderboard and form hiding', async () => {
     expect(EMAIL_HTML).toContain('<div class="form-container" [hidden]="gameState.hasWon">')
-    expect(EMAIL_HTML).toContain('[text]="gameState.definitions[{{index}}].text"')
-    expect(EMAIL_HTML).toContain('[hidden]="gameState.hasWon || {{hasWon}}"')
-    expect(EMAIL_HTML).toContain('[class]="(gameState.hasWon || {{hasWon}}) ? \'leaderboard-items\' : \'leaderboard-blur-content\'"')
+    expect(EMAIL_HTML).toContain('[hidden]="gameState.hasWon"')
+    expect(EMAIL_HTML).toContain('[class]="gameState.hasWon ? \'leaderboard-items\' : \'leaderboard-blur-content\'"')
+    expect(EMAIL_HTML).not.toContain('gameState.hasWon ||')
+    expect(EMAIL_HTML).not.toContain('[text]="gameState.definitions')
 
     const email = await buildPuzzleEmailContent(undefined, 'player@testcorp.com', '2026-09-28')
-    expect(email.ampHtml).toContain('"definitions": [')
-    expect(email.ampHtml).toContain('"revealedCount": 1')
-    expect(email.ampHtml).toContain('"text": "The volume of work required to be performed."')
+    expect(email.ampHtml).toContain('"wordLength": 4')
+    expect(email.ampHtml).toContain('The volume of work required to be performed.')
   })
 })
 

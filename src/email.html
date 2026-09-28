@@ -760,17 +760,7 @@
                 {
                     "hasWon": false,
                     "wordLength": 7,
-                    "version": 0,
-                    "revealedCount": 1,
-                    "definitions": [
-                        { "num": 1, "index": 0, "text": "", "isRevealed": true },
-                        { "num": 2, "index": 1, "text": "", "isRevealed": false },
-                        { "num": 3, "index": 2, "text": "", "isRevealed": false },
-                        { "num": 4, "index": 3, "text": "", "isRevealed": false },
-                        { "num": 5, "index": 4, "text": "", "isRevealed": false },
-                        { "num": 6, "index": 5, "text": "", "isRevealed": false },
-                        { "num": 7, "index": 6, "text": "", "isRevealed": false }
-                    ]
+                    "version": 0
                 }
             </script>
         </amp-state>
@@ -815,8 +805,7 @@
                                     <div class="clue-content"
                                         [hidden]="(clueView.activeClue || {{revealedCount}}) != {{num}}">
                                         <div class="clue-text {{^isRevealed}}blurred{{/isRevealed}}"
-                                            [class]="'clue-text' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? '' : ' blurred')"
-                                            [text]="gameState.definitions[{{index}}].text">{{text}}</div>
+                                            [class]="'clue-text' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? '' : ' blurred')">{{text}}</div>
                                     </div>
                                     {{/definitions}}
                                 </div>
@@ -938,14 +927,14 @@
                 <template type="amp-mustache">
                     <div class="leaderboard-container">
                         {{^hasWon}}
-                        <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon || {{hasWon}}">
+                        <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon">
                             Solve today's puzzle to reveal the leaderboard!
                         </div>
                         {{/hasWon}}
 
                         <div
                             class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}"
-                            [class]="(gameState.hasWon || {{hasWon}}) ? 'leaderboard-items' : 'leaderboard-blur-content'">
+                            [class]="gameState.hasWon ? 'leaderboard-items' : 'leaderboard-blur-content'">
                             {{#players}}
                             <div class="leaderboard-item {{#isCurrentPlayer}}current-player{{/isCurrentPlayer}}">
                                 <span class="rank-number">#{{rank}}</span>
