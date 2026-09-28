@@ -760,7 +760,17 @@ export const EMAIL_HTML = `<!doctype html>
                 {
                     "hasWon": false,
                     "wordLength": 7,
-                    "version": 0
+                    "version": 0,
+                    "revealedCount": 1,
+                    "definitions": [
+                        { "num": 1, "index": 0, "text": "", "isRevealed": true },
+                        { "num": 2, "index": 1, "text": "", "isRevealed": false },
+                        { "num": 3, "index": 2, "text": "", "isRevealed": false },
+                        { "num": 4, "index": 3, "text": "", "isRevealed": false },
+                        { "num": 5, "index": 4, "text": "", "isRevealed": false },
+                        { "num": 6, "index": 5, "text": "", "isRevealed": false },
+                        { "num": 7, "index": 6, "text": "", "isRevealed": false }
+                    ]
                 }
             </script>
         </amp-state>
@@ -805,7 +815,8 @@ export const EMAIL_HTML = `<!doctype html>
                                     <div class="clue-content"
                                         [hidden]="(clueView.activeClue || {{revealedCount}}) != {{num}}">
                                         <div class="clue-text {{^isRevealed}}blurred{{/isRevealed}}"
-                                            [class]="'clue-text' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? '' : ' blurred')">{{text}}</div>
+                                            [class]="'clue-text' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? '' : ' blurred')"
+                                            [text]="gameState.definitions[{{index}}].text">{{text}}</div>
                                     </div>
                                     {{/definitions}}
                                 </div>
@@ -865,11 +876,11 @@ export const EMAIL_HTML = `<!doctype html>
                 </amp-list>
 
                 <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
-                <div class="form-container">
+                <div class="form-container" [hidden]="gameState.hasWon">
                     <form id="guess-form" method="POST"
                         action-xhr="https://inboxed.fun/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
                         on="submit:AMP.setState({ uiState: { submitting: true } });
-                            submit-success:AMP.setState({ gameState: (!gameState.version || (event.response.version && event.response.version >= gameState.version)) ? event.response : gameState, clueView: { activeClue: event.response.revealedCount }, typed: { word: '' }, uiState: { submitting: false } }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
+                            submit-success:AMP.setState({ gameState: (!gameState.version || (event.response.version && event.response.version >= gameState.version)) ? event.response : gameState, clueView: { activeClue: event.response.hasWon ? (clueView.activeClue || 1) : event.response.revealedCount }, typed: { word: '' }, uiState: { submitting: false } }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
                             submit-error:AMP.setState({ gameState: { lastMessage: (event.response && (event.response.lastMessage || event.response.error)) ? (event.response.lastMessage || event.response.error) : 'Connection issue — tap Submit Guess to try again.' }, uiState: { submitting: false } })">
 
                         <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
@@ -927,13 +938,14 @@ export const EMAIL_HTML = `<!doctype html>
                 <template type="amp-mustache">
                     <div class="leaderboard-container">
                         {{^hasWon}}
-                        <div class="leaderboard-lock-banner">
+                        <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon || {{hasWon}}">
                             Solve today's puzzle to reveal the leaderboard!
                         </div>
                         {{/hasWon}}
 
                         <div
-                            class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
+                            class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}"
+                            [class]="(gameState.hasWon || {{hasWon}}) ? 'leaderboard-items' : 'leaderboard-blur-content'">
                             {{#players}}
                             <div class="leaderboard-item {{#isCurrentPlayer}}current-player{{/isCurrentPlayer}}">
                                 <span class="rank-number">#{{rank}}</span>
@@ -950,10 +962,10 @@ export const EMAIL_HTML = `<!doctype html>
                 </template>
                 <div placeholder>
                     <div class="leaderboard-container">
-                        <div class="leaderboard-lock-banner">
+                        <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon">
                             Solve today's puzzle to reveal the leaderboard!
                         </div>
-                        <div class="leaderboard-blur-content">
+                        <div class="leaderboard-blur-content" [class]="gameState.hasWon ? 'leaderboard-items' : 'leaderboard-blur-content'">
                             <div class="leaderboard-item">
                                 <span class="rank-number">#1</span>
                                 <span class="player-email">alex@company.com</span>

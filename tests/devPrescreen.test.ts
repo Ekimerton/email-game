@@ -273,6 +273,12 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
       expect(stdGuessData.hasWon).toBe(true)
 
       // 3. Submit guess for dev tester (DIGEST)
+      // Check leaderboard before winning: must be locked (hasWon: false)
+      const lbBeforeRes = await app.request(`/api/leaderboard?domain=firm.com&email=${encodeURIComponent(devUser)}&date=2026-09-28`)
+      expect(lbBeforeRes.status).toBe(200)
+      const lbBefore = await lbBeforeRes.json() as any
+      expect(lbBefore.hasWon).toBe(false)
+
       const devGuessRes = await app.request(`/api/guess?email=${encodeURIComponent(devUser)}&date=2026-09-28`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -280,6 +286,21 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
       })
       const devGuessData = await devGuessRes.json() as any
       expect(devGuessData.hasWon).toBe(true)
+      expect(devGuessData.revealedCount).toBe(devGuessData.definitions.length)
+      // Verify all definitions are unredacted and include index property
+      for (let i = 0; i < devGuessData.definitions.length; i++) {
+        const def = devGuessData.definitions[i]
+        expect(def.isRevealed).toBe(true)
+        expect(def.index).toBe(i)
+        expect(def.text).not.toContain('•')
+      }
+
+      // Check leaderboard after winning: must reveal for dev tester (hasWon: true)
+      const lbAfterRes = await app.request(`/api/leaderboard?domain=firm.com&email=${encodeURIComponent(devUser)}&date=2026-09-28`)
+      expect(lbAfterRes.status).toBe(200)
+      const lbAfter = await lbAfterRes.json() as any
+      expect(lbAfter.hasWon).toBe(true)
+      expect(lbAfter.players.some((p: any) => p.email === devUser && p.isCurrentPlayer)).toBe(true)
     })
   })
 

@@ -242,7 +242,8 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
     try {
       const userEmail = await getUserEmail(c)
       const domain = c.req.query('domain') || extractDomain(userEmail)
-      const dateStr = c.req.query('date') || getDailyPuzzle().date
+      const isDev = await isDevTester(c.env?.GAME_STATE_KV, userEmail)
+      const dateStr = c.req.query('date') || getDailyPuzzle(undefined, { isDev }).date
       const leaderboard = await getDomainLeaderboard(c.env?.GAME_STATE_KV, domain, dateStr)
 
       // Filter out users who chose to hide themselves from the leaderboard
@@ -274,7 +275,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         items.push(currentPlayerItem)
       }
 
-      const { state: userState } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateStr)
+      const { state: userState } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateStr, { isDev })
 
       const payload = {
         domain,
@@ -284,7 +285,8 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       }
 
       return c.json({
-        items: [payload]
+        items: [payload],
+        ...payload
       })
     } catch (error: any) {
       return c.json({ items: [] })

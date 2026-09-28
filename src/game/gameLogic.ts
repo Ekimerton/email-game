@@ -93,6 +93,7 @@ export function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?:
     const isFirst = i === 0
     return {
       num: i + 1,
+      index: i,
       isRevealed,
       isLatest,
       isFirst,

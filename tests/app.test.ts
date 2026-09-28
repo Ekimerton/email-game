@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getDailyPuzzle } from '../src/game'
-import { app, getFallbackHtml, calculateScore, isPuzzleSynonym, renderConfirmationEmailHtml, renderConfirmationEmailText } from '../src/index'
+import { app, getFallbackHtml, calculateScore, isPuzzleSynonym, renderConfirmationEmailHtml, renderConfirmationEmailText, buildPuzzleEmailContent } from '../src/index'
 import { EMAIL_HTML } from '../src/email'
 
 describe('Hono App & Layout Calculations', () => {
@@ -864,6 +864,18 @@ describe('Cold Start & Network Resilience Handling', () => {
     expect(EMAIL_HTML).toContain('form.amp-form-submitting .btn-primary')
     expect(EMAIL_HTML).toContain('btn-text-submitting')
     expect(EMAIL_HTML).toContain('<input type="hidden" name="date" value="USER_DATE_PLACEHOLDER">')
+  })
+
+  it('should include dynamic victory reveal bindings for definitions, leaderboard, and form hiding', async () => {
+    expect(EMAIL_HTML).toContain('<div class="form-container" [hidden]="gameState.hasWon">')
+    expect(EMAIL_HTML).toContain('[text]="gameState.definitions[{{index}}].text"')
+    expect(EMAIL_HTML).toContain('[hidden]="gameState.hasWon || {{hasWon}}"')
+    expect(EMAIL_HTML).toContain('[class]="(gameState.hasWon || {{hasWon}}) ? \'leaderboard-items\' : \'leaderboard-blur-content\'"')
+
+    const email = await buildPuzzleEmailContent(undefined, 'player@testcorp.com', '2026-09-28')
+    expect(email.ampHtml).toContain('"definitions": [')
+    expect(email.ampHtml).toContain('"revealedCount": 1')
+    expect(email.ampHtml).toContain('"text": "The volume of work required to be performed."')
   })
 })
 
