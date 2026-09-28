@@ -572,14 +572,21 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(html).toContain('inboxed.fun')
   })
 
-  it('should include link to privacy policy and made with love footer in signup landing page', async () => {
+  it('should include link to privacy policy, feedback form, and made with love footer in signup landing page', async () => {
     const res = await app.request('/signup')
     expect(res.status).toBe(200)
     const html = await res.text()
     expect(html).toContain('href="/privacy"')
+    expect(html).toContain('https://forms.gle/o3rAMb56i7cL1T1n8')
+    expect(html).toContain('Give Feedback')
     expect(html).toContain('Game made with ❤️ by')
     expect(html).toContain('https://ekimerton.github.io')
     expect(html).toContain('Ekim')
+  })
+
+  it('should include link to feedback form in EMAIL_HTML footer', () => {
+    expect(EMAIL_HTML).toContain('https://forms.gle/o3rAMb56i7cL1T1n8')
+    expect(EMAIL_HTML).toContain('Give Feedback')
   })
 
   describe('Development-Only Game HTML Viewer', () => {

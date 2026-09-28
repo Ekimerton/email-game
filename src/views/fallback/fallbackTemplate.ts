@@ -100,7 +100,7 @@ export const FALLBACK_HTML = `<!doctype html>
       <div style="padding: 14px 0 2px; text-align: left; font-size: 12px; line-height: 1.5; color: {{MUTED_TEXT}};">
         <strong style="color: {{SUB_STRONG_TEXT}};">Seeing this while trying to load the game?</strong><br>
         <p style="margin: 6px 0 0;">Your email client might not be supported. This game uses AMP email, which is supported by Gmail, Yahoo Mail, AOL Mail, FairEmail, and Mail.ru.</p>
-        <p style="margin: 4px 0 0;">You can <a href="{{ACCOUNT_URL}}" style="color: {{CTA_COLOR}}; font-weight: 700; text-decoration: underline;">update your account preferences</a>.</p>
+        <p style="margin: 4px 0 0;">You can <a href="{{ACCOUNT_URL}}" style="color: {{CTA_COLOR}}; font-weight: 700; text-decoration: underline;">update your account preferences</a> or <a href="https://forms.gle/o3rAMb56i7cL1T1n8" target="_blank" rel="noopener noreferrer" style="color: {{CTA_COLOR}}; font-weight: 700; text-decoration: underline;">give feedback</a>.</p>
       </div>
     </div>
   </div>

@@ -769,7 +769,10 @@ body.dark-theme .footer-text a {
           <hr className="section-divider" />
 
           <div className="footer-text">
-            Game made with ❤️ by <a href="https://ekimerton.github.io" target="_blank" rel="noopener noreferrer">Ekim</a>
+            <div>Game made with ❤️ by <a href="https://ekimerton.github.io" target="_blank" rel="noopener noreferrer">Ekim</a></div>
+            <div style={{ marginTop: '6px' }}>
+              <a href="https://forms.gle/o3rAMb56i7cL1T1n8" target="_blank" rel="noopener noreferrer" style={{ color: '#71717a', textDecoration: 'underline' }}>Give Feedback</a>
+            </div>
           </div>
         </div>
       );
