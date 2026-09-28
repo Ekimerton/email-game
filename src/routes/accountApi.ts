@@ -18,8 +18,8 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       return c.json({ success: false, message: 'Invalid or missing authentication token.' }, 401)
     }
 
-    const userProfile = await getUserSettings(c.env?.GAME_STATE_KV, verified.email)
-    const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
+    const userProfile = await getUserSettings(c.env, verified.email)
+    const subscribers = await getSubscribers(c.env)
     const isSubscribed = subscribers.some(s => s.email.toLowerCase() === verified.email.toLowerCase() && s.status === 'active')
     const theme = userProfile.theme || 'light'
 
@@ -49,9 +49,9 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
 
       const targetSubscribed = Boolean(body.subscribed)
       if (targetSubscribed) {
-        await addSubscriber(c.env?.GAME_STATE_KV, verified.email)
+        await addSubscriber(c.env, verified.email)
       } else {
-        await removeSubscriber(c.env?.GAME_STATE_KV, verified.email)
+        await removeSubscriber(c.env, verified.email)
       }
 
       return c.json({
@@ -76,10 +76,10 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         return c.json({ success: false, message: 'Invalid authentication token.' }, 401)
       }
 
-      const userProfile = await getUserSettings(c.env?.GAME_STATE_KV, verified.email)
+      const userProfile = await getUserSettings(c.env, verified.email)
       const showOnLeaderboard = Boolean(body.showOnLeaderboard)
       userProfile.showOnLeaderboard = showOnLeaderboard
-      await updateUserSettings(c.env?.GAME_STATE_KV, userProfile)
+      await updateUserSettings(c.env, userProfile)
 
       return c.json({
         success: true,
@@ -105,7 +105,7 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         return c.json({ success: false, message: 'Invalid authentication token.' }, 401)
       }
 
-      const userProfile = await getUserSettings(c.env?.GAME_STATE_KV, verified.email)
+      const userProfile = await getUserSettings(c.env, verified.email)
       let nextTheme: EmailTheme = 'light'
       if (typeof body.theme === 'string') {
         nextTheme = body.theme === 'dark' ? 'dark' : 'light'
@@ -116,7 +116,7 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       }
 
       userProfile.theme = nextTheme
-      await updateUserSettings(c.env?.GAME_STATE_KV, userProfile)
+      await updateUserSettings(c.env, userProfile)
 
       return c.json({
         success: true,

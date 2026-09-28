@@ -1,14 +1,14 @@
-import { extractEmailDomain, kvGet, kvPut, withKeyLock } from '../core'
+import { extractEmailDomain, kvGet, kvPut, withKeyLock, type StorageBackend } from '../core'
 import type { SubscriberEntry } from '../core'
 
 const SUBSCRIBERS_KEY = 'subscribers:list'
 
-export async function getSubscribers(kv: KVNamespace | undefined): Promise<SubscriberEntry[]> {
+export async function getSubscribers(kv: StorageBackend): Promise<SubscriberEntry[]> {
   const data = await kvGet(kv, SUBSCRIBERS_KEY)
   return Array.isArray(data) ? data : []
 }
 
-export async function addSubscriber(kv: KVNamespace | undefined, email: string): Promise<SubscriberEntry[]> {
+export async function addSubscriber(kv: StorageBackend, email: string): Promise<SubscriberEntry[]> {
   const cleanEmail = email.toLowerCase().trim()
   const domain = extractEmailDomain(cleanEmail)
   return withKeyLock(SUBSCRIBERS_KEY, async () => {
@@ -31,7 +31,7 @@ export async function addSubscriber(kv: KVNamespace | undefined, email: string):
   })
 }
 
-export async function removeSubscriber(kv: KVNamespace | undefined, email: string): Promise<SubscriberEntry[]> {
+export async function removeSubscriber(kv: StorageBackend, email: string): Promise<SubscriberEntry[]> {
   const cleanEmail = email.toLowerCase().trim()
   return withKeyLock(SUBSCRIBERS_KEY, async () => {
     const subscribers = await getSubscribers(kv)
@@ -46,7 +46,7 @@ export async function removeSubscriber(kv: KVNamespace | undefined, email: strin
 }
 
 export async function unsubscribeUser(
-  kv: KVNamespace | undefined,
+  kv: StorageBackend,
   email: string,
   purge = false
 ): Promise<{ success: boolean; email: string; status: string; totalSubscribers: number; activeCount: number }> {
@@ -79,7 +79,7 @@ export async function unsubscribeUser(
 }
 
 // Auto-subscribe the user if they've opened the email game for the first time
-export async function ensureSubscribedOnOpen(kv: KVNamespace | undefined, email: string): Promise<boolean> {
+export async function ensureSubscribedOnOpen(kv: StorageBackend, email: string): Promise<boolean> {
   const cleanEmail = email.toLowerCase().trim()
   return withKeyLock(SUBSCRIBERS_KEY, async () => {
     const subscribers = await getSubscribers(kv)

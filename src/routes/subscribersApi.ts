@@ -93,7 +93,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
       }
 
       // Ensure subscriber is persisted in KV
-      await addSubscriber(c.env?.GAME_STATE_KV, email)
+      await addSubscriber(c.env, email)
 
       const reqUrl = new URL(c.req.url)
       const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
@@ -105,7 +105,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
       const targetDate = getPuzzleDateForSendCron(new Date(), cronStr)
 
       const emailContent = await buildPuzzleEmailContent(
-        c.env?.GAME_STATE_KV,
+        c.env,
         email,
         targetDate,
         currentOrigin,
@@ -141,7 +141,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
   // Get Subscribers Endpoint
   app.get('/api/subscribers', async (c) => {
     try {
-      const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
+      const subscribers = await getSubscribers(c.env)
       return c.json({
         total: subscribers.length,
         activeCount: subscribers.filter(s => s.status === 'active').length,
@@ -156,7 +156,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
   app.get('/api/sub-status', async (c) => {
     try {
       const userEmail = await getUserEmail(c)
-      const isSubscribed = await ensureSubscribedOnOpen(c.env?.GAME_STATE_KV, userEmail)
+      const isSubscribed = await ensureSubscribedOnOpen(c.env, userEmail)
       const payload = { isSubscribed, userEmail }
       return c.json({ items: [payload], ...payload })
     } catch (error: any) {
@@ -204,7 +204,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
         date = getPuzzleDateForSendCron(new Date(), cronStr)
       }
 
-      const result = await resetUserDayState(c.env?.GAME_STATE_KV, email, date)
+      const result = await resetUserDayState(c.env, email, date)
       return c.json(result)
     } catch (error: any) {
       console.error('Error resetting user day state:', error)
@@ -250,7 +250,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
     }
 
     if (email && email.includes('@')) {
-      await removeSubscriber(c.env?.GAME_STATE_KV, email.toLowerCase().trim())
+      await removeSubscriber(c.env, email.toLowerCase().trim())
     }
 
     const acceptHeader = c.req.header('Accept') || ''
@@ -287,7 +287,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
         return c.json({ success: false, error: 'A valid email address is required.' }, 400)
       }
 
-      const result = await unsubscribeUser(c.env?.GAME_STATE_KV, email, purge)
+      const result = await unsubscribeUser(c.env, email, purge)
       return c.json(result)
     } catch (err: any) {
       return c.json({ success: false, error: err.message || 'Failed to unsubscribe user' }, 500)
@@ -309,7 +309,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
     if (!verifyAdmin(c)) {
       return c.json({ success: false, error: 'Unauthorized' }, 401)
     }
-    const devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+    const devTesters = await getDevTesters(c.env)
     return c.json({ success: true, devTesters })
   })
 
@@ -328,7 +328,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
         return c.json({ success: false, error: 'A valid email address is required.' }, 400)
       }
       const cleanEmail = email.toLowerCase().trim()
-      const devTesters = await addDevTester(c.env?.GAME_STATE_KV, cleanEmail)
+      const devTesters = await addDevTester(c.env, cleanEmail)
       return c.json({
         success: true,
         message: `Added ${cleanEmail} to Dev Prescreen list (41 days ahead)!`,
@@ -354,7 +354,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
         return c.json({ success: false, error: 'A valid email address is required.' }, 400)
       }
       const cleanEmail = email.toLowerCase().trim()
-      const devTesters = await removeDevTester(c.env?.GAME_STATE_KV, cleanEmail)
+      const devTesters = await removeDevTester(c.env, cleanEmail)
       return c.json({
         success: true,
         message: `Removed ${cleanEmail} from Dev Prescreen list.`,
@@ -380,12 +380,12 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
         return c.json({ success: false, error: 'A valid email address is required.' }, 400)
       }
       const cleanEmail = email.toLowerCase().trim()
-      const currentlyDev = await isDevTester(c.env?.GAME_STATE_KV, cleanEmail)
+      const currentlyDev = await isDevTester(c.env, cleanEmail)
       let devTesters: string[] = []
       if (currentlyDev) {
-        devTesters = await removeDevTester(c.env?.GAME_STATE_KV, cleanEmail)
+        devTesters = await removeDevTester(c.env, cleanEmail)
       } else {
-        devTesters = await addDevTester(c.env?.GAME_STATE_KV, cleanEmail)
+        devTesters = await addDevTester(c.env, cleanEmail)
       }
       const isDev = !currentlyDev
       return c.json({

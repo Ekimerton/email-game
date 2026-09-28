@@ -151,11 +151,22 @@ async function resetDirectKv(email: string, date: string, isRemote: boolean) {
   const cleanEmail = email.toLowerCase().trim()
   const stateKey = `game:${date}:${cleanEmail}`
   const flag = isRemote ? '--remote' : '--local'
-  const cmd = `npx wrangler kv key delete --binding GAME_STATE_KV ${flag} "${stateKey}"`
 
+  // Delete from D1
+  const d1Cmd = `npx wrangler d1 execute inboxed-db ${flag} --command="DELETE FROM kv_store WHERE key = '${stateKey}';" -y`
   try {
-    console.log(`🔧 Running Wrangler KV delete: ${cmd}`)
-    const output = execSync(cmd, { stdio: 'pipe', encoding: 'utf8' })
+    console.log(`🔧 Running Wrangler D1 delete: ${d1Cmd}`)
+    execSync(d1Cmd, { stdio: 'pipe', encoding: 'utf8' })
+    console.log(`  ✅ D1 row for "${stateKey}" deleted successfully.`)
+  } catch (err: any) {
+    console.warn(`  ⚠️ Wrangler D1 CLI output:\n${err.stderr || err.stdout || err.message}`)
+  }
+
+  // Delete from KV (backup)
+  const kvCmd = `npx wrangler kv key delete --binding GAME_STATE_KV ${flag} "${stateKey}"`
+  try {
+    console.log(`🔧 Running Wrangler KV delete: ${kvCmd}`)
+    const output = execSync(kvCmd, { stdio: 'pipe', encoding: 'utf8' })
     console.log(`  ✅ KV key "${stateKey}" deleted successfully via Wrangler.`)
     if (output.trim()) {
       console.log(`     ${output.trim()}`)

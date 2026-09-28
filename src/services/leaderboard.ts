@@ -1,8 +1,8 @@
-import { kvGet, kvPut, withKeyLock } from '../core'
+import { kvGet, kvPut, withKeyLock, type StorageBackend } from '../core'
 import type { LeaderboardEntry } from '../core'
 
 export async function getDomainLeaderboard(
-  kv: KVNamespace | undefined,
+  kv: StorageBackend,
   domain: string,
   date: string
 ): Promise<LeaderboardEntry[]> {
@@ -11,9 +11,9 @@ export async function getDomainLeaderboard(
   return Array.isArray(data) ? data : []
 }
 
-// Save domain leaderboard entry to KV and Memory
+// Save domain leaderboard entry to KV/D1 and Memory
 export async function updateDomainLeaderboard(
-  kv: KVNamespace | undefined,
+  kv: StorageBackend,
   domain: string,
   date: string,
   entry: LeaderboardEntry

@@ -35,7 +35,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
-    const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret)
+    const content = await buildPuzzleEmailContent(c.env, userEmail, dateParam, currentOrigin, authSecret)
 
     return c.html(getDevWorkbenchHtml({
       ampHtml: content.ampHtml,
@@ -71,7 +71,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
-    const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret)
+    const content = await buildPuzzleEmailContent(c.env, userEmail, dateParam, currentOrigin, authSecret)
     return c.html(content.ampHtml)
   })
 
@@ -101,7 +101,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     } else if (page === 'account') {
       html = getAccountPageHtml()
     } else if (page === 'fallback') {
-      const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret)
+      const content = await buildPuzzleEmailContent(c.env, userEmail, dateParam, currentOrigin, authSecret)
       html = content.fallbackHtml
     } else if (page === 'confirm-email') {
       const token = generateConfirmationToken(userEmail, authSecret)
@@ -130,12 +130,12 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
             throw new Error(`HTTP ${prodRes.status}`)
           }
         } catch (err: any) {
-          subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
+          subscribers = await getSubscribers(c.env)
           dataSource = 'local'
           fetchError = err.message || 'offline'
         }
       } else {
-        subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
+        subscribers = await getSubscribers(c.env)
       }
       let devTesters: string[] = []
       if (dataSource === 'prod') {
@@ -148,13 +148,13 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
             const devData = (await prodDevRes.json().catch(() => ({}))) as any
             devTesters = Array.isArray(devData?.devTesters) ? devData.devTesters : []
           } else {
-            devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+            devTesters = await getDevTesters(c.env)
           }
         } catch {
-          devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+          devTesters = await getDevTesters(c.env)
         }
       } else {
-        devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+        devTesters = await getDevTesters(c.env)
       }
 
       html = getDevSubscribersPageHtml({
@@ -165,7 +165,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         devTesters
       })
     } else {
-      const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret)
+      const content = await buildPuzzleEmailContent(c.env, userEmail, dateParam, currentOrigin, authSecret)
       html = content.ampHtml
     }
 
@@ -191,7 +191,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
-    const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret)
+    const content = await buildPuzzleEmailContent(c.env, userEmail, dateParam, currentOrigin, authSecret)
     return c.html(content.fallbackHtml)
   })
 
@@ -290,12 +290,12 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
           throw new Error(`HTTP ${prodRes.status}`)
         }
       } catch (err: any) {
-        subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
+        subscribers = await getSubscribers(c.env)
         dataSource = 'local'
         fetchError = `Could not reach ${prodOrigin} (${err.message || 'offline'}). Showing local KV.`
       }
     } else {
-      subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
+      subscribers = await getSubscribers(c.env)
     }
 
     let devTesters: string[] = []
@@ -309,13 +309,13 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
           const devData = (await prodDevRes.json().catch(() => ({}))) as any
           devTesters = Array.isArray(devData?.devTesters) ? devData.devTesters : []
         } else {
-          devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+          devTesters = await getDevTesters(c.env)
         }
       } catch {
-        devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+        devTesters = await getDevTesters(c.env)
       }
     } else {
-      devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+      devTesters = await getDevTesters(c.env)
     }
 
     return c.html(getDevSubscribersPageHtml({
@@ -373,7 +373,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         }
 
         // Also remove from local KV in case local store was in sync
-        await unsubscribeUser(c.env?.GAME_STATE_KV, cleanEmail, purge)
+        await unsubscribeUser(c.env, cleanEmail, purge)
 
         return c.json({
           success: true,
@@ -383,7 +383,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         })
       } else {
         // Remove from local KV
-        const result = await unsubscribeUser(c.env?.GAME_STATE_KV, cleanEmail, purge)
+        const result = await unsubscribeUser(c.env, cleanEmail, purge)
         return c.json({
           success: true,
           target: 'local',
@@ -427,7 +427,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
           throw new Error(errorData.message || errorData.error || `Production returned HTTP ${prodRes.status}`)
         }
 
-        await addSubscriber(c.env?.GAME_STATE_KV, email)
+        await addSubscriber(c.env, email)
 
         return c.json({
           success: true,
@@ -435,7 +435,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
           message: `Added ${email} to production subscribers!`
         })
       } else {
-        const subscribers = await addSubscriber(c.env?.GAME_STATE_KV, email)
+        const subscribers = await addSubscriber(c.env, email)
         return c.json({
           success: true,
           target: 'local',
@@ -521,14 +521,14 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         })
       } else {
         return await withKeyLock('subscribers:list', async () => {
-          const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
+          const subscribers = await getSubscribers(c.env)
           const idx = subscribers.findIndex(s => s.email === email)
           if (idx < 0) {
             return c.json({ success: false, error: 'Subscriber not found.' }, 404)
           }
           const newStatus = subscribers[idx].status === 'active' ? 'unsubscribed' : 'active'
           subscribers[idx].status = newStatus
-          await kvPut(c.env?.GAME_STATE_KV, 'subscribers:list', subscribers)
+          await kvPut(c.env, 'subscribers:list', subscribers)
           return c.json({
             success: true,
             target: 'local',
@@ -559,9 +559,9 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         'player@company.com'
       ]
       for (const email of demoEmails) {
-        await addSubscriber(c.env?.GAME_STATE_KV, email)
+        await addSubscriber(c.env, email)
       }
-      const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
+      const subscribers = await getSubscribers(c.env)
       return c.json({
         success: true,
         message: `Seeded ${demoEmails.length} demo subscribers!`,
@@ -595,7 +595,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         return c.json({ success: false, error: err.message || 'Failed to fetch dev testers from prod' }, 500)
       }
     }
-    const devTesters = await getDevTesters(c.env?.GAME_STATE_KV)
+    const devTesters = await getDevTesters(c.env)
     return c.json({ success: true, target: 'local', devTesters })
   })
 
@@ -638,9 +638,9 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         message = data.message || `Added ${email} to Production Dev Prescreen list!`
 
         // Also update local KV for consistency
-        await addDevTester(c.env?.GAME_STATE_KV, email)
+        await addDevTester(c.env, email)
       } else {
-        devTesters = await addDevTester(c.env?.GAME_STATE_KV, email)
+        devTesters = await addDevTester(c.env, email)
       }
 
       return c.json({
@@ -693,9 +693,9 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         message = data.message || `Removed ${email} from Production Dev Prescreen list.`
 
         // Also update local KV for consistency
-        await removeDevTester(c.env?.GAME_STATE_KV, email)
+        await removeDevTester(c.env, email)
       } else {
-        devTesters = await removeDevTester(c.env?.GAME_STATE_KV, email)
+        devTesters = await removeDevTester(c.env, email)
       }
 
       return c.json({
@@ -751,16 +751,16 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
 
         // Mirror locally
         if (isDev) {
-          await addDevTester(c.env?.GAME_STATE_KV, email)
+          await addDevTester(c.env, email)
         } else {
-          await removeDevTester(c.env?.GAME_STATE_KV, email)
+          await removeDevTester(c.env, email)
         }
       } else {
-        const currentlyDev = await isDevTester(c.env?.GAME_STATE_KV, email)
+        const currentlyDev = await isDevTester(c.env, email)
         if (currentlyDev) {
-          devTesters = await removeDevTester(c.env?.GAME_STATE_KV, email)
+          devTesters = await removeDevTester(c.env, email)
         } else {
-          devTesters = await addDevTester(c.env?.GAME_STATE_KV, email)
+          devTesters = await addDevTester(c.env, email)
         }
         isDev = !currentlyDev
         message = isDev

@@ -51,7 +51,8 @@ export interface GameState {
 }
 
 export type Bindings = {
-  GAME_STATE_KV: KVNamespace
+  DB?: D1Database
+  GAME_STATE_KV?: KVNamespace
   AUTH_SECRET?: string
   MAILGUN_API_KEY?: string
   MAILGUN_DOMAIN?: string
@@ -64,6 +65,14 @@ export type Bindings = {
   ASSETS?: any
   SEND_CRON?: string
 }
+
+export type StorageBackend =
+  | D1Database
+  | KVNamespace
+  | Bindings
+  | { DB?: D1Database; GAME_STATE_KV?: KVNamespace; db?: D1Database; kv?: KVNamespace }
+  | undefined
+
 
 export interface DailyEmailDispatchResult {
   total: number

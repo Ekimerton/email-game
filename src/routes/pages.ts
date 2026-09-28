@@ -130,7 +130,7 @@ export function registerPageRoutes(app: Hono<{ Bindings: Bindings }>) {
     }
 
     // Persist directly to KV now that the user has confirmed their subscription
-    await addSubscriber(c.env?.GAME_STATE_KV, verified.email)
+    await addSubscriber(c.env, verified.email)
 
     return c.html(getConfirmationPageHtml(c, verified.email, token || ''))
   })
@@ -152,9 +152,9 @@ export function registerPageRoutes(app: Hono<{ Bindings: Bindings }>) {
     const themeParam = c.req.query('theme') as EmailTheme | undefined
     const puzzle = getDailyPuzzle(dateParam)
     const domain = extractDomain(userEmail)
-    const profile = await recordUserActivity(c.env?.GAME_STATE_KV, userEmail, puzzle.date)
-    const coworkerCount = await getCoworkerCount(c.env?.GAME_STATE_KV, domain, userEmail)
-    const playerCount = await getPlayerCount(c.env?.GAME_STATE_KV)
+    const profile = await recordUserActivity(c.env, userEmail, puzzle.date)
+    const coworkerCount = await getCoworkerCount(c.env, domain, userEmail)
+    const playerCount = await getPlayerCount(c.env)
     const theme: EmailTheme = themeParam || profile.theme || 'light'
 
     const reqUrl = new URL(c.req.url)

@@ -1,6 +1,6 @@
 import { getDailyPuzzle, getPuzzleDateForSendCron, formatPrettyDate, getRedactedText, getOrCreateGameState, buildStatePayload, GAME_MESSAGES, type DailyPuzzle } from '../game'
 import { EMAIL_HTML } from './emailHtml'
-import { generateAccountToken, getAccountUrl, extractEmailDomain, type Bindings, type DailyEmailDispatchResult } from '../core'
+import { generateAccountToken, getAccountUrl, extractEmailDomain, type Bindings, type DailyEmailDispatchResult, type StorageBackend } from '../core'
 import { sendMailgunEmail } from './emailService'
 import { applyEmailTheme, type EmailTheme } from './emailThemes'
 import { recordUserActivity, getCoworkerCount, getPlayerCount, getUserEmail, getSubscribers, isDevTester, getDevTesters } from '../services'
@@ -8,7 +8,7 @@ import { getFallbackHtml } from '../views'
 
 // Helper to build full AMP + Fallback HTML content for daily puzzle emails
 export async function buildPuzzleEmailContent(
-  kv: KVNamespace | undefined,
+  kv: StorageBackend,
   userEmail: string,
   dateParam?: string,
   currentOrigin?: string,
@@ -127,7 +127,7 @@ export async function renderAmpGame(c: any) {
   const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
   const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
-  const content = await buildPuzzleEmailContent(c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret, themeParam)
+  const content = await buildPuzzleEmailContent(c.env?.DB || c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret, themeParam)
   return c.html(content.ampHtml)
 }
 
@@ -167,7 +167,7 @@ export async function sendDailyPuzzleEmails(
     let testEmails: string[] = []
 
     if (mode === 'subscribers' || mode === 'all') {
-      const subscribers = await getSubscribers(env?.GAME_STATE_KV)
+      const subscribers = await getSubscribers(env?.DB || env?.GAME_STATE_KV)
       activeSubscribers = subscribers
         .filter(s => s.status === 'active')
         .map(s => s.email.toLowerCase().trim())
@@ -202,7 +202,7 @@ export async function sendDailyPuzzleEmails(
 
   console.log(`[Daily Cron] Dispatching Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${recipients.length} recipient(s): ${recipients.join(', ')}`)
 
-  const devList = await getDevTesters(env?.GAME_STATE_KV)
+  const devList = await getDevTesters(env?.DB || env?.GAME_STATE_KV)
   const devSet = new Set(devList.map(e => e.toLowerCase().trim()))
 
   const errors: Record<string, string> = {}
@@ -221,7 +221,7 @@ export async function sendDailyPuzzleEmails(
       }
 
       const emailContent = await buildPuzzleEmailContent(
-        env?.GAME_STATE_KV,
+        env?.DB || env?.GAME_STATE_KV,
         cleanEmail,
         targetDate,
         prodOrigin,

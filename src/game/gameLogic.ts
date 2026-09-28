@@ -1,7 +1,7 @@
 import { DailyPuzzle } from './puzzles'
 import { getDailyPuzzle } from './puzzleLogic'
 import { GAME_MESSAGES } from './gameMessages'
-import { extractEmailDomain, kvGet } from '../core'
+import { extractEmailDomain, kvGet, type StorageBackend } from '../core'
 import type { LetterStatus, GameState } from '../core'
 
 export function escapeHtml(value: string): string {
@@ -136,7 +136,7 @@ export function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?:
 
 // Helper to initialize or retrieve game state for a user and date
 export async function getOrCreateGameState(
-  kv: KVNamespace | undefined,
+  kv: StorageBackend,
   userEmail: string,
   dateStr?: string,
   options?: { isDev?: boolean }

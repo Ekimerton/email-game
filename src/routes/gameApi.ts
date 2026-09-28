@@ -26,12 +26,12 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
     try {
       const userEmail = await getUserEmail(c)
       const dateParam = c.req.query('date')
-      const isDev = await isDevTester(c.env?.GAME_STATE_KV, userEmail)
+      const isDev = await isDevTester(c.env, userEmail)
       const puzzle = getDailyPuzzle(dateParam, { isDev })
       const stateKey = `game:${puzzle.date}:${userEmail}`
 
       const payload = await withKeyLock(stateKey, async () => {
-        const { state } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateParam, { isDev })
+        const { state } = await getOrCreateGameState(c.env, userEmail, dateParam, { isDev })
         return buildStatePayload(state, puzzle)
       })
 
@@ -50,13 +50,13 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const guess = (body['user-guess'] as string || '').toUpperCase().trim()
       const dateParam = c.req.query('date') || (body['date'] as string)
       const domain = extractDomain(userEmail)
-      const isDev = await isDevTester(c.env?.GAME_STATE_KV, userEmail)
+      const isDev = await isDevTester(c.env, userEmail)
       const puzzle = getDailyPuzzle(dateParam, { isDev })
       const stateKey = `game:${puzzle.date}:${userEmail}`
 
       const payload = await withKeyLock(stateKey, async () => {
         const { state } = await getOrCreateGameState(
-          c.env?.GAME_STATE_KV,
+          c.env,
           userEmail,
           dateParam,
           { isDev }
@@ -72,7 +72,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
           state.lastMessage = GAME_MESSAGES.invalidLength(puzzle.word.length)
           state.version = (state.version || 0) + 1
           state.updatedAt = new Date().toISOString()
-          await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
+          await kvPut(c.env, stateKey, state)
           return buildStatePayload(state, puzzle, state.lastMessage)
         }
 
@@ -86,7 +86,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
           state.lastMessage = GAME_MESSAGES.alreadyGuessed(guess)
           state.version = (state.version || 0) + 1
           state.updatedAt = new Date().toISOString()
-          await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
+          await kvPut(c.env, stateKey, state)
           return buildStatePayload(state, puzzle, state.lastMessage)
         }
 
@@ -135,7 +135,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
           }
 
           const updatedLeaderboard = await updateDomainLeaderboard(
-            c.env?.GAME_STATE_KV,
+            c.env,
             domain,
             puzzle.date,
             leaderboardEntry
@@ -162,7 +162,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
           }
         }
 
-        await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
+        await kvPut(c.env, stateKey, state)
         return buildStatePayload(state, puzzle)
       })
 
@@ -179,13 +179,13 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const body = await c.req.parseBody()
       const userEmail = await getUserEmail(c, body)
       const dateParam = c.req.query('date') || (body['date'] as string)
-      const isDev = await isDevTester(c.env?.GAME_STATE_KV, userEmail)
+      const isDev = await isDevTester(c.env, userEmail)
       const puzzle = getDailyPuzzle(dateParam, { isDev })
       const stateKey = `game:${puzzle.date}:${userEmail}`
 
       const payload = await withKeyLock(stateKey, async () => {
         const { state } = await getOrCreateGameState(
-          c.env?.GAME_STATE_KV,
+          c.env,
           userEmail,
           dateParam,
           { isDev }
@@ -206,7 +206,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
           state.lastMessage = GAME_MESSAGES.allLettersRevealed
           state.version = (state.version || 0) + 1
           state.updatedAt = new Date().toISOString()
-          await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
+          await kvPut(c.env, stateKey, state)
           return buildStatePayload(state, puzzle)
         }
 
@@ -226,7 +226,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         state.version = (state.version || 0) + 1
         state.updatedAt = new Date().toISOString()
 
-        await kvPut(c.env?.GAME_STATE_KV, stateKey, state)
+        await kvPut(c.env, stateKey, state)
         return buildStatePayload(state, puzzle)
       })
 
@@ -242,14 +242,14 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
     try {
       const userEmail = await getUserEmail(c)
       const domain = c.req.query('domain') || extractDomain(userEmail)
-      const isDev = await isDevTester(c.env?.GAME_STATE_KV, userEmail)
+      const isDev = await isDevTester(c.env, userEmail)
       const dateStr = c.req.query('date') || getDailyPuzzle(undefined, { isDev }).date
-      const leaderboard = await getDomainLeaderboard(c.env?.GAME_STATE_KV, domain, dateStr)
+      const leaderboard = await getDomainLeaderboard(c.env, domain, dateStr)
 
       // Filter out users who chose to hide themselves from the leaderboard
       const visibleEntriesWithSettings = await Promise.all(
         leaderboard.map(async (entry) => {
-          const userSettings = await getUserSettings(c.env?.GAME_STATE_KV, entry.email)
+          const userSettings = await getUserSettings(c.env, entry.email)
           return { entry, showOnLeaderboard: userSettings.showOnLeaderboard }
         })
       )
@@ -275,7 +275,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         items.push(currentPlayerItem)
       }
 
-      const { state: userState } = await getOrCreateGameState(c.env?.GAME_STATE_KV, userEmail, dateStr, { isDev })
+      const { state: userState } = await getOrCreateGameState(c.env, userEmail, dateStr, { isDev })
 
       const hasWon = Boolean(userState.hasWon || currentPlayerItem)
 

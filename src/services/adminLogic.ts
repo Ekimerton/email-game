@@ -1,10 +1,10 @@
-import { extractEmailDomain, kvDelete, kvPut, withKeyLock } from '../core'
+import { extractEmailDomain, kvDelete, kvPut, withKeyLock, type StorageBackend } from '../core'
 import { getDomainLeaderboard } from './leaderboard'
 import { getUserSettings, updateUserSettings } from './userService'
 
 // Reset user game state, leaderboard entry, and played dates for a specific date
 export async function resetUserDayState(
-  kv: KVNamespace | undefined,
+  kv: StorageBackend,
   email: string,
   dateStr: string
 ): Promise<{

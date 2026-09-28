@@ -18,6 +18,13 @@
       "id": "659e2e65e8bb4081a402110fda15b339"
     }
   ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "inboxed-db",
+      "database_id": "2fbc6baa-df3d-44ac-a8fd-78877e46416b"
+    }
+  ],
   "assets": {
     "directory": "./public"
   },

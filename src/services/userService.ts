@@ -1,5 +1,5 @@
 import { OAuth2Client } from 'google-auth-library'
-import { extractEmailDomain, kvGet, kvPut, withKeyLock } from '../core'
+import { extractEmailDomain, kvGet, kvPut, withKeyLock, type StorageBackend } from '../core'
 import type { UserSettings } from '../core'
 import { getDailyPuzzle } from '../game'
 import { getSubscribers } from './subscribers'
@@ -63,7 +63,7 @@ export async function getUserEmail(c: any, parsedBody?: Record<string, any>): Pr
   return 'player@company.com'
 }
 
-export async function getUserSettings(kv: KVNamespace | undefined, email: string): Promise<UserSettings> {
+export async function getUserSettings(kv: StorageBackend, email: string): Promise<UserSettings> {
   const cleanEmail = email.toLowerCase().trim()
   const domain = extractDomain(cleanEmail)
   const userKey = `user:profile:${cleanEmail}`
@@ -87,7 +87,7 @@ export async function getUserSettings(kv: KVNamespace | undefined, email: string
   }
 }
 
-export async function updateUserSettings(kv: KVNamespace | undefined, settings: UserSettings): Promise<void> {
+export async function updateUserSettings(kv: StorageBackend, settings: UserSettings): Promise<void> {
   const cleanEmail = settings.email.toLowerCase().trim()
   const key = `user:profile:${cleanEmail}`
   await withKeyLock(key, async () => {
@@ -96,7 +96,7 @@ export async function updateUserSettings(kv: KVNamespace | undefined, settings: 
 }
 
 export async function recordUserActivity(
-  kv: KVNamespace | undefined,
+  kv: StorageBackend,
   email: string,
   dateStr: string
 ): Promise<UserSettings> {
@@ -118,7 +118,7 @@ export async function recordUserActivity(
 }
 
 export async function getCoworkerCount(
-  kv: KVNamespace | undefined,
+  kv: StorageBackend,
   domain: string,
   email: string
 ): Promise<number> {
@@ -141,14 +141,14 @@ export async function getCoworkerCount(
   return coworkerEmails.size
 }
 
-export async function getPlayerCount(kv: KVNamespace | undefined): Promise<number> {
+export async function getPlayerCount(kv: StorageBackend): Promise<number> {
   const subscribers = await getSubscribers(kv)
   return subscribers.filter(subscriber => subscriber.status === 'active').length
 }
 
 export const DEV_TESTERS_KEY = 'dev:testers:list'
 
-export async function getDevTesters(kv: KVNamespace | undefined): Promise<string[]> {
+export async function getDevTesters(kv: StorageBackend): Promise<string[]> {
   const data = await kvGet(kv, DEV_TESTERS_KEY)
   const list = Array.isArray(data)
     ? data.map((e: any) => String(e).toLowerCase().trim()).filter(Boolean)
@@ -160,14 +160,14 @@ export async function getDevTesters(kv: KVNamespace | undefined): Promise<string
   return Array.from(new Set([...list, ...envDevList]))
 }
 
-export async function isDevTester(kv: KVNamespace | undefined, email: string): Promise<boolean> {
+export async function isDevTester(kv: StorageBackend, email: string): Promise<boolean> {
   if (!email) return false
   const cleanEmail = email.toLowerCase().trim()
   const list = await getDevTesters(kv)
   return list.includes(cleanEmail)
 }
 
-export async function addDevTester(kv: KVNamespace | undefined, email: string): Promise<string[]> {
+export async function addDevTester(kv: StorageBackend, email: string): Promise<string[]> {
   if (!email) return getDevTesters(kv)
   const cleanEmail = email.toLowerCase().trim()
   return withKeyLock(DEV_TESTERS_KEY, async () => {
@@ -180,7 +180,7 @@ export async function addDevTester(kv: KVNamespace | undefined, email: string): 
   })
 }
 
-export async function removeDevTester(kv: KVNamespace | undefined, email: string): Promise<string[]> {
+export async function removeDevTester(kv: StorageBackend, email: string): Promise<string[]> {
   if (!email) return getDevTesters(kv)
   const cleanEmail = email.toLowerCase().trim()
   return withKeyLock(DEV_TESTERS_KEY, async () => {
