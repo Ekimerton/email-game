@@ -1,4 +1,4 @@
-import { kvGet, kvPut } from '../core'
+import { kvGet, kvPut, withKeyLock } from '../core'
 import type { LeaderboardEntry } from '../core'
 
 export async function getDomainLeaderboard(
@@ -19,18 +19,21 @@ export async function updateDomainLeaderboard(
   entry: LeaderboardEntry
 ): Promise<LeaderboardEntry[]> {
   const key = `leaderboard:${domain}:${date}`
-  const list = (await getDomainLeaderboard(kv, domain, date)) || []
+  return withKeyLock(key, async () => {
+    const list = (await getDomainLeaderboard(kv, domain, date)) || []
 
-  const existingIdx = list.findIndex((item) => item.email === entry.email)
-  if (existingIdx >= 0) {
-    list[existingIdx] = entry
-  } else {
-    list.push(entry)
-  }
+    const existingIdx = list.findIndex((item) => item.email === entry.email)
+    if (existingIdx >= 0) {
+      list[existingIdx] = entry
+    } else {
+      list.push(entry)
+    }
 
-  list.sort((a, b) => b.score - a.score || a.guessCount - b.guessCount)
+    list.sort((a, b) => b.score - a.score || a.guessCount - b.guessCount)
 
-  const topList = list.slice(0, 20)
-  await kvPut(kv, key, topList)
-  return topList
+    const topList = list.slice(0, 20)
+    await kvPut(kv, key, topList)
+    return topList
+  })
 }
+

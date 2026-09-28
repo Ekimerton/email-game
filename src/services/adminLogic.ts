@@ -1,4 +1,4 @@
-import { extractEmailDomain, kvDelete, kvPut } from '../core'
+import { extractEmailDomain, kvDelete, kvPut, withKeyLock } from '../core'
 import { getDomainLeaderboard } from './leaderboard'
 import { getUserSettings, updateUserSettings } from './userService'
 
@@ -23,21 +23,25 @@ export async function resetUserDayState(
   const stateKey = `game:${dateStr}:${cleanEmail}`
 
   // 1. Delete Game State
-  await kvDelete(kv, stateKey)
+  await withKeyLock(stateKey, async () => {
+    await kvDelete(kv, stateKey)
+  })
 
   // 2. Remove from Domain Leaderboard for this date if present
   let removedFromLeaderboard = false
   const leaderboardKey = `leaderboard:${domain}:${dateStr}`
-  const existingLeaderboard = await getDomainLeaderboard(kv, domain, dateStr)
-  if (existingLeaderboard && existingLeaderboard.length > 0) {
-    const filteredLeaderboard = existingLeaderboard.filter(
-      (entry) => entry.email.toLowerCase().trim() !== cleanEmail
-    )
-    if (filteredLeaderboard.length !== existingLeaderboard.length) {
-      await kvPut(kv, leaderboardKey, filteredLeaderboard)
-      removedFromLeaderboard = true
+  await withKeyLock(leaderboardKey, async () => {
+    const existingLeaderboard = await getDomainLeaderboard(kv, domain, dateStr)
+    if (existingLeaderboard && existingLeaderboard.length > 0) {
+      const filteredLeaderboard = existingLeaderboard.filter(
+        (entry) => entry.email.toLowerCase().trim() !== cleanEmail
+      )
+      if (filteredLeaderboard.length !== existingLeaderboard.length) {
+        await kvPut(kv, leaderboardKey, filteredLeaderboard)
+        removedFromLeaderboard = true
+      }
     }
-  }
+  })
 
   // 3. Remove date from user's playedDates profile if present
   let removedFromPlayedDates = false

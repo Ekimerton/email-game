@@ -125,6 +125,8 @@ export function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?:
     shareText: state.shareText,
     guessedWords,
     guessesHistory: state.guessesHistory || [],
+    version: state.version || 0,
+    updatedAt: state.updatedAt,
     ...(error ? { error } : {}),
   }
 
@@ -151,6 +153,9 @@ export async function getOrCreateGameState(
     if (stored.synonymGuessesCount === undefined) {
       stored.synonymGuessesCount = 0
     }
+    if (stored.version === undefined) {
+      stored.version = 0
+    }
     return { state: stored, puzzle, stateKey }
   }
 
@@ -168,6 +173,8 @@ export async function getOrCreateGameState(
     shareText: '',
     revealedCount: 1,
     synonymGuessesCount: 0,
+    version: 0,
+    updatedAt: new Date().toISOString(),
   }
 
   return { state: initialState, puzzle, stateKey }

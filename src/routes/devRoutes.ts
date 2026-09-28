@@ -1,5 +1,5 @@
 import type { Hono } from 'hono'
-import { generateConfirmationToken, generateAccountToken, kvPut, type Bindings, type SubscriberEntry } from '../core'
+import { generateConfirmationToken, generateAccountToken, kvPut, withKeyLock, type Bindings, type SubscriberEntry } from '../core'
 import { buildPuzzleEmailContent, renderConfirmationEmailHtml } from '../email'
 import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser } from '../services'
 import {
@@ -478,22 +478,24 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
           message: `Updated ${email} status to ${nextStatus} on production!`
         })
       } else {
-        const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
-        const idx = subscribers.findIndex(s => s.email === email)
-        if (idx < 0) {
-          return c.json({ success: false, error: 'Subscriber not found.' }, 404)
-        }
-        const newStatus = subscribers[idx].status === 'active' ? 'unsubscribed' : 'active'
-        subscribers[idx].status = newStatus
-        await kvPut(c.env?.GAME_STATE_KV, 'subscribers:list', subscribers)
-        return c.json({
-          success: true,
-          target: 'local',
-          email,
-          status: newStatus,
-          message: `Set ${email} status to ${newStatus}.`,
-          total: subscribers.length,
-          activeCount: subscribers.filter(s => s.status === 'active').length,
+        return await withKeyLock('subscribers:list', async () => {
+          const subscribers = await getSubscribers(c.env?.GAME_STATE_KV)
+          const idx = subscribers.findIndex(s => s.email === email)
+          if (idx < 0) {
+            return c.json({ success: false, error: 'Subscriber not found.' }, 404)
+          }
+          const newStatus = subscribers[idx].status === 'active' ? 'unsubscribed' : 'active'
+          subscribers[idx].status = newStatus
+          await kvPut(c.env?.GAME_STATE_KV, 'subscribers:list', subscribers)
+          return c.json({
+            success: true,
+            target: 'local',
+            email,
+            status: newStatus,
+            message: `Set ${email} status to ${newStatus}.`,
+            total: subscribers.length,
+            activeCount: subscribers.filter(s => s.status === 'active').length,
+          })
         })
       }
     } catch (err: any) {

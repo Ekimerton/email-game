@@ -46,6 +46,8 @@ export interface GameState {
   shareText: string
   revealedCount: number
   synonymGuessesCount?: number
+  version?: number
+  updatedAt?: string
 }
 
 export type Bindings = {

@@ -1,5 +1,5 @@
 import { OAuth2Client } from 'google-auth-library'
-import { extractEmailDomain, kvGet, kvPut } from '../core'
+import { extractEmailDomain, kvGet, kvPut, withKeyLock } from '../core'
 import type { UserSettings } from '../core'
 import { getDailyPuzzle } from '../game'
 import { getSubscribers } from './subscribers'
@@ -89,7 +89,10 @@ export async function getUserSettings(kv: KVNamespace | undefined, email: string
 
 export async function updateUserSettings(kv: KVNamespace | undefined, settings: UserSettings): Promise<void> {
   const cleanEmail = settings.email.toLowerCase().trim()
-  await kvPut(kv, `user:profile:${cleanEmail}`, settings)
+  const key = `user:profile:${cleanEmail}`
+  await withKeyLock(key, async () => {
+    await kvPut(kv, key, settings)
+  })
 }
 
 export async function recordUserActivity(
@@ -97,17 +100,21 @@ export async function recordUserActivity(
   email: string,
   dateStr: string
 ): Promise<UserSettings> {
-  const profile = await getUserSettings(kv, email)
+  const cleanEmail = email.toLowerCase().trim()
+  const key = `user:profile:${cleanEmail}`
+  return withKeyLock(key, async () => {
+    const profile = await getUserSettings(kv, cleanEmail)
 
-  if (!profile.playedDates) {
-    profile.playedDates = [dateStr]
-  } else if (!profile.playedDates.includes(dateStr)) {
-    profile.playedDates.push(dateStr)
-  }
-  profile.daysPlayed = profile.playedDates.length
+    if (!profile.playedDates) {
+      profile.playedDates = [dateStr]
+    } else if (!profile.playedDates.includes(dateStr)) {
+      profile.playedDates.push(dateStr)
+    }
+    profile.daysPlayed = profile.playedDates.length
 
-  await updateUserSettings(kv, profile)
-  return profile
+    await kvPut(kv, key, profile)
+    return profile
+  })
 }
 
 export async function getCoworkerCount(
