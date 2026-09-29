@@ -134,14 +134,14 @@ export function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?:
   return { items: [statePayload], ...statePayload }
 }
 
-// Helper to initialize or retrieve game state for a user and puzzle/date
+// Helper to initialize or retrieve game state for a user and date
 export async function getOrCreateGameState(
   kv: StorageBackend,
   userEmail: string,
-  dateOrPuzzle?: string | number,
+  dateStr?: string,
   options?: { isDev?: boolean }
 ): Promise<{ state: GameState; puzzle: DailyPuzzle; stateKey: string }> {
-  const puzzle = getDailyPuzzle(dateOrPuzzle, options)
+  const puzzle = getDailyPuzzle(dateStr, options)
   const stateKey = `game:${puzzle.date}:${userEmail}`
 
   const stored = await kvGet(kv, stateKey)

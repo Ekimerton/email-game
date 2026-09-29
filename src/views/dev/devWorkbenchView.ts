@@ -16,7 +16,6 @@ export function getDevWorkbenchHtml(params: {
   const safeSubject = escapeHtml(subject)
   const encodedEmail = encodeURIComponent(userEmail)
   const encodedDate = encodeURIComponent(puzzle.date)
-  const encodedPuzzle = encodeURIComponent(puzzle.id)
   const ampHtmlSizeKb = (ampHtml.length / 1024).toFixed(1)
 
   return `<!doctype html>
@@ -46,16 +45,6 @@ export function getDevWorkbenchHtml(params: {
 
       <form id="dev-params-form" class="controls-section" method="GET" action="/dev">
         <input
-          type="text"
-          id="puzzle-input"
-          name="puzzle"
-          class="dev-input"
-          value="#${puzzle.id}"
-          placeholder="Puzzle #"
-          title="Enter Puzzle # (e.g. 1, 43)"
-          style="width: 75px;"
-        >
-        <input
           type="date"
           id="date-input"
           name="date"
@@ -74,10 +63,10 @@ export function getDevWorkbenchHtml(params: {
           style="width: 190px;"
         >
         <button type="submit" class="btn-dev btn-primary">Update</button>
-        <button type="button" id="reset-state-btn" class="btn-dev btn-danger" title="Reset guess state for this puzzle">Reset Game</button>
+        <button type="button" id="reset-state-btn" class="btn-dev btn-danger" title="Reset guess state for this day">Reset Game</button>
         <a
           id="standalone-link"
-          href="/dev/render?puzzle=${encodedPuzzle}&date=${encodedDate}&email=${encodedEmail}"
+          href="/dev/render?date=${encodedDate}&email=${encodedEmail}"
           target="_blank"
           rel="noopener noreferrer"
           class="btn-dev btn-secondary"
@@ -156,7 +145,7 @@ export function getDevWorkbenchHtml(params: {
       <iframe
         id="preview-iframe"
         class="game-iframe"
-        src="/dev/render?puzzle=${encodedPuzzle}&date=${encodedDate}&email=${encodedEmail}"
+        src="/dev/render?date=${encodedDate}&email=${encodedEmail}"
         title="Page Live Preview"
       ></iframe>
     </div>
@@ -176,7 +165,6 @@ export function getDevWorkbenchHtml(params: {
   <script>
     var currentEmail = '${encodedEmail}';
     var currentDate = '${encodedDate}';
-    var currentPuzzle = '${encodedPuzzle}';
     var currentPage = 'game';
     var currentViewMode = 'preview';
     var currentSignupVariant = 'default';
@@ -186,7 +174,7 @@ export function getDevWorkbenchHtml(params: {
         title: '🎮 Daily Game (AMP Email)',
         desc: 'Interactive AMP Email game with clue stepper, letter masking, and live guess validation.',
         badge: 'Interactive',
-        url: '/dev/render?puzzle=' + currentPuzzle + '&date=' + currentDate + '&email=' + currentEmail,
+        url: '/dev/render?date=' + currentDate + '&email=' + currentEmail,
         hasGameMeta: true
       },
       confirmed: {
@@ -212,7 +200,7 @@ export function getDevWorkbenchHtml(params: {
         title: '✉️ Fallback Email Card',
         desc: 'Non-AMP fallback email invitation card for Apple Mail, Outlook, and desktop clients.',
         badge: 'Email Card',
-        url: '/dev/fallback?puzzle=' + currentPuzzle + '&date=' + currentDate + '&email=' + currentEmail
+        url: '/dev/fallback?date=' + currentDate + '&email=' + currentEmail
       },
       invalid: {
         title: '⚠️ Invalid / Expired Token',
@@ -390,12 +378,11 @@ export function getDevWorkbenchHtml(params: {
       });
     }
 
-    // Reset Game State for current email and puzzle/date
+    // Reset Game State for current email and date
     var resetBtn = document.getElementById('reset-state-btn');
     if (resetBtn) {
       resetBtn.addEventListener('click', async function() {
         var email = document.getElementById('email-input').value.trim();
-        var puzzle = document.getElementById('puzzle-input') ? document.getElementById('puzzle-input').value.trim() : '';
         var date = document.getElementById('date-input').value.trim();
         if (!email) {
           showToast('Please enter an email to reset');
@@ -406,8 +393,7 @@ export function getDevWorkbenchHtml(params: {
         resetBtn.textContent = 'Resetting...';
 
         try {
-          var targetParam = puzzle ? '&puzzle=' + encodeURIComponent(puzzle) : '&date=' + encodeURIComponent(date);
-          var res = await fetch('/api/admin/reset-user-day?email=' + encodeURIComponent(email) + targetParam, {
+          var res = await fetch('/api/admin/reset-user-day?email=' + encodeURIComponent(email) + '&date=' + encodeURIComponent(date), {
             method: 'POST'
           });
           var data = await res.json();

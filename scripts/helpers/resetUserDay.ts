@@ -3,19 +3,17 @@
  * resetUserDay.ts
  *
  * Resets a user's game save state, domain leaderboard score,
- * and played-dates history for a specific puzzle number (or date).
+ * and played-dates history for a specific date (defaults to today).
  *
  * Usage:
- *   npx tsx scripts/helpers/resetUserDay.ts <email> [puzzle]
- *   npx tsx scripts/helpers/resetUserDay.ts alice@company.com 1
- *   npx tsx scripts/helpers/resetUserDay.ts alice@company.com #1 --remote
- *   npx tsx scripts/helpers/resetUserDay.ts --email=alice@company.com --puzzle=1
- *   npm run reset-user-day -- alice@company.com 1
+ *   npx tsx scripts/helpers/resetUserDay.ts <email> [date]
+ *   npx tsx scripts/helpers/resetUserDay.ts --email=alice@company.com --date=2026-09-07
+ *   npx tsx scripts/helpers/resetUserDay.ts alice@company.com --remote
+ *   npm run reset-user-day -- alice@company.com
  *
  * Options:
  *   --email, -e       User email address (required)
- *   --puzzle, -p      Target puzzle number (e.g. 1, 43, #1, defaults to today's puzzle)
- *   --date, -d        Target puzzle date in YYYY-MM-DD (legacy / backward compatibility)
+ *   --date, -d        Target puzzle date in YYYY-MM-DD (defaults to today's puzzle)
  *   --remote, --prod  Reset state on the remote/production worker
  *   --local, --dev    Reset state on local dev server (default)
  *   --url=<url>       Target a custom worker endpoint URL
@@ -25,13 +23,12 @@
 
 import 'dotenv/config'
 import { execSync } from 'node:child_process'
-import { getDailyPuzzle, getDateForPuzzleId } from '../../src/game'
+import { getDailyPuzzle } from '../../src/game'
 
 interface ResetResult {
   success: boolean
   email?: string
   date?: string
-  puzzleId?: string
   message?: string
   error?: string
   details?: {
@@ -45,20 +42,19 @@ function printHelp() {
   console.log(`
 🎮 Inboxed - Reset User Day Helper
 
-Resets a user's save state, clears their leaderboard entry for that puzzle,
-and removes the puzzle from their played-dates record.
+Resets a user's save state, clears their leaderboard entry for that day,
+and removes the date from their played-dates record.
 
 Usage:
-  npx tsx scripts/helpers/resetUserDay.ts <email> [puzzle] [options]
-  npm run reset-user-day -- <email> [puzzle] [options]
+  npx tsx scripts/helpers/resetUserDay.ts <email> [date] [options]
+  npm run reset-user-day -- <email> [date] [options]
 
 Arguments:
   email              User email address (e.g. alice@company.com)
-  puzzle             Optional puzzle number (e.g. 1, 43, #1) or date (YYYY-MM-DD, defaults to today's puzzle)
+  date               Optional date in YYYY-MM-DD format (defaults to today's puzzle date)
 
 Options:
   -e, --email=<str>  User email address
-  -p, --puzzle=<val> Puzzle number (e.g. 1, 43, #1)
   -d, --date=<str>   Date (YYYY-MM-DD)
   --remote, --prod   Target remote production worker (${process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun'})
   --local, --dev     Target local worker (http://localhost:8787, with in-process fallback)
@@ -68,9 +64,8 @@ Options:
 
 Examples:
   npx tsx scripts/helpers/resetUserDay.ts alice@company.com
-  npx tsx scripts/helpers/resetUserDay.ts alice@company.com 1
-  npx tsx scripts/helpers/resetUserDay.ts alice@company.com #1 --remote
-  npx tsx scripts/helpers/resetUserDay.ts --email=alice@company.com --puzzle=1 --remote
+  npx tsx scripts/helpers/resetUserDay.ts alice@company.com 2026-09-07
+  npx tsx scripts/helpers/resetUserDay.ts --email=alice@company.com --date=2026-09-07 --remote
 `)
 }
 
@@ -81,7 +76,6 @@ function parseArgs(args: string[]) {
   }
 
   let email: string | undefined
-  let puzzle: string | undefined
   let date: string | undefined
   let isRemote = args.includes('--remote') || args.includes('--prod') || args.includes('--production')
   let isLocal = args.includes('--local') || args.includes('--dev')
@@ -96,10 +90,6 @@ function parseArgs(args: string[]) {
       email = arg.split('=')[1]
     } else if (arg === '--email' || arg === '-e') {
       email = args[++i]
-    } else if (arg.startsWith('--puzzle=')) {
-      puzzle = arg.split('=')[1]
-    } else if (arg === '--puzzle' || arg === '-p') {
-      puzzle = args[++i]
     } else if (arg.startsWith('--date=')) {
       date = arg.split('=')[1]
     } else if (arg === '--date' || arg === '-d') {
@@ -114,49 +104,28 @@ function parseArgs(args: string[]) {
   // Parse positionals if not set via flags
   if (!email && positional.length > 0 && positional[0].includes('@')) {
     email = positional[0]
+    if (!date && positional.length > 1 && /^\d{4}-\d{2}-\d{2}$/.test(positional[1])) {
+      date = positional[1]
+    }
   } else if (!email && positional.length > 0) {
     email = positional[0]
   }
 
-  // Second positional could be puzzle ID or date
-  if (positional.length > 1) {
-    const second = positional[1]
-    if (/^\d{4}-\d{2}-\d{2}$/.test(second)) {
-      date = date || second
-    } else if (/^#?\d+$/.test(second)) {
-      puzzle = puzzle || second
-    }
+  if (!date && positional.length > 1 && /^\d{4}-\d{2}-\d{2}$/.test(positional[1])) {
+    date = positional[1]
   }
 
-  // Determine target puzzle ID and date
-  let targetPuzzleId = ''
-  let targetDate = ''
-
-  if (puzzle) {
-    targetPuzzleId = String(puzzle).replace(/^#/, '').trim()
-    targetDate = date || getDateForPuzzleId(targetPuzzleId, { isDev: false })
-  } else if (date) {
-    targetDate = date
-    targetPuzzleId = getDailyPuzzle(date, { isDev: false }).id
-  } else {
-    const todayPuzzle = getDailyPuzzle()
-    targetPuzzleId = todayPuzzle.id
-    targetDate = todayPuzzle.date
+  if (!date) {
+    date = getDailyPuzzle().date
   }
 
-  return { email, puzzle: targetPuzzleId, date: targetDate, isRemote, isLocal, directKv, customUrl }
+  return { email, date, isRemote, isLocal, directKv, customUrl }
 }
 
-async function resetViaApi(
-  targetBaseUrl: string,
-  email: string,
-  target: { puzzleId: string; dateStr: string },
-  adminSecret?: string
-): Promise<ResetResult> {
+async function resetViaApi(targetBaseUrl: string, email: string, date: string, adminSecret?: string): Promise<ResetResult> {
   const url = new URL('/api/admin/reset-user-day', targetBaseUrl)
   url.searchParams.set('email', email)
-  url.searchParams.set('puzzle', target.puzzleId)
-  url.searchParams.set('date', target.dateStr)
+  url.searchParams.set('date', date)
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -168,7 +137,7 @@ async function resetViaApi(
   const res = await fetch(url.toString(), {
     method: 'POST',
     headers,
-    body: JSON.stringify({ email, puzzle: target.puzzleId, date: target.dateStr }),
+    body: JSON.stringify({ email, date }),
   })
 
   const json = (await res.json().catch(() => ({}))) as ResetResult
@@ -178,47 +147,39 @@ async function resetViaApi(
   return json
 }
 
-async function resetDirectKv(email: string, puzzleId: string, date: string, isRemote: boolean) {
+async function resetDirectKv(email: string, date: string, isRemote: boolean) {
   const cleanEmail = email.toLowerCase().trim()
+  const stateKey = `game:${date}:${cleanEmail}`
   const flag = isRemote ? '--remote' : '--local'
-  const devDate = getDateForPuzzleId(puzzleId, { isDev: true })
 
-  const stateKeys = Array.from(new Set([
-    `game:${date}:${cleanEmail}`,
-    `game:${date}:dev:${cleanEmail}`,
-    ...(devDate ? [`game:${devDate}:${cleanEmail}`, `game:${devDate}:dev:${cleanEmail}`] : []),
-  ]))
+  // Delete from D1
+  const d1Cmd = `npx wrangler d1 execute inboxed-db ${flag} --command="DELETE FROM kv_store WHERE key = '${stateKey}';" -y`
+  try {
+    console.log(`🔧 Running Wrangler D1 delete: ${d1Cmd}`)
+    execSync(d1Cmd, { stdio: 'pipe', encoding: 'utf8' })
+    console.log(`  ✅ D1 row for "${stateKey}" deleted successfully.`)
+  } catch (err: any) {
+    console.warn(`  ⚠️ Wrangler D1 CLI output:\n${err.stderr || err.stdout || err.message}`)
+  }
 
-  for (const stateKey of stateKeys) {
-    // Delete from D1
-    const d1Cmd = `npx wrangler d1 execute inboxed-db ${flag} --command="DELETE FROM kv_store WHERE key = '${stateKey}';" -y`
-    try {
-      console.log(`🔧 Running Wrangler D1 delete: ${d1Cmd}`)
-      execSync(d1Cmd, { stdio: 'pipe', encoding: 'utf8' })
-      console.log(`  ✅ D1 row for "${stateKey}" deleted successfully.`)
-    } catch (err: any) {
-      console.warn(`  ⚠️ Wrangler D1 CLI output:\n${err.stderr || err.stdout || err.message}`)
+  // Delete from KV (backup)
+  const kvCmd = `npx wrangler kv key delete --binding GAME_STATE_KV ${flag} "${stateKey}"`
+  try {
+    console.log(`🔧 Running Wrangler KV delete: ${kvCmd}`)
+    const output = execSync(kvCmd, { stdio: 'pipe', encoding: 'utf8' })
+    console.log(`  ✅ KV key "${stateKey}" deleted successfully via Wrangler.`)
+    if (output.trim()) {
+      console.log(`     ${output.trim()}`)
     }
-
-    // Delete from KV (backup)
-    const kvCmd = `npx wrangler kv key delete --binding GAME_STATE_KV ${flag} "${stateKey}"`
-    try {
-      console.log(`🔧 Running Wrangler KV delete: ${kvCmd}`)
-      const output = execSync(kvCmd, { stdio: 'pipe', encoding: 'utf8' })
-      console.log(`  ✅ KV key "${stateKey}" deleted successfully via Wrangler.`)
-      if (output.trim()) {
-        console.log(`     ${output.trim()}`)
-      }
-    } catch (err: any) {
-      const errorOutput = err.stderr || err.stdout || err.message
-      console.warn(`  ⚠️ Wrangler KV CLI output:\n${errorOutput}`)
-    }
+  } catch (err: any) {
+    const errorOutput = err.stderr || err.stdout || err.message
+    console.warn(`  ⚠️ Wrangler KV CLI output:\n${errorOutput}`)
   }
 }
 
 async function main() {
   const rawArgs = process.argv.slice(2)
-  const { email, puzzle: targetPuzzleId, date: targetDate, isRemote, directKv, customUrl } = parseArgs(rawArgs)
+  const { email, date, isRemote, directKv, customUrl } = parseArgs(rawArgs)
 
   if (!email || !email.includes('@')) {
     console.error('❌ Error: A valid email address is required.\n')
@@ -227,24 +188,25 @@ async function main() {
   }
 
   const cleanEmail = email.toLowerCase().trim()
+  const cleanDate = date!
 
   console.log(`\n🔄 Resetting User Day State`)
   console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
-  console.log(`👤 User:    ${cleanEmail}`)
-  console.log(`🧩 Puzzle:  #${targetPuzzleId} (${targetDate})`)
+  console.log(`👤 User:  ${cleanEmail}`)
+  console.log(`📅 Date:  ${cleanDate}`)
 
   const prodUrl = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
   const localUrl = 'http://localhost:8787'
   const targetBaseUrl = customUrl || (isRemote ? prodUrl : localUrl)
   const adminSecret = process.env.ADMIN_SECRET
 
-  console.log(`🌐 Target:  ${targetBaseUrl} ${isRemote ? '(production)' : '(local)'}\n`)
+  console.log(`🌐 Target: ${targetBaseUrl} ${isRemote ? '(production)' : '(local)'}\n`)
 
   let apiSuccess = false
 
   try {
     // 1. Try hitting the API endpoint (local dev server or remote worker)
-    const result = await resetViaApi(targetBaseUrl, cleanEmail, { puzzleId: targetPuzzleId, dateStr: targetDate }, adminSecret)
+    const result = await resetViaApi(targetBaseUrl, cleanEmail, cleanDate, adminSecret)
     apiSuccess = true
     console.log(`✅ ${result.message || 'Save state reset successfully!'}`)
     if (result.details) {
@@ -258,7 +220,7 @@ async function main() {
       console.log(`ℹ️  Local dev server not responding at ${localUrl}. Running reset in-process...`)
       try {
         const { resetUserDayState } = await import('../../src/index')
-        const result = await resetUserDayState(undefined, cleanEmail, targetPuzzleId)
+        const result = await resetUserDayState(undefined, cleanEmail, cleanDate)
         apiSuccess = true
         console.log(`✅ ${result.message}`)
         console.log(`   • Game state deleted:     ${result.details.gameStateDeleted ? 'Yes' : 'No'}`)
@@ -275,11 +237,11 @@ async function main() {
   // 2. If --direct-kv was requested or if remote API was unreachable, also run direct wrangler kv delete
   if (directKv || (!apiSuccess && isRemote)) {
     console.log(`\n📦 Attempting direct Cloudflare KV deletion via Wrangler...`)
-    await resetDirectKv(cleanEmail, targetPuzzleId, targetDate, isRemote)
+    await resetDirectKv(cleanEmail, cleanDate, isRemote)
   }
 
   console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
-  console.log(`🎉 Done! Next time ${cleanEmail} plays Puzzle #${targetPuzzleId} (${targetDate}), they will start fresh.\n`)
+  console.log(`🎉 Done! Next time ${cleanEmail} plays puzzle ${cleanDate}, they will start fresh.\n`)
 }
 
 main().catch((err) => {

@@ -27,9 +27,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     }
 
     const userEmail = (c.req.query('email') || await getUserEmail(c)).toLowerCase().trim()
-    const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
     const dateParam = c.req.query('date')
-    const target = puzzleParam || dateParam
     const reqUrl = new URL(c.req.url)
     const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
     const forceHttps = c.req.query('forceHttps') === 'true'
@@ -37,7 +35,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
-    const content = await buildPuzzleEmailContent(c.env, userEmail, target, currentOrigin, authSecret)
+    const content = await buildPuzzleEmailContent(c.env, userEmail, dateParam, currentOrigin, authSecret)
 
     return c.html(getDevWorkbenchHtml({
       ampHtml: content.ampHtml,
@@ -65,9 +63,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     }
 
     const userEmail = (c.req.query('email') || await getUserEmail(c)).toLowerCase().trim()
-    const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
     const dateParam = c.req.query('date')
-    const target = puzzleParam || dateParam
     const reqUrl = new URL(c.req.url)
     const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
     const forceHttps = c.req.query('forceHttps') === 'true'
@@ -75,7 +71,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
-    const content = await buildPuzzleEmailContent(c.env, userEmail, target, currentOrigin, authSecret)
+    const content = await buildPuzzleEmailContent(c.env, userEmail, dateParam, currentOrigin, authSecret)
     return c.html(content.ampHtml)
   })
 
@@ -87,9 +83,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
 
     const page = c.req.query('page') || 'game'
     const userEmail = (c.req.query('email') || await getUserEmail(c)).toLowerCase().trim()
-    const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
     const dateParam = c.req.query('date')
-    const target = puzzleParam || dateParam
     const reqUrl = new URL(c.req.url)
     const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
     const forceHttps = c.req.query('forceHttps') === 'true'
@@ -107,7 +101,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     } else if (page === 'account') {
       html = getAccountPageHtml()
     } else if (page === 'fallback') {
-      const content = await buildPuzzleEmailContent(c.env, userEmail, target, currentOrigin, authSecret)
+      const content = await buildPuzzleEmailContent(c.env, userEmail, dateParam, currentOrigin, authSecret)
       html = content.fallbackHtml
     } else if (page === 'confirm-email') {
       const token = generateConfirmationToken(userEmail, authSecret)
@@ -171,7 +165,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         devTesters
       })
     } else {
-      const content = await buildPuzzleEmailContent(c.env, userEmail, target, currentOrigin, authSecret)
+      const content = await buildPuzzleEmailContent(c.env, userEmail, dateParam, currentOrigin, authSecret)
       html = content.ampHtml
     }
 
@@ -189,9 +183,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     }
 
     const userEmail = (c.req.query('email') || await getUserEmail(c)).toLowerCase().trim()
-    const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
     const dateParam = c.req.query('date')
-    const target = puzzleParam || dateParam
     const reqUrl = new URL(c.req.url)
     const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
     const forceHttps = c.req.query('forceHttps') === 'true'
@@ -199,7 +191,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
-    const content = await buildPuzzleEmailContent(c.env, userEmail, target, currentOrigin, authSecret)
+    const content = await buildPuzzleEmailContent(c.env, userEmail, dateParam, currentOrigin, authSecret)
     return c.html(content.fallbackHtml)
   })
 

@@ -20,9 +20,7 @@ import { getDailyPuzzle, getPuzzleDateForSendCron, formatPrettyDate } from '../s
 const args = process.argv.slice(2)
 const isDryRun = args.includes('--dry-run')
 const toArg = args.find(a => a.startsWith('--to='))?.split('=')[1]
-const puzzleArg = args.find(a => a.startsWith('--puzzle=') || a.startsWith('-p='))?.split('=')[1]
-  || args.find(a => !a.startsWith('-') && !a.includes('@') && /^#?\d+$/.test(a))
-const dateArg = args.find(a => a.startsWith('--date=') || a.startsWith('-d='))?.split('=')[1]
+const dateArg = args.find(a => a.startsWith('--date='))?.split('=')[1]
 
 const SENDER_EMAIL = process.env.SENDER_EMAIL || 'Inboxed <game@inboxed.fun>'
 const PUBLIC_URL = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
@@ -57,18 +55,11 @@ async function getSubscribers(): Promise<string[]> {
   }
 }
 
-async function getEmailContent(email: string, puzzleOrDate?: string | number): Promise<{ ampHtml: string; fallbackHtml: string }> {
-  let query = ''
-  if (puzzleOrDate) {
-    if (/^#?\d+$/.test(String(puzzleOrDate).trim()) && !String(puzzleOrDate).includes('-')) {
-      query = `&puzzle=${encodeURIComponent(String(puzzleOrDate).replace('#', ''))}`
-    } else {
-      query = `&date=${encodeURIComponent(String(puzzleOrDate))}`
-    }
-  }
+async function getEmailContent(email: string, dateStr?: string): Promise<{ ampHtml: string; fallbackHtml: string }> {
+  const dateQuery = dateStr ? `&date=${encodeURIComponent(dateStr)}` : ''
   try {
-    const ampRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(email)}&forceHttps=true${query}`)
-    const fbRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(email)}&forceHttps=true${query}`)
+    const ampRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
+    const fbRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
     if (!ampRes.ok || !fbRes.ok) throw new Error('Dev server not running or returned error')
     const ampHtml = await ampRes.text()
     const fallbackHtml = await fbRes.text()
@@ -76,9 +67,9 @@ async function getEmailContent(email: string, puzzleOrDate?: string | number): P
   } catch {
     // Dev server not running — render via Hono app in-process
     const { app } = await import('../src/index')
-    const ampRes = await app.request(`/?email=${encodeURIComponent(email)}&forceHttps=true${query}`)
+    const ampRes = await app.request(`/?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
     const ampHtml = await ampRes.text()
-    const fbRes = await app.request(`/fallback?email=${encodeURIComponent(email)}&forceHttps=true${query}`)
+    const fbRes = await app.request(`/fallback?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
     const fallbackHtml = await fbRes.text()
     return { ampHtml, fallbackHtml }
   }
@@ -86,12 +77,12 @@ async function getEmailContent(email: string, puzzleOrDate?: string | number): P
 
 async function main() {
   const cronStr = process.env.SEND_CRON || '0 15 * * *'
-  const targetPuzzle = puzzleArg || dateArg || getPuzzleDateForSendCron(new Date(), cronStr)
-  const puzzle = getDailyPuzzle(targetPuzzle)
+  const targetDate = dateArg || getPuzzleDateForSendCron(new Date(), cronStr)
+  const puzzle = getDailyPuzzle(targetDate)
   const today = puzzle.date
   const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(today)}`
 
-  console.log(`\n📅 Daily Email — Puzzle #${puzzle.id} (${today})`)
+  console.log(`\n📅 Daily Email — ${today}`)
   console.log(`📝 Puzzle #${puzzle.id}: ${puzzle.word}`)
   if (isDryRun) console.log(`🏃 DRY RUN — no emails will be sent\n`)
 
@@ -124,14 +115,14 @@ async function main() {
 
   for (const email of subscribers) {
     try {
-      const { ampHtml, fallbackHtml } = await getEmailContent(email, targetPuzzle)
-      const playQuery = `?email=${encodeURIComponent(email)}&puzzle=${encodeURIComponent(puzzle.id)}`
+      const { ampHtml, fallbackHtml } = await getEmailContent(email, targetDate)
+      const dateQuery = `?date=${encodeURIComponent(targetDate)}`
 
       const info = await transporter.sendMail({
         from: SENDER_EMAIL,
         to: email,
         subject,
-        text: `Play today's Inboxed puzzle: ${PUBLIC_URL}${playQuery}`,
+        text: `Play today's Inboxed puzzle: ${PUBLIC_URL}${dateQuery}`,
         html: fallbackHtml,
         alternatives: [
           {
