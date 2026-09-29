@@ -10,14 +10,14 @@ import { getFallbackHtml } from '../views'
 export async function buildPuzzleEmailContent(
   kv: StorageBackend,
   userEmail: string,
-  dateParam?: string,
+  dateOrPuzzleParam?: string | number,
   currentOrigin?: string,
   authSecret?: string,
   themeOverride?: EmailTheme,
   options?: { isDev?: boolean }
 ): Promise<{ ampHtml: string; fallbackHtml: string; subject: string; text: string; puzzle: DailyPuzzle; theme: EmailTheme }> {
   const isDev = options?.isDev !== undefined ? options.isDev : await isDevTester(kv, userEmail)
-  const { state, puzzle } = await getOrCreateGameState(kv, userEmail, dateParam, { isDev })
+  const { state, puzzle } = await getOrCreateGameState(kv, userEmail, dateOrPuzzleParam, { isDev })
   const domain = extractEmailDomain(userEmail)
   const secret = authSecret || process.env.AUTH_SECRET
   const userToken = generateAccountToken(userEmail, secret)
@@ -119,7 +119,9 @@ export async function buildPuzzleEmailContent(
 export async function renderAmpGame(c: any) {
   const userEmail = await getUserEmail(c)
   const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
-  const dateParam = c.req.query('date') || getPuzzleDateForSendCron(new Date(), cronStr)
+  const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
+  const dateParam = c.req.query('date')
+  const target = puzzleParam || dateParam || getPuzzleDateForSendCron(new Date(), cronStr)
   const themeParam = c.req.query('theme') as EmailTheme | undefined
   const reqUrl = new URL(c.req.url)
   const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
@@ -128,7 +130,7 @@ export async function renderAmpGame(c: any) {
   const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
   const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
-  const content = await buildPuzzleEmailContent(c.env?.DB || c.env?.GAME_STATE_KV, userEmail, dateParam, currentOrigin, authSecret, themeParam)
+  const content = await buildPuzzleEmailContent(c.env?.DB || c.env?.GAME_STATE_KV, userEmail, target, currentOrigin, authSecret, themeParam)
   return c.html(content.ampHtml)
 }
 
@@ -139,6 +141,7 @@ export async function renderAmpGame(c: any) {
 export async function sendDailyPuzzleEmails(
   env?: any,
   options?: {
+    puzzleId?: string | number
     dateStr?: string
     targetEmails?: string[]
     isDryRun?: boolean
@@ -154,7 +157,8 @@ export async function sendDailyPuzzleEmails(
     cronStr,
     options?.leadTimeMinutes ?? 5
   )
-  const puzzle = getDailyPuzzle(targetDate)
+  const puzzleTarget = options?.puzzleId !== undefined ? options.puzzleId : targetDate
+  const puzzle = getDailyPuzzle(puzzleTarget)
   const prodOrigin = (env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
   const authSecret = env?.AUTH_SECRET || process.env.AUTH_SECRET
   const mode = options?.mode || 'all'
@@ -224,7 +228,7 @@ export async function sendDailyPuzzleEmails(
       const emailContent = await buildPuzzleEmailContent(
         env?.DB || env?.GAME_STATE_KV,
         cleanEmail,
-        targetDate,
+        puzzleTarget,
         prodOrigin,
         authSecret,
         undefined,

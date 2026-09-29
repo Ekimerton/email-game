@@ -27,13 +27,15 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
   app.get('/api/state', async (c) => {
     try {
       const userEmail = await getUserEmail(c)
+      const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
       const dateParam = c.req.query('date')
+      const target = puzzleParam || dateParam
       const isDev = await isDevTester(c.env, userEmail)
-      const puzzle = getDailyPuzzle(dateParam, { isDev })
+      const puzzle = getDailyPuzzle(target, { isDev })
       const stateKey = `game:${puzzle.date}:${userEmail}`
 
       const payload = await withKeyLock(stateKey, async () => {
-        const { state } = await getOrCreateGameState(c.env, userEmail, dateParam, { isDev })
+        const { state } = await getOrCreateGameState(c.env, userEmail, target, { isDev })
         return buildStatePayload(state, puzzle)
       })
 
@@ -50,17 +52,19 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const body = await c.req.parseBody()
       const userEmail = await getUserEmail(c, body)
       const guess = (body['user-guess'] as string || '').toUpperCase().trim()
+      const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id') || (body['puzzle'] as string) || (body['puzzleId'] as string) || (body['id'] as string)
       const dateParam = c.req.query('date') || (body['date'] as string)
+      const target = puzzleParam || dateParam
       const domain = extractDomain(userEmail)
       const isDev = await isDevTester(c.env, userEmail)
-      const puzzle = getDailyPuzzle(dateParam, { isDev })
+      const puzzle = getDailyPuzzle(target, { isDev })
       const stateKey = `game:${puzzle.date}:${userEmail}`
 
       const payload = await withKeyLock(stateKey, async () => {
         const { state } = await getOrCreateGameState(
           c.env,
           userEmail,
-          dateParam,
+          target,
           { isDev }
         )
 
@@ -180,16 +184,18 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
     try {
       const body = await c.req.parseBody()
       const userEmail = await getUserEmail(c, body)
+      const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id') || (body['puzzle'] as string) || (body['puzzleId'] as string) || (body['id'] as string)
       const dateParam = c.req.query('date') || (body['date'] as string)
+      const target = puzzleParam || dateParam
       const isDev = await isDevTester(c.env, userEmail)
-      const puzzle = getDailyPuzzle(dateParam, { isDev })
+      const puzzle = getDailyPuzzle(target, { isDev })
       const stateKey = `game:${puzzle.date}:${userEmail}`
 
       const payload = await withKeyLock(stateKey, async () => {
         const { state } = await getOrCreateGameState(
           c.env,
           userEmail,
-          dateParam,
+          target,
           { isDev }
         )
 
@@ -245,12 +251,12 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const userEmail = await getUserEmail(c)
       const domain = c.req.query('domain') || extractDomain(userEmail)
       const isDev = await isDevTester(c.env, userEmail)
-      const puzzleIdParam = c.req.query('puzzleId') || c.req.query('id')
+      const puzzleIdParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
       const dateParam = c.req.query('date')
 
       let puzzle: DailyPuzzle
       if (puzzleIdParam) {
-        puzzle = getPuzzleById(puzzleIdParam) || getDailyPuzzle(dateParam, { isDev })
+        puzzle = getPuzzleById(puzzleIdParam) || getDailyPuzzle(puzzleIdParam, { isDev })
       } else {
         puzzle = getDailyPuzzle(dateParam, { isDev })
       }

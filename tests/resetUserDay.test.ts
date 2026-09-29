@@ -86,6 +86,75 @@ describe('Reset User Day Helper & Endpoint', () => {
     expect(data.date).toBe(puzzle.date)
   })
 
+  it('should support reset by puzzle number via POST /api/admin/reset-user-day', async () => {
+    const testEmail = `puzzle_num_post_${Date.now()}@puzzlecorp.com`
+    const puzzle = getDailyPuzzle()
+    const wrongGuess = 'Z'.repeat(puzzle.word.length)
+
+    // Make a guess
+    await app.request(`/api/guess?email=${encodeURIComponent(testEmail)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': wrongGuess }).toString(),
+    })
+
+    // Reset via POST using puzzle number
+    const resetRes = await app.request('/api/admin/reset-user-day', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: testEmail, puzzle: puzzle.id }),
+    })
+    expect(resetRes.status).toBe(200)
+    const resetData = (await resetRes.json()) as any
+    expect(resetData.success).toBe(true)
+    expect(resetData.puzzleId).toBe(puzzle.id)
+    expect(resetData.details.gameStateDeleted).toBe(true)
+
+    // Check state is reset
+    const stateAfter = await (await app.request(`/api/state?email=${encodeURIComponent(testEmail)}`)).json() as any
+    expect(stateAfter.guessCount).toBe(0)
+  })
+
+  it('should support reset by puzzle number with hash prefix (#1) via GET query parameters', async () => {
+    const testEmail = `puzzle_num_get_${Date.now()}@puzzlecorp.com`
+    const puzzle = getDailyPuzzle()
+
+    const res = await app.request(`/api/admin/reset-user-day?email=${encodeURIComponent(testEmail)}&puzzle=${encodeURIComponent('#' + puzzle.id)}`)
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as any
+    expect(data.success).toBe(true)
+    expect(data.email).toBe(testEmail)
+    expect(data.puzzleId).toBe(puzzle.id)
+  })
+
+  it('should remove user from puzzle-keyed leaderboard when reset by puzzle ID', async () => {
+    const testEmail = `puzzle_lb_winner_${Date.now()}@gamers.com`
+    const puzzle = getDailyPuzzle()
+
+    // Solve the puzzle
+    await app.request(`/api/guess?email=${encodeURIComponent(testEmail)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': puzzle.word }).toString(),
+    })
+
+    // Verify user is on leaderboard for this puzzle
+    const lbBefore = await (await app.request(`/api/leaderboard?domain=gamers.com&puzzleId=${puzzle.id}`)).json() as any
+    const inLbBefore = lbBefore.items?.[0]?.players?.some((e: any) => e.email === testEmail)
+    expect(inLbBefore).toBe(true)
+
+    // Reset using puzzle number
+    const resetResult = await resetUserDayState(undefined, testEmail, puzzle.id)
+    expect(resetResult.success).toBe(true)
+    expect(resetResult.puzzleId).toBe(puzzle.id)
+    expect(resetResult.details.removedFromLeaderboard).toBe(true)
+
+    // Verify user is gone from leaderboard
+    const lbAfter = await (await app.request(`/api/leaderboard?domain=gamers.com&puzzleId=${puzzle.id}`)).json() as any
+    const inLbAfter = lbAfter.items?.[0]?.players?.some((e: any) => e.email === testEmail)
+    expect(inLbAfter).toBe(false)
+  })
+
   it('should reject requests without a valid email', async () => {
     const res = await app.request('/api/admin/reset-user-day', {
       method: 'POST',

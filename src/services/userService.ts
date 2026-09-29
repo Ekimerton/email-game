@@ -75,6 +75,7 @@ export async function getUserSettings(kv: StorageBackend, email: string): Promis
       showOnLeaderboard: typeof existing.showOnLeaderboard === 'boolean' ? existing.showOnLeaderboard : true,
       daysPlayed: existing.daysPlayed,
       playedDates: existing.playedDates,
+      playedPuzzles: existing.playedPuzzles,
       theme: existing.theme === 'dark' ? 'dark' : 'light',
     }
   }
@@ -98,19 +99,29 @@ export async function updateUserSettings(kv: StorageBackend, settings: UserSetti
 export async function recordUserActivity(
   kv: StorageBackend,
   email: string,
-  dateStr: string
+  puzzleOrDate?: string | number
 ): Promise<UserSettings> {
   const cleanEmail = email.toLowerCase().trim()
   const key = `user:profile:${cleanEmail}`
   return withKeyLock(key, async () => {
     const profile = await getUserSettings(kv, cleanEmail)
+    const puzzle = getDailyPuzzle(puzzleOrDate)
+    const dateStr = puzzle.date
+    const puzzleId = puzzle.id
 
     if (!profile.playedDates) {
       profile.playedDates = [dateStr]
     } else if (!profile.playedDates.includes(dateStr)) {
       profile.playedDates.push(dateStr)
     }
-    profile.daysPlayed = profile.playedDates.length
+
+    if (!profile.playedPuzzles) {
+      profile.playedPuzzles = [puzzleId]
+    } else if (!profile.playedPuzzles.includes(puzzleId)) {
+      profile.playedPuzzles.push(puzzleId)
+    }
+
+    profile.daysPlayed = Math.max(profile.playedDates.length, profile.playedPuzzles.length)
 
     await kvPut(kv, key, profile)
     return profile
@@ -120,7 +131,8 @@ export async function recordUserActivity(
 export async function getCoworkerCount(
   kv: StorageBackend,
   domain: string,
-  email: string
+  email: string,
+  puzzleOrDate?: string | number
 ): Promise<number> {
   const subscribers = await getSubscribers(kv)
   const coworkerEmails = new Set<string>()
@@ -131,7 +143,7 @@ export async function getCoworkerCount(
     }
   }
 
-  const puzzle = getDailyPuzzle()
+  const puzzle = getDailyPuzzle(puzzleOrDate)
   const leaderboard = await getDomainLeaderboard(kv, domain, puzzle.id, puzzle.date)
   for (const entry of leaderboard) {
     coworkerEmails.add(entry.email.toLowerCase())

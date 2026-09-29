@@ -14,7 +14,7 @@ import {
   addDevTester,
   removeDevTester
 } from '../services'
-import { getDailyPuzzle, getPuzzleDateForSendCron } from '../game'
+import { getDailyPuzzle, getPuzzleDateForSendCron, getSendDailyPuzzle } from '../game'
 import { getUnsubscribeHtml } from '../views'
 
 export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) {
@@ -102,7 +102,9 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
       const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
 
       const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
-      const targetDate = getPuzzleDateForSendCron(new Date(), cronStr)
+      const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
+      const dateParam = c.req.query('date')
+      const targetDate = puzzleParam || dateParam || getPuzzleDateForSendCron(new Date(), cronStr)
 
       const emailContent = await buildPuzzleEmailContent(
         c.env,
@@ -178,6 +180,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
 
       let email = c.req.query('email')
       let date = c.req.query('date')
+      let puzzle = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
 
       if (c.req.method === 'POST') {
         try {
@@ -185,6 +188,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
           if (body && typeof body === 'object') {
             email = body.email || email
             date = body.date || date
+            puzzle = body.puzzle ?? body.puzzleId ?? body.id ?? puzzle
           }
         } catch (_) {
           try {
@@ -192,6 +196,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
             if (form) {
               email = (form['email'] as string) || email
               date = (form['date'] as string) || date
+              puzzle = (form['puzzle'] as string) || (form['puzzleId'] as string) || (form['id'] as string) || puzzle
             }
           } catch (_) {}
         }
@@ -201,12 +206,14 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
         return c.json({ success: false, error: 'A valid email parameter is required' }, 400)
       }
 
-      if (!date) {
+      if (!puzzle && !date) {
         const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
-        date = getPuzzleDateForSendCron(new Date(), cronStr)
+        const currentActivePuzzle = getSendDailyPuzzle(new Date(), cronStr)
+        puzzle = currentActivePuzzle.id
       }
 
-      const result = await resetUserDayState(c.env, email, date)
+      const target = (puzzle !== undefined && puzzle !== null && puzzle !== '') ? puzzle : date
+      const result = await resetUserDayState(c.env, email, target)
       return c.json(result)
     } catch (error: any) {
       console.error('Error resetting user day state:', error)
@@ -228,12 +235,14 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
     const dryRun = c.req.query('dryRun') === 'true'
     const emailParam = c.req.query('email') || c.req.query('to')
     const dateParam = c.req.query('date')
+    const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
     const modeParam = c.req.query('mode') as 'subscribers' | 'test' | 'all' | undefined
     const cronParam = c.req.query('cron') || c.env?.SEND_CRON || '0 15 * * *'
 
     const targetEmails = emailParam ? emailParam.split(/[,;\s]+/).map((e: string) => e.trim()).filter(Boolean) : undefined
     const result = await sendDailyPuzzleEmails(c.env || {}, {
       targetEmails,
+      puzzleId: puzzleParam,
       dateStr: dateParam,
       isDryRun: dryRun,
       mode: modeParam,

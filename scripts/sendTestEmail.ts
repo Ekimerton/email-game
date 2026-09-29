@@ -27,6 +27,22 @@ function parseEmailList(raw: string | undefined): string[] {
 function parseArgs(args: string[]) {
   const isDryRun = args.includes('--dry-run')
 
+  let puzzleArg: string | undefined
+  const puzzleEq = args.find(a => a.startsWith('--puzzle=') || a.startsWith('-p='))
+  if (puzzleEq) {
+    puzzleArg = puzzleEq.split('=')[1]
+  } else {
+    const puzzleIdx = args.findIndex(a => a === '--puzzle' || a === '-p')
+    if (puzzleIdx !== -1 && args[puzzleIdx + 1] && !args[puzzleIdx + 1].startsWith('-')) {
+      puzzleArg = args[puzzleIdx + 1]
+    } else {
+      const numericPos = args.find(a => !a.startsWith('-') && !a.includes('@') && /^#?\d+$/.test(a))
+      if (numericPos) {
+        puzzleArg = numericPos
+      }
+    }
+  }
+
   let dateArg: string | undefined
   const dateEq = args.find(a => a.startsWith('--date='))
   if (dateEq) {
@@ -82,7 +98,7 @@ function parseArgs(args: string[]) {
 
   const isDevArg = args.includes('--dev')
 
-  return { isDryRun, senderArg, targetArg, dateArg, isDevArg, asArg }
+  return { isDryRun, senderArg, targetArg, puzzleArg, dateArg, isDevArg, asArg }
 }
 
 async function checkIsDevTester(email: string, publicUrl: string, forceDev?: boolean): Promise<boolean> {
@@ -109,20 +125,27 @@ async function checkIsDevTester(email: string, publicUrl: string, forceDev?: boo
 
 async function getEmailContent(
   email: string,
-  dateStr?: string,
+  puzzleOrDate?: string | number,
   origin = 'https://inboxed.fun',
   options?: { isDev?: boolean }
 ): Promise<{ ampHtml: string; fallbackHtml: string; subject: string; text: string; puzzle: any }> {
-  const dateQuery = dateStr ? `&date=${encodeURIComponent(dateStr)}` : ''
+  let query = ''
+  if (puzzleOrDate) {
+    if (/^#?\d+$/.test(String(puzzleOrDate).trim()) && !String(puzzleOrDate).includes('-')) {
+      query = `&puzzle=${encodeURIComponent(String(puzzleOrDate).replace('#', ''))}`
+    } else {
+      query = `&date=${encodeURIComponent(String(puzzleOrDate))}`
+    }
+  }
 
   // 1. Try public origin (production worker) first if reachable
   try {
-    const ampRes = await fetch(`${origin}/?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
-    const fallbackRes = await fetch(`${origin}/fallback?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
+    const ampRes = await fetch(`${origin}/?email=${encodeURIComponent(email)}&forceHttps=true${query}`)
+    const fallbackRes = await fetch(`${origin}/fallback?email=${encodeURIComponent(email)}&forceHttps=true${query}`)
     if (ampRes.ok && fallbackRes.ok) {
       const ampHtml = await ampRes.text()
       const fallbackHtml = await fallbackRes.text()
-      const puzzle = getDailyPuzzle(dateStr, options)
+      const puzzle = getDailyPuzzle(puzzleOrDate, options)
       const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(puzzle.date)}`
       const text = `Play today's Inboxed puzzle (#${puzzle.id}): ${origin}/?email=${encodeURIComponent(email)}`
       return { ampHtml, fallbackHtml, subject, text, puzzle }
@@ -131,12 +154,12 @@ async function getEmailContent(
 
   // 2. Try local server
   try {
-    const localRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
-    const fallbackRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(email)}&forceHttps=true${dateQuery}`)
+    const localRes = await fetch(`http://localhost:8787/?email=${encodeURIComponent(email)}&forceHttps=true${query}`)
+    const fallbackRes = await fetch(`http://localhost:8787/fallback?email=${encodeURIComponent(email)}&forceHttps=true${query}`)
     if (localRes.ok && fallbackRes.ok) {
       const ampHtml = await localRes.text()
       const fallbackHtml = await fallbackRes.text()
-      const puzzle = getDailyPuzzle(dateStr, options)
+      const puzzle = getDailyPuzzle(puzzleOrDate, options)
       const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(puzzle.date)}`
       const text = `Play today's Inboxed puzzle (#${puzzle.id}): ${origin}/?email=${encodeURIComponent(email)}`
       return { ampHtml, fallbackHtml, subject, text, puzzle }
@@ -148,7 +171,7 @@ async function getEmailContent(
   const content = await buildPuzzleEmailContent(
     undefined,
     email,
-    dateStr,
+    puzzleOrDate,
     origin,
     process.env.AUTH_SECRET,
     undefined,
@@ -159,7 +182,7 @@ async function getEmailContent(
 
 async function sendTestEmail() {
   const args = process.argv.slice(2)
-  const { isDryRun, senderArg, targetArg, dateArg, isDevArg, asArg } = parseArgs(args)
+  const { isDryRun, senderArg, targetArg, puzzleArg, dateArg, isDevArg, asArg } = parseArgs(args)
 
   const rawTargets = targetArg || process.env.TEST_EMAILS || process.env.TEST_EMAIL || 'ekim0252@gmail.com'
   const targetEmails = parseEmailList(rawTargets)
@@ -171,10 +194,11 @@ async function sendTestEmail() {
   const publicHttpsUrl = (process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
 
   const cronStr = process.env.SEND_CRON || '0 15 * * *'
-  const targetDate = dateArg || getPuzzleDateForSendCron(new Date(), cronStr)
+  const targetPuzzle = puzzleArg || dateArg || getPuzzleDateForSendCron(new Date(), cronStr)
+  const previewPuzzle = getDailyPuzzle(targetPuzzle)
 
   console.log('Preparing test AMP Email via Mailgun SMTP...')
-  console.log(`  Date:          ${targetDate}`)
+  console.log(`  Puzzle:        #${previewPuzzle.id} (${previewPuzzle.word}, ${previewPuzzle.date})`)
   console.log(`  Sender (From): ${senderEmail}`)
   console.log(`  Target (To):   ${targetEmails.join(', ')} (${targetEmails.length} recipient${targetEmails.length > 1 ? 's' : ''})`)
   if (asArg) {
@@ -187,7 +211,7 @@ async function sendTestEmail() {
     for (const targetEmail of targetEmails) {
       const playerEmail = asArg || targetEmail
       const isDev = await checkIsDevTester(playerEmail, publicHttpsUrl, isDevArg)
-      const emailContent = await getEmailContent(playerEmail, targetDate, publicHttpsUrl, { isDev })
+      const emailContent = await getEmailContent(playerEmail, targetPuzzle, publicHttpsUrl, { isDev })
       console.log(`\n  Target (To):   ${targetEmail}`)
       if (asArg) {
         console.log(`  Player (As):   ${playerEmail}`)
@@ -229,7 +253,7 @@ async function sendTestEmail() {
     try {
       const playerEmail = asArg || targetEmail
       const isDev = await checkIsDevTester(playerEmail, publicHttpsUrl, isDevArg)
-      const emailContent = await getEmailContent(playerEmail, targetDate, publicHttpsUrl, { isDev })
+      const emailContent = await getEmailContent(playerEmail, targetPuzzle, publicHttpsUrl, { isDev })
       const info = await transporter.sendMail({
         from: senderEmail,
         to: targetEmail,

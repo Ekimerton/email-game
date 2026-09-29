@@ -29,6 +29,7 @@ export interface UserSettings {
   showOnLeaderboard: boolean
   daysPlayed?: number
   playedDates?: string[]
+  playedPuzzles?: string[]
   theme?: EmailTheme
 }
 
