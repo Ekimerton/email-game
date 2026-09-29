@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { getDailyPuzzle } from '../src/game'
 import { app, getFallbackHtml, calculateScore, isPuzzleSynonym, renderConfirmationEmailHtml, renderConfirmationEmailText, buildPuzzleEmailContent } from '../src/index'
 import { EMAIL_HTML } from '../src/email'
@@ -457,6 +457,36 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     const data = await sendRes.json() as any
     expect(data.success).toBe(true)
     expect(data.message).toContain("Today's puzzle has been sent to your inbox!")
+  })
+
+  it('should send normal track puzzle email (Inboxed #1) via POST /api/send-today even if user is on dev tester track', async () => {
+    const { addDevTester } = await import('../src/services')
+    const devEmail = `devtester_sendtoday_${Date.now()}@testfirm.com`
+    await addDevTester(undefined, devEmail)
+
+    const warnSpy = vi.spyOn(console, 'warn')
+
+    const subRes = await app.request('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: devEmail }),
+    })
+    const { token } = await subRes.json() as any
+
+    const sendRes = await app.request('/api/send-today', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: devEmail, token }),
+    })
+    expect(sendRes.status).toBe(200)
+
+    const sentCall = warnSpy.mock.calls.find((call) =>
+      call[0]?.includes(devEmail) && call[0]?.includes('Inboxed #')
+    )
+    expect(sentCall?.[0]).toContain('Inboxed #1')
+    expect(sentCall?.[0]).not.toContain('Inboxed #43')
+
+    warnSpy.mockRestore()
   })
 
   it('should reject unauthorized send-today request with invalid token', async () => {

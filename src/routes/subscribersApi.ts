@@ -109,7 +109,9 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
         email,
         targetDate,
         currentOrigin,
-        authSecret
+        authSecret,
+        undefined,
+        { isDev: false }
       )
 
       await sendMailgunEmail({
