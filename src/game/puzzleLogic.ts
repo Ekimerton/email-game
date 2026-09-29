@@ -117,3 +117,8 @@ export function hashCode(str: string): number {
   }
   return hash
 }
+
+export function getPuzzleById(id: string | number): DailyPuzzle | undefined {
+  const cleanId = String(id).trim()
+  return PUZZLES.find(p => p.id === cleanId)
+}

@@ -34,6 +34,7 @@ export async function buildPuzzleEmailContent(
     .replaceAll('USER_EMAIL_PLACEHOLDER', encodedEmail)
     .replaceAll('USER_DOMAIN_PLACEHOLDER', encodedDomain)
     .replaceAll('USER_DATE_PLACEHOLDER', puzzle.date)
+    .replaceAll('USER_PUZZLE_ID_PLACEHOLDER', puzzle.id)
     .replaceAll('default-dev-token', userToken)
 
   ampHtml = applyEmailTheme(ampHtml, theme)

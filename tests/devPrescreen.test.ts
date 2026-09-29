@@ -295,12 +295,34 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
         expect(def.text).not.toContain('•')
       }
 
-      // Check leaderboard after winning: must reveal for dev tester (hasWon: true)
+      // Check leaderboard after winning: must reveal for dev tester on Puzzle #43 (hasWon: true)
       const lbAfterRes = await app.request(`/api/leaderboard?domain=firm.com&email=${encodeURIComponent(devUser)}&date=2026-09-28`)
       expect(lbAfterRes.status).toBe(200)
       const lbAfter = await lbAfterRes.json() as any
       expect(lbAfter.hasWon).toBe(true)
+      expect(lbAfter.puzzleId).toBe('43')
       expect(lbAfter.players.some((p: any) => p.email === devUser && p.isCurrentPlayer)).toBe(true)
+      expect(lbAfter.players.some((p: any) => p.email === standardUser)).toBe(false)
+
+      // Standard user leaderboard must be isolated to Puzzle #1
+      const stdLbRes = await app.request(`/api/leaderboard?domain=firm.com&email=${encodeURIComponent(standardUser)}&date=2026-09-28`)
+      expect(stdLbRes.status).toBe(200)
+      const stdLb = await stdLbRes.json() as any
+      expect(stdLb.hasWon).toBe(true)
+      expect(stdLb.puzzleId).toBe('1')
+      expect(stdLb.players.some((p: any) => p.email === standardUser && p.isCurrentPlayer)).toBe(true)
+      expect(stdLb.players.some((p: any) => p.email === devUser)).toBe(false)
+
+      // Direct query by puzzleId
+      const p1LbRes = await app.request('/api/leaderboard?domain=firm.com&puzzleId=1')
+      const p1Lb = await p1LbRes.json() as any
+      expect(p1Lb.players.some((p: any) => p.email === standardUser)).toBe(true)
+      expect(p1Lb.players.some((p: any) => p.email === devUser)).toBe(false)
+
+      const p43LbRes = await app.request('/api/leaderboard?domain=firm.com&puzzleId=43')
+      const p43Lb = await p43LbRes.json() as any
+      expect(p43Lb.players.some((p: any) => p.email === devUser)).toBe(true)
+      expect(p43Lb.players.some((p: any) => p.email === standardUser)).toBe(false)
     })
   })
 

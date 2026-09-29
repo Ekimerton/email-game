@@ -4,11 +4,13 @@ import {
   GAME_MESSAGES,
   formatPrettyDate,
   getDailyPuzzle,
+  getPuzzleById,
   evaluateGuess,
   isPuzzleSynonym,
   calculateScore,
   buildStatePayload,
-  getOrCreateGameState
+  getOrCreateGameState,
+  type DailyPuzzle
 } from '../game'
 import {
   getUserEmail,
@@ -137,7 +139,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
           const updatedLeaderboard = await updateDomainLeaderboard(
             c.env,
             domain,
-            puzzle.date,
+            puzzle.id,
             leaderboardEntry
           )
 
@@ -243,8 +245,17 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const userEmail = await getUserEmail(c)
       const domain = c.req.query('domain') || extractDomain(userEmail)
       const isDev = await isDevTester(c.env, userEmail)
-      const dateStr = c.req.query('date') || getDailyPuzzle(undefined, { isDev }).date
-      const leaderboard = await getDomainLeaderboard(c.env, domain, dateStr)
+      const puzzleIdParam = c.req.query('puzzleId') || c.req.query('id')
+      const dateParam = c.req.query('date')
+
+      let puzzle: DailyPuzzle
+      if (puzzleIdParam) {
+        puzzle = getPuzzleById(puzzleIdParam) || getDailyPuzzle(dateParam, { isDev })
+      } else {
+        puzzle = getDailyPuzzle(dateParam, { isDev })
+      }
+
+      const leaderboard = await getDomainLeaderboard(c.env, domain, puzzle.id, puzzle.date)
 
       // Filter out users who chose to hide themselves from the leaderboard
       const visibleEntriesWithSettings = await Promise.all(
@@ -275,13 +286,14 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         items.push(currentPlayerItem)
       }
 
-      const { state: userState } = await getOrCreateGameState(c.env, userEmail, dateStr, { isDev })
+      const { state: userState } = await getOrCreateGameState(c.env, userEmail, puzzle.date, { isDev })
 
       const hasWon = Boolean(userState.hasWon || currentPlayerItem)
 
       const payload = {
         domain,
-        date: dateStr,
+        date: puzzle.date,
+        puzzleId: puzzle.id,
         hasWon,
         players: items
       }

@@ -132,7 +132,7 @@ export async function getCoworkerCount(
   }
 
   const puzzle = getDailyPuzzle()
-  const leaderboard = await getDomainLeaderboard(kv, domain, puzzle.date)
+  const leaderboard = await getDomainLeaderboard(kv, domain, puzzle.id, puzzle.date)
   for (const entry of leaderboard) {
     coworkerEmails.add(entry.email.toLowerCase())
   }
