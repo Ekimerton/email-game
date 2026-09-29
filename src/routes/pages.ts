@@ -148,9 +148,11 @@ export function registerPageRoutes(app: Hono<{ Bindings: Bindings }>) {
   app.get('/fallback', async (c) => {
     const userEmail = await getUserEmail(c)
     const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
-    const dateParam = c.req.query('date') || getPuzzleDateForSendCron(new Date(), cronStr)
+    const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
+    const dateParam = c.req.query('date')
+    const target = puzzleParam || dateParam || getPuzzleDateForSendCron(new Date(), cronStr)
     const themeParam = c.req.query('theme') as EmailTheme | undefined
-    const puzzle = getDailyPuzzle(dateParam)
+    const puzzle = getDailyPuzzle(target)
     const domain = extractDomain(userEmail)
     const profile = await recordUserActivity(c.env, userEmail, puzzle.date)
     const coworkerCount = await getCoworkerCount(c.env, domain, userEmail)

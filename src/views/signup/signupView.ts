@@ -7,11 +7,13 @@ export function getSignupHtml(c: any, dateOverride?: string, nowOverride?: Date)
   const isPending = c?.req?.query ? (c.req.query('pending') === 'true') : false
   const safeEmail = escapeHtml(queryEmail)
   const cronStr = c?.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
-  const targetDate = dateOverride || (c?.req?.query ? c.req.query('date') : undefined) || getPuzzleDateForSendCron(nowOverride || new Date(), cronStr)
+  const puzzleParam = c?.req?.query ? (c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')) : undefined
+  const targetDate = dateOverride || puzzleParam || (c?.req?.query ? c.req.query('date') : undefined) || getPuzzleDateForSendCron(nowOverride || new Date(), cronStr)
 
   // Landing page always shows the puzzle of the normal track (never dev prescreen track).
   // For dates prior to official launch (LAUNCH_DATE = '2026-09-28'), showcase the launch puzzle (Puzzle #1).
-  const effectiveDate = (!targetDate || (targetDate < LAUNCH_DATE && !dateOverride && !nowOverride))
+  const isNumericPuzzle = Boolean(puzzleParam && /^\d+$/.test(String(puzzleParam).replace(/^#/, '')))
+  const effectiveDate = (!targetDate || (!isNumericPuzzle && targetDate < LAUNCH_DATE && !dateOverride && !nowOverride))
     ? LAUNCH_DATE
     : targetDate
   const puzzle = getDailyPuzzle(effectiveDate, { isDev: false })

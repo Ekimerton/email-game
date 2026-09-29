@@ -80,6 +80,24 @@ describe('Daily Puzzles Module', () => {
     expect(puzzle.word).toBe(PUZZLES[0].word)
   })
 
+  it('should return predefined puzzle when queried by puzzle ID or number', () => {
+    const puzzleNum = getDailyPuzzle(1)
+    expect(puzzleNum.id).toBe('1')
+    expect(puzzleNum.word).toBe(PUZZLES[0].word)
+
+    const puzzleStr = getDailyPuzzle('1')
+    expect(puzzleStr.id).toBe('1')
+    expect(puzzleStr.word).toBe(PUZZLES[0].word)
+
+    const puzzleHash = getDailyPuzzle('#1')
+    expect(puzzleHash.id).toBe('1')
+    expect(puzzleHash.word).toBe(PUZZLES[0].word)
+
+    const puzzleSecond = getDailyPuzzle(2)
+    expect(puzzleSecond.id).toBe('2')
+    expect(puzzleSecond.word).toBe(PUZZLES[1].word)
+  })
+
   it('should return today\'s puzzle based on send cron switchover time (5 min before 15:00 UTC)', () => {
     const cronDate = getPuzzleDateForSendCron()
     const puzzle = getDailyPuzzle()

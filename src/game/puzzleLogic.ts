@@ -62,8 +62,26 @@ export function getSendDailyPuzzle(
   return getDailyPuzzle(dateStr, options)
 }
 
-export function getDailyPuzzle(dateStr?: string, options?: { isDev?: boolean }): DailyPuzzle {
-  const targetDate = dateStr || getPuzzleDateForSendCron()
+export function getDailyPuzzle(dateOrPuzzleId?: string | number, options?: { isDev?: boolean }): DailyPuzzle {
+  if (dateOrPuzzleId !== undefined && dateOrPuzzleId !== null && dateOrPuzzleId !== '') {
+    const raw = String(dateOrPuzzleId).trim()
+    // Check if it's a puzzle ID / number (e.g. 1, "1", "#1", 43) rather than a date string with hyphens
+    if (/^#?\d+$/.test(raw) && !raw.includes('-')) {
+      const cleanId = raw.replace('#', '')
+      const found = getPuzzleById(cleanId)
+      if (found) {
+        const targetDate = getDateForPuzzleId(cleanId, options)
+        return {
+          ...found,
+          date: targetDate,
+        }
+      }
+    }
+  }
+
+  const targetDate = (dateOrPuzzleId && /^\d{4}-\d{2}-\d{2}$/.test(String(dateOrPuzzleId)))
+    ? String(dateOrPuzzleId)
+    : getPuzzleDateForSendCron()
 
   // For historical dates before the official launch date ('2026-09-28'):
   // Retain exact historical behavior and deterministic hash fallback for tests.
@@ -119,6 +137,20 @@ export function hashCode(str: string): number {
 }
 
 export function getPuzzleById(id: string | number): DailyPuzzle | undefined {
-  const cleanId = String(id).trim()
+  const cleanId = String(id).replace('#', '').trim()
   return PUZZLES.find(p => p.id === cleanId)
+}
+
+export function getDateForPuzzleId(id: string | number, options?: { isDev?: boolean }): string {
+  const cleanId = typeof id === 'number' ? id : parseInt(String(id).replace('#', '').trim(), 10)
+  if (isNaN(cleanId) || cleanId < 1) return LAUNCH_DATE
+
+  const offset = options?.isDev ? DEV_PUZZLE_OFFSET : 0
+  const daysSinceLaunch = cleanId - 1 - offset
+
+  const [ly, lm, ld] = LAUNCH_DATE.split('-').map(Number)
+  const launchUtc = Date.UTC(ly, lm - 1, ld)
+  const targetUtc = launchUtc + (daysSinceLaunch * 86400000)
+  const targetDate = new Date(targetUtc)
+  return targetDate.toISOString().slice(0, 10)
 }

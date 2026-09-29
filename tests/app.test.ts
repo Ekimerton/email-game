@@ -896,8 +896,9 @@ describe('Cold Start & Network Resilience Handling', () => {
     expect(EMAIL_HTML).toContain('<input type="hidden" name="date" value="USER_DATE_PLACEHOLDER">')
   })
 
-  it('should include dynamic victory reveal bindings for leaderboard and form hiding', async () => {
-    expect(EMAIL_HTML).toContain('<div class="form-container" [hidden]="gameState.hasWon">')
+  it('should include dynamic victory reveal bindings for leaderboard while keeping form-container visible', async () => {
+    expect(EMAIL_HTML).toContain('<div class="form-container">')
+    expect(EMAIL_HTML).not.toContain('<div class="form-container" [hidden]="gameState.hasWon">')
     expect(EMAIL_HTML).toContain('[hidden]="gameState.hasWon"')
     expect(EMAIL_HTML).toContain('[class]="gameState.hasWon ? \'leaderboard-items\' : \'leaderboard-blur-content\'"')
     expect(EMAIL_HTML).not.toContain('gameState.hasWon ||')
@@ -908,4 +909,87 @@ describe('Cold Start & Network Resilience Handling', () => {
     expect(email.ampHtml).toContain('The volume of work required to be performed.')
   })
 })
+
+describe('Puzzle ID Support Across Game API Endpoints', () => {
+  it('should load initial game state by puzzle query parameter (/api/state?puzzle=1)', async () => {
+    const testEmail = `puzzle_api_user_${Date.now()}@example.com`
+    const p1 = getDailyPuzzle(1)
+
+    const res = await app.request(`/api/state?email=${encodeURIComponent(testEmail)}&puzzle=1`)
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as any
+    expect(data.wordLength).toBe(p1.word.length)
+    expect(data.revealedCount).toBe(1)
+    expect(data.guessCount).toBe(0)
+    expect(data.hasWon).toBe(false)
+  })
+
+  it('should support making guesses using puzzle parameter in body and query', async () => {
+    const testEmail = `guess_puzzle_${Date.now()}@acme.org`
+    const p1 = getDailyPuzzle(1)
+    const wrongGuess = 'Z'.repeat(p1.word.length)
+
+    // Submit guess using puzzle in URLSearchParams
+    const res = await app.request(`/api/guess?email=${encodeURIComponent(testEmail)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        puzzle: '1',
+        'user-guess': wrongGuess,
+      }).toString(),
+    })
+
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as any
+    expect(data.guessCount).toBe(1)
+    expect(data.wordLength).toBe(p1.word.length)
+    expect(data.guessedWords).toContain(wrongGuess)
+
+    // Query state by puzzleId
+    const stateRes = await app.request(`/api/state?email=${encodeURIComponent(testEmail)}&puzzleId=1`)
+    const stateData = (await stateRes.json()) as any
+    expect(stateData.guessCount).toBe(1)
+  })
+
+  it('should support requesting letter hints using puzzle parameter', async () => {
+    const testEmail = `hint_puzzle_${Date.now()}@acme.org`
+    const p1 = getDailyPuzzle(1)
+
+    const res = await app.request(`/api/hint?email=${encodeURIComponent(testEmail)}&puzzle=1`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams().toString(),
+    })
+
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as any
+    expect(data.hintsUsed).toBe(1)
+    expect(data.letterMask[0]).toBe(p1.word[0])
+    expect(data.score).toBe(850)
+    expect(data.wordLength).toBe(p1.word.length)
+  })
+
+  it('should return leaderboard entries filtered by puzzle number', async () => {
+    const testEmail = `lb_puzzle_${Date.now()}@leaderboardcorp.com`
+    const p1 = getDailyPuzzle(1)
+
+    // Win puzzle 1
+    const winRes = await app.request(`/api/guess?email=${encodeURIComponent(testEmail)}&puzzle=1`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        'user-guess': p1.word,
+      }).toString(),
+    })
+    expect(winRes.status).toBe(200)
+
+    // Fetch leaderboard by puzzle
+    const lbRes = await app.request(`/api/leaderboard?domain=leaderboardcorp.com&puzzle=1`)
+    expect(lbRes.status).toBe(200)
+    const lbData = (await lbRes.json()) as any
+    const inLb = lbData.items?.[0]?.players?.some((e: any) => e.email === testEmail)
+    expect(inLb).toBe(true)
+  })
+})
+
 

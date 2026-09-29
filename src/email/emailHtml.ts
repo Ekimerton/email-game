@@ -865,7 +865,7 @@ export const EMAIL_HTML = `<!doctype html>
                 </amp-list>
 
                 <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
-                <div class="form-container" [hidden]="gameState.hasWon">
+                <div class="form-container">
                     <form id="guess-form" method="POST"
                         action-xhr="https://inboxed.fun/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
                         on="submit:AMP.setState({ uiState: { submitting: true } });
