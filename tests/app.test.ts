@@ -546,7 +546,11 @@ describe('Email Signup Landing Page & Subscribe API', () => {
       const authJson = await authRes.json() as any
       expect(authJson.total).toBeDefined()
     } finally {
-      process.env.ADMIN_SECRET = origSecret
+      if (origSecret === undefined) {
+        delete process.env.ADMIN_SECRET
+      } else {
+        process.env.ADMIN_SECRET = origSecret
+      }
     }
   })
 
@@ -572,7 +576,11 @@ describe('Email Signup Landing Page & Subscribe API', () => {
       })
       expect(authRes.status).toBe(200)
     } finally {
-      process.env.ADMIN_SECRET = origSecret
+      if (origSecret === undefined) {
+        delete process.env.ADMIN_SECRET
+      } else {
+        process.env.ADMIN_SECRET = origSecret
+      }
     }
   })
 
@@ -693,7 +701,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
       expect(html).toContain('data-page="fallback"')
       expect(html).toContain('data-page="invalid"')
       expect(html).toContain('data-page="privacy"')
-      expect(html).toContain('data-page="subscribers"')
+      expect(html).toContain('/dev/dashboard')
     })
 
     it('should serve direct game HTML render at GET /dev/render on localhost', async () => {

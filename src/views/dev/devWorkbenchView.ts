@@ -99,7 +99,8 @@ export function getDevWorkbenchHtml(params: {
       <button type="button" class="page-tab-btn" data-page="fallback">✉️ Fallback Email</button>
       <button type="button" class="page-tab-btn" data-page="invalid">⚠️ Invalid / Expired Token</button>
       <button type="button" class="page-tab-btn" data-page="privacy">🔒 Privacy Policy</button>
-      <button type="button" class="page-tab-btn" data-page="subscribers">👥 Subscribed Emails</button>
+      <a href="/dev/dashboard" target="_blank" class="page-tab-btn" style="text-decoration: none; display: inline-flex; align-items: center; color: #38bdf8; font-weight: 700;">📊 Live Dashboard ↗</a>
+      <button type="button" class="page-tab-btn" data-page="brand">🎨 Brand Assets</button>
     </div>
   </nav>
 
@@ -226,11 +227,11 @@ export function getDevWorkbenchHtml(params: {
         badge: 'Document',
         url: '/dev/page/privacy'
       },
-      subscribers: {
-        title: '👥 Subscribed Emails (Production)',
-        desc: 'Live directory of confirmed email subscribers fetched directly from the production database at https://inboxed.fun.',
-        badge: 'Production DB',
-        url: '/dev/page/subscribers?source=prod'
+      brand: {
+        title: '🎨 Brand Assets (Favicon & Social Share Cards)',
+        desc: 'Pixel-perfect master favicon (512×512) and 1200×630 social share cards ready for screenshots or 1-click export.',
+        badge: 'Assets',
+        url: '/brand-assets'
       }
     };
 

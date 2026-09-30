@@ -12,7 +12,8 @@ import {
   getDevTesters,
   isDevTester,
   addDevTester,
-  removeDevTester
+  removeDevTester,
+  getDashboardStats
 } from '../services'
 import { getDailyPuzzle, getPuzzleDateForSendCron, getSendDailyPuzzle } from '../game'
 import { getUnsubscribeHtml } from '../views'
@@ -415,6 +416,22 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
       })
     } catch (err: any) {
       return c.json({ success: false, error: err.message || 'Failed to toggle dev tester' }, 500)
+    }
+  })
+
+  // Admin: Get Dashboard Analytics (Subscribers, Daily Gameplay, Player Scores)
+  app.get('/api/admin/dashboard-data', async (c) => {
+    if (!verifyAdmin(c)) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+
+    try {
+      const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id') || c.req.query('date')
+      const stats = await getDashboardStats(c.env, puzzleParam)
+      return c.json({ success: true, ...stats })
+    } catch (err: any) {
+      console.error('[Admin Dashboard Data Error]:', err)
+      return c.json({ success: false, error: err.message || 'Failed to fetch dashboard data' }, 500)
     }
   })
 }

@@ -68,6 +68,7 @@ export function syncAllViews() {
   syncView('unsubscribe', 'unsubscribe', 'UNSUBSCRIBE')
   syncView('dev', 'devWorkbench', 'DEV_WORKBENCH')
   syncView('dev', 'devSubscribers', 'DEV_SUBSCRIBERS')
+  syncView('dev', 'devDashboard', 'DEV_DASHBOARD')
 }
 
 syncAllViews()

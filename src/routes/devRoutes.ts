@@ -1,10 +1,11 @@
 import type { Hono } from 'hono'
 import { generateConfirmationToken, generateAccountToken, kvPut, withKeyLock, type Bindings, type SubscriberEntry } from '../core'
 import { buildPuzzleEmailContent, renderConfirmationEmailHtml } from '../email'
-import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser, getDevTesters, addDevTester, removeDevTester, isDevTester } from '../services'
+import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser, getDevTesters, addDevTester, removeDevTester, isDevTester, getDashboardStats } from '../services'
 import {
   getDevWorkbenchHtml,
   getDevSubscribersPageHtml,
+  getDevDashboardPageHtml,
   getSignupHtml,
   getConfirmationPageHtml,
   getInvalidConfirmationHtml,
@@ -170,6 +171,9 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         fetchError,
         devTesters
       })
+    } else if (page === 'dashboard') {
+      const stats = await getDashboardStats(c.env, target)
+      html = getDevDashboardPageHtml({ stats, source: 'local', prodOrigin })
     } else {
       const content = await buildPuzzleEmailContent(c.env, userEmail, target, currentOrigin, authSecret)
       html = content.ampHtml
@@ -264,8 +268,8 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     return c.redirect(`/account?token=${encodeURIComponent(token)}`)
   })
 
-  // Development-only direct render of subscribers directory (fetches from production by default)
-  app.get('/dev/page/subscribers', async (c) => {
+  // Development-only Live Production Analytics Dashboard (with activeTab support)
+  const handleDevDashboard = async (c: any, overrideTab?: 'gameplay' | 'subscribers') => {
     if (!isDevelopment(c)) {
       return c.text('Not Found', 404)
     }
@@ -273,66 +277,84 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
     const sourceParam = c.req.query('source') || 'prod'
     const isLocalSource = sourceParam === 'local'
+    const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id') || c.req.query('date')
+    const activeTab = overrideTab || (c.req.query('tab') === 'subscribers' ? 'subscribers' : 'gameplay')
 
-    let subscribers: SubscriberEntry[] = []
+    let stats: any = null
     let dataSource: 'prod' | 'local' = isLocalSource ? 'local' : 'prod'
     let fetchError = ''
 
     if (!isLocalSource) {
       try {
         const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
-        const headers: Record<string, string> = {
-          'Accept': 'application/json'
-        }
+        const headers: Record<string, string> = { 'Accept': 'application/json' }
         if (adminSecret) {
           headers['Authorization'] = `Bearer ${adminSecret}`
         }
-        const prodRes = await fetch(`${prodOrigin}/api/subscribers`, { headers })
+        const queryStr = puzzleParam ? `?puzzle=${encodeURIComponent(puzzleParam)}` : ''
+        const prodRes = await fetch(`${prodOrigin}/api/admin/dashboard-data${queryStr}`, { headers })
         if (prodRes.ok) {
-          const data = (await prodRes.json().catch(() => ({}))) as any
-          subscribers = Array.isArray(data?.subscribers)
-            ? data.subscribers
-            : (Array.isArray(data) ? data : [])
+          stats = await prodRes.json().catch(() => null)
+          if (!stats || !stats.todayPuzzle) {
+            throw new Error('Invalid dashboard payload from production')
+          }
           dataSource = 'prod'
         } else {
-          throw new Error(`HTTP ${prodRes.status}`)
+          throw new Error(`Production API returned HTTP ${prodRes.status}`)
         }
       } catch (err: any) {
-        subscribers = await getSubscribers(c.env)
         dataSource = 'local'
-        fetchError = `Could not reach ${prodOrigin} (${err.message || 'offline'}). Showing local KV.`
+        fetchError = `Could not reach ${prodOrigin} (${err.message || 'offline'}). Showing local dev database.`
+        stats = await getDashboardStats(c.env, puzzleParam)
       }
     } else {
-      subscribers = await getSubscribers(c.env)
+      stats = await getDashboardStats(c.env, puzzleParam)
     }
 
-    let devTesters: string[] = []
-    if (dataSource === 'prod') {
-      try {
-        const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
-        const headers: Record<string, string> = { 'Accept': 'application/json' }
-        if (adminSecret) headers['Authorization'] = `Bearer ${adminSecret}`
-        const prodDevRes = await fetch(`${prodOrigin}/api/admin/dev-testers`, { headers })
-        if (prodDevRes.ok) {
-          const devData = (await prodDevRes.json().catch(() => ({}))) as any
-          devTesters = Array.isArray(devData?.devTesters) ? devData.devTesters : []
-        } else {
-          devTesters = await getDevTesters(c.env)
-        }
-      } catch {
-        devTesters = await getDevTesters(c.env)
-      }
-    } else {
-      devTesters = await getDevTesters(c.env)
-    }
-
-    return c.html(getDevSubscribersPageHtml({
-      subscribers,
+    return c.html(getDevDashboardPageHtml({
+      stats,
       source: dataSource,
       prodOrigin,
       fetchError,
-      devTesters
+      activeTab,
     }))
+  }
+
+  app.get('/dev/dashboard', (c) => handleDevDashboard(c))
+  app.get('/dev/page/dashboard', (c) => handleDevDashboard(c))
+  app.get('/dev/page/subscribers', (c) => handleDevDashboard(c, 'subscribers'))
+
+  // Dev API Proxy for asynchronous dashboard refreshes
+  app.get('/dev/api/dashboard-data', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+
+    const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+    const sourceParam = c.req.query('source') || 'prod'
+    const isLocalSource = sourceParam === 'local'
+    const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id') || c.req.query('date')
+
+    if (!isLocalSource) {
+      try {
+        const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+        const headers: Record<string, string> = { 'Accept': 'application/json' }
+        if (adminSecret) {
+          headers['Authorization'] = `Bearer ${adminSecret}`
+        }
+        const queryStr = puzzleParam ? `?puzzle=${encodeURIComponent(puzzleParam)}` : ''
+        const prodRes = await fetch(`${prodOrigin}/api/admin/dashboard-data${queryStr}`, { headers })
+        if (prodRes.ok) {
+          const data = await prodRes.json()
+          return c.json(data)
+        }
+      } catch (err) {
+        console.warn('[dev/api/dashboard-data] Proxy error, falling back to local:', err)
+      }
+    }
+
+    const localStats = await getDashboardStats(c.env, puzzleParam)
+    return c.json({ success: true, ...localStats })
   })
 
   // Development-only API to remove/purge a subscriber from either prod or local KV

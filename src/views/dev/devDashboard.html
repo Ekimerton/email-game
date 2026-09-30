@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inboxed Dev - Live Production Analytics Dashboard</title>
+  <link rel="stylesheet" href="./devDashboard.css">
+  <style>/* INJECT_CSS */</style>
+</head>
+<body>
+  <header class="dev-header">
+    <div class="header-inner">
+      <div class="brand-section">
+        <div class="logo-tiles" aria-label="INBOXED">
+          <span class="logo-tile" style="background-color: #D8FFC5;">I</span>
+          <span class="logo-tile" style="background-color: #C4F7CA;">N</span>
+          <span class="logo-tile" style="background-color: #D8FFC5;">B</span>
+          <span class="logo-tile" style="background-color: #C4F7CA;">O</span>
+          <span class="logo-tile" style="background-color: #D8FFC5;">X</span>
+          <span class="logo-tile" style="background-color: #C4F7CA;">E</span>
+          <span class="logo-tile" style="background-color: #D8FFC5;">D</span>
+        </div>
+        <span class="badge-dev">ANALYTICS DASHBOARD</span>
+        <span id="source-badge" class="badge-source ${isProd ? 'badge-prod' : 'badge-local-source'}">
+          ${isProd ? '🟢 Live Production DB' : '💻 Local Dev KV'}
+        </span>
+      </div>
+
+      <div class="header-actions">
+        <div class="source-toggle">
+          <a href="/dev/dashboard?source=prod" class="source-toggle-btn ${isProd ? 'active' : ''}">🌐 Production Live</a>
+          <a href="/dev/dashboard?source=local" class="source-toggle-btn ${!isProd ? 'active' : ''}">💻 Local Dev</a>
+        </div>
+        <button type="button" id="refresh-btn" class="btn btn-primary" onclick="refreshData()" title="Fetch latest production numbers">
+          <span id="refresh-icon">🔄</span> Refresh Live
+        </button>
+        <a href="/dev/page/subscribers?source=${isProd ? 'prod' : 'local'}" class="btn btn-secondary" title="Manage subscribers list">
+          👥 Subscribers
+        </a>
+        <a href="/dev" class="btn btn-secondary" title="Go to UI &amp; Email Preview Workbench">
+          🎨 UI Preview
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="hero-bar">
+      <div class="hero-title">
+        <h1>📊 Live Production Analytics &amp; Scores</h1>
+        <p class="hero-subtitle">
+          Real-time metrics, active subscriber counts, and individual player score records from Cloudflare D1/KV.
+        </p>
+      </div>
+      <div class="hero-meta">
+        <span id="last-updated-text">Generated just now</span> &bull; 
+        <span style="color: #38bdf8;">${escapeHtml(prodOrigin)}</span>
+      </div>
+    </div>
+
+    <!-- KPI Metric Cards Grid -->
+    <section class="kpi-grid">
+      <!-- Subscribers Card -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Active Subscribers</span>
+          <span class="kpi-icon">📬</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-value" id="kpi-active-subs">${stats.subscribers.activeCount}</span>
+          <span class="kpi-unit">/ ${stats.subscribers.total} total</span>
+        </div>
+        <div class="kpi-subtext">
+          <span>Across <strong class="kpi-highlight" id="kpi-domains-count">${stats.subscribers.uniqueDomainsCount}</strong> company domains</span>
+        </div>
+      </div>
+
+      <!-- Today's Players Card -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Today's Players (Puzzle #${stats.todayPuzzle.id})</span>
+          <span class="kpi-icon">🎮</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-value" id="kpi-today-players">${stats.todayStats.totalPlayers}</span>
+          <span class="kpi-unit">played today</span>
+        </div>
+        <div class="kpi-subtext">
+          <span><strong class="kpi-highlight" id="kpi-today-won">${stats.todayStats.totalWon}</strong> solved (${stats.todayStats.winRate}% win rate)</span>
+        </div>
+      </div>
+
+      <!-- Today's Performance Card -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Today's Avg Score</span>
+          <span class="kpi-icon">🎯</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-value" id="kpi-today-avg-score">${stats.todayStats.avgScore}</span>
+          <span class="kpi-unit">pts</span>
+        </div>
+        <div class="kpi-subtext">
+          <span>Top score: <strong class="kpi-highlight" id="kpi-today-top-score">${stats.todayStats.topScore} pts</strong> (${stats.todayStats.avgGuesses} avg guesses)</span>
+        </div>
+      </div>
+
+      <!-- All-Time Activity Card -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-title">Total Games Played</span>
+          <span class="kpi-icon">📈</span>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-value" id="kpi-all-plays">${stats.allPlays.length}</span>
+          <span class="kpi-unit">all-time plays</span>
+        </div>
+        <div class="kpi-subtext">
+          <span>Unique solvers: <strong class="kpi-highlight">${uniqueAllTimePlayersCount}</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar: Puzzle Switcher & Filter -->
+    <section class="toolbar-card">
+      <div class="toolbar-main-row">
+        <div class="puzzle-selector-group">
+          <label for="puzzle-select" class="puzzle-select-label">Select Puzzle:</label>
+          <select id="puzzle-select" class="puzzle-select" onchange="handlePuzzleChange(this.value)">
+            ${puzzleOptionsHtml}
+          </select>
+        </div>
+
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" class="search-input" placeholder="Search by player email or domain..." oninput="applyFilters()">
+        </div>
+
+        <div class="filter-tabs">
+          <button type="button" class="tab-btn active" data-filter="all" onclick="setFilter('all', this)">
+            All (<span id="count-all">${stats.selectedPlays.length}</span>)
+          </button>
+          <button type="button" class="tab-btn" data-filter="won" onclick="setFilter('won', this)">
+            🎉 Solved (<span id="count-won">${stats.selectedPuzzleStats.totalWon}</span>)
+          </button>
+          <button type="button" class="tab-btn" data-filter="playing" onclick="setFilter('playing', this)">
+            ⏳ In Progress (<span id="count-playing">${stats.selectedPuzzleStats.totalPlaying}</span>)
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-secondary" onclick="exportCsv()" title="Export scores table to CSV">
+            💾 Export CSV
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="exportJson()" title="Export complete data as JSON">
+            💾 JSON
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Two-Column Layout -->
+    <div class="dashboard-grid">
+      <!-- Left Column: Player Scores Table -->
+      <section class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🎮 Player Scores for Puzzle #<span id="selected-puzzle-title">${stats.selectedPuzzle.id}</span></span>
+            <span class="panel-count" id="table-row-count">${stats.selectedPlays.length} plays</span>
+          </div>
+          <div style="font-size: 12px; color: #94a3b8;">
+            Date: <span id="selected-puzzle-date" style="font-family: monospace;">${stats.selectedPuzzle.date}</span>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table id="scores-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Status</th>
+                <th>Score</th>
+                <th>Guesses</th>
+                <th>Hints</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="scores-tbody">
+              ${scoreRowsHtml}
+            </tbody>
+          </table>
+
+          <div id="empty-scores" class="empty-state" style="display: ${stats.selectedPlays.length === 0 ? 'block' : 'none'};">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">No recorded gameplay or scores for Puzzle #<span id="empty-puzzle-id">${stats.selectedPuzzle.id}</span> yet today!</div>
+            <div style="margin-top: 6px; font-size: 12px; color: #475569;">Players will appear here in real-time as they make guesses and submit words.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Workplace Domains Leaderboard -->
+      <section class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🏢 Workplace Leaderboard</span>
+            <span class="panel-count">${stats.domainRankings.length} domains</span>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Domain</th>
+                <th>Players</th>
+                <th>Subs</th>
+                <th>Avg Score</th>
+                <th>Best</th>
+              </tr>
+            </thead>
+            <tbody id="domains-tbody">
+              ${domainRowsHtml}
+            </tbody>
+          </table>
+
+          <div id="empty-domains" class="empty-state" style="display: ${stats.domainRankings.length === 0 ? 'block' : 'none'};">
+            <div class="empty-icon">🏢</div>
+            <div class="empty-text">No workplace domains registered yet.</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    var currentData = ${dashboardJson};
+    var currentSource = '${source}';
+    var activeFilter = 'all';
+
+    function setFilter(filter, btn) {
+      activeFilter = filter;
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      applyFilters();
+    }
+
+    function applyFilters() {
+      var query = (document.getElementById('search-input').value || '').toLowerCase().trim();
+      var rows = document.querySelectorAll('.score-row');
+      var visibleCount = 0;
+
+      rows.forEach(function(row) {
+        var email = row.getAttribute('data-email') || '';
+        var domain = row.getAttribute('data-domain') || '';
+        var status = row.getAttribute('data-status') || '';
+
+        var matchesFilter = (activeFilter === 'all') || (status === activeFilter);
+        var matchesQuery = !query || email.includes(query) || domain.includes(query);
+
+        if (matchesFilter && matchesQuery) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      var emptyEl = document.getElementById('empty-scores');
+      var tableEl = document.getElementById('scores-table');
+      if (visibleCount === 0) {
+        emptyEl.style.display = 'block';
+        tableEl.style.display = 'none';
+      } else {
+        emptyEl.style.display = 'none';
+        tableEl.style.display = 'table';
+      }
+      document.getElementById('table-row-count').textContent = visibleCount + ' plays';
+    }
+
+    async function handlePuzzleChange(puzzleId) {
+      await refreshData(puzzleId);
+    }
+
+    async function refreshData(puzzleId) {
+      var refreshBtn = document.getElementById('refresh-btn');
+      var refreshIcon = document.getElementById('refresh-icon');
+      refreshIcon.classList.add('refresh-spin');
+      refreshBtn.disabled = true;
+
+      var targetPuzzle = puzzleId || document.getElementById('puzzle-select').value;
+
+      try {
+        var res = await fetch('/dev/api/dashboard-data?puzzle=' + encodeURIComponent(targetPuzzle) + '&source=' + encodeURIComponent(currentSource));
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var data = await res.json();
+        if (data.success) {
+          currentData = data;
+          updateDashboardUI(data);
+          document.getElementById('last-updated-text').textContent = 'Updated just now (' + new Date().toLocaleTimeString() + ')';
+        }
+      } catch (err) {
+        alert('Could not refresh live dashboard data: ' + err.message);
+      } finally {
+        refreshIcon.classList.remove('refresh-spin');
+        refreshBtn.disabled = false;
+      }
+    }
+
+    function updateDashboardUI(data) {
+      document.getElementById('kpi-active-subs').textContent = data.subscribers.activeCount;
+      document.getElementById('kpi-domains-count').textContent = data.subscribers.uniqueDomainsCount;
+      document.getElementById('kpi-today-players').textContent = data.todayStats.totalPlayers;
+      document.getElementById('kpi-today-won').textContent = data.todayStats.totalWon;
+      document.getElementById('kpi-today-avg-score').textContent = data.todayStats.avgScore;
+      document.getElementById('kpi-today-top-score').textContent = data.todayStats.topScore + ' pts';
+      document.getElementById('kpi-all-plays').textContent = data.allPlays.length;
+
+      document.getElementById('selected-puzzle-title').textContent = data.selectedPuzzle.id;
+      document.getElementById('selected-puzzle-date').textContent = data.selectedPuzzle.date;
+      document.getElementById('count-all').textContent = data.selectedPlays.length;
+      document.getElementById('count-won').textContent = data.selectedPuzzleStats.totalWon;
+      document.getElementById('count-playing').textContent = data.selectedPuzzleStats.totalPlaying;
+
+      // Render score rows
+      var tbody = document.getElementById('scores-tbody');
+      if (data.selectedPlays.length === 0) {
+        tbody.innerHTML = '';
+        document.getElementById('empty-scores').style.display = 'block';
+        document.getElementById('scores-table').style.display = 'none';
+      } else {
+        var html = '';
+        data.selectedPlays.forEach(function(play) {
+          var initial = (play.email[0] || '?').toUpperCase();
+          var devBadge = play.isDev ? '<span class="dev-badge-small">🧪 Dev</span>' : '';
+          var statusPill = play.hasWon 
+            ? '<span class="status-pill status-won">🎉 Solved</span>'
+            : (play.status === 'lost' 
+                ? '<span class="status-pill status-lost">❌ Failed</span>' 
+                : '<span class="status-pill status-playing">⏳ Playing</span>');
+
+          var scoreTierClass = play.score >= 900 
+            ? 'score-tier-high' 
+            : (play.score >= 700 ? 'score-tier-med' : (play.score > 0 ? 'score-tier-low' : 'score-tier-zero'));
+
+          var guessesChips = '';
+          if (play.guesses && play.guesses.length > 0) {
+            guessesChips = play.guesses.map(function(g, idx) {
+              var isLastAndWon = play.hasWon && idx === play.guesses.length - 1;
+              return '<span class="guess-chip ' + (isLastAndWon ? 'guess-chip-target' : '') + '">' + escapeXml(g) + '</span>';
+            }).join(' ');
+          }
+
+          var timeFormatted = play.wonAt || play.updatedAt 
+            ? new Date(play.wonAt || play.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '—';
+
+          html += '<tr class="score-row" data-email="' + escapeXml(play.email) + '" data-domain="' + escapeXml(play.domain) + '" data-status="' + play.status + '">'
+            + '<td>'
+            + '  <div class="player-cell">'
+            + '    <div class="avatar">' + initial + '</div>'
+            + '    <div class="player-details">'
+            + '      <span class="player-email">' + escapeXml(play.email) + ' ' + devBadge + '</span>'
+            + '      <span class="domain-pill">@' + escapeXml(play.domain) + '</span>'
+            + '    </div>'
+            + '  </div>'
+            + '</td>'
+            + '<td>' + statusPill + '</td>'
+            + '<td><span class="score-badge ' + scoreTierClass + '">' + play.score + ' pts</span></td>'
+            + '<td>'
+            + '  <div class="guesses-wrapper">'
+            + '    <span class="guess-count-pill">' + play.guessCount + (play.guessCount === 1 ? ' guess' : ' guesses') + '</span>'
+            + '    <div class="guess-chips">' + guessesChips + '</div>'
+            + '  </div>'
+            + '</td>'
+            + '<td>' + (play.hintsUsed > 0 ? '💡 ' + play.hintsUsed : '—') + '</td>'
+            + '<td style="color: #94a3b8; font-size: 12px;">' + timeFormatted + '</td>'
+            + '</tr>';
+        });
+        tbody.innerHTML = html;
+        document.getElementById('empty-scores').style.display = 'none';
+        document.getElementById('scores-table').style.display = 'table';
+      }
+      applyFilters();
+    }
+
+    function escapeXml(unsafe) {
+      return String(unsafe || '').replace(/[<>&'"]/g, function (c) {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+        }
+      });
+    }
+
+    function exportCsv() {
+      if (!currentData || !currentData.selectedPlays) return;
+      var headers = ['Email', 'Domain', 'Puzzle', 'Date', 'Status', 'Score', 'GuessesCount', 'Guesses', 'HintsUsed', 'Timestamp'];
+      var rows = currentData.selectedPlays.map(function(p) {
+        return [
+          p.email,
+          p.domain,
+          p.puzzleId,
+          p.date,
+          p.status,
+          p.score,
+          p.guessCount,
+          (p.guesses || []).join('; '),
+          p.hintsUsed,
+          p.wonAt || p.updatedAt || ''
+        ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+      });
+      var csv = [headers.join(','), rows.join('\\n')].join('\\n');
+      var blob = new Blob([csv], { type: 'text/csv' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'inboxed-puzzle-' + currentData.selectedPuzzle.id + '-scores.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportJson() {
+      if (!currentData) return;
+      var blob = new Blob([JSON.stringify(currentData, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'inboxed-dashboard-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

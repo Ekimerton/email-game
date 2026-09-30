@@ -3,7 +3,7 @@ import type { StorageBackend } from './types'
 // Persistent memory store for development fallback & 429 rate limit protection
 export const MEMORY_STORE = new Map<string, any>()
 
-function extractBackends(storage?: StorageBackend) {
+export function extractBackends(storage?: StorageBackend) {
   let db: D1Database | undefined
   let kv: KVNamespace | undefined
 
