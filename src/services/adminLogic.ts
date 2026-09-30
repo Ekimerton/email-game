@@ -1,4 +1,4 @@
-import { extractEmailDomain, kvDelete, kvPut, kvGet, withKeyLock, type StorageBackend, type LeaderboardEntry } from '../core'
+import { extractEmailDomain, getLeaderboardDomain, kvDelete, kvPut, kvGet, withKeyLock, type StorageBackend, type LeaderboardEntry } from '../core'
 import { getDailyPuzzle, getDateForPuzzleId } from '../game'
 import { getDomainLeaderboard } from './leaderboard'
 import { getUserSettings, updateUserSettings } from './userService'
@@ -79,13 +79,17 @@ export async function resetUserDayState(
 
   // 2. Remove from Domain Leaderboard for this date/puzzle if present
   let removedFromLeaderboard = false
-  const leaderboardKeys = Array.from(new Set([
-    ...(targetPuzzleId ? [`leaderboard:${domain}:${targetPuzzleId}`] : []),
-    `leaderboard:${domain}:${stdPuzzle.id}`,
-    `leaderboard:${domain}:${devPuzzle.id}`,
-    `leaderboard:${domain}:${dateStr}`,
-    ...(devDate ? [`leaderboard:${domain}:${devDate}`] : [])
-  ]))
+  const lbDomain = getLeaderboardDomain(cleanEmail)
+  const domainsToCheck = Array.from(new Set([domain, lbDomain]))
+  const leaderboardKeys = Array.from(new Set(
+    domainsToCheck.flatMap(d => [
+      ...(targetPuzzleId ? [`leaderboard:${d}:${targetPuzzleId}`] : []),
+      `leaderboard:${d}:${stdPuzzle.id}`,
+      `leaderboard:${d}:${devPuzzle.id}`,
+      `leaderboard:${d}:${dateStr}`,
+      ...(devDate ? [`leaderboard:${d}:${devDate}`] : [])
+    ])
+  ))
 
   for (const lbKey of leaderboardKeys) {
     await withKeyLock(lbKey, async () => {

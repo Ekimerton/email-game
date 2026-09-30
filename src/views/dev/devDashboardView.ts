@@ -84,9 +84,10 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
   // Domain ranking rows
   const domainRowsHtml = stats.domainRankings.map((d: DomainStats) => {
     const safeDomain = escapeHtml(d.domain)
+    const domainLabel = safeDomain === 'general' ? 'general' : `@${safeDomain}`
     return `
       <tr>
-        <td><span class="domain-pill">@${safeDomain}</span></td>
+        <td><span class="domain-pill">${domainLabel}</span></td>
         <td><strong style="color: #38bdf8;">${d.playerCount}</strong></td>
         <td>${d.subscriberCount}</td>
         <td>${d.avgScore > 0 ? `${d.avgScore} pts` : '—'}</td>

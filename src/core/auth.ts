@@ -16,6 +16,41 @@ export function extractEmailDomain(email: string): string {
 }
 
 /**
+ * Check if a domain or email address belongs to the "general" leaderboard
+ * (Gmail, Googlemail, and Yahoo Mail).
+ */
+export function isGeneralLeaderboardDomain(domainOrEmail: string): boolean {
+  if (!domainOrEmail) return false
+  const clean = domainOrEmail.toLowerCase().trim()
+  const domain = clean.includes('@') ? (clean.split('@')[1] || '').trim() : clean
+  if (domain === 'general') return true
+  if (domain === 'gmail.com' || domain === 'googlemail.com') return true
+  if (
+    domain === 'yahoo.com' ||
+    domain.startsWith('yahoo.') ||
+    domain.endsWith('.yahoo.com') ||
+    domain === 'ymail.com'
+  ) {
+    return true
+  }
+  return false
+}
+
+/**
+ * Returns the canonical leaderboard domain for a given domain or email address.
+ * For gmail.com, googlemail.com, and yahoo mail domains, returns 'general'.
+ * For corporate/custom domain users, returns their email domain.
+ */
+export function getLeaderboardDomain(domainOrEmail: string): string {
+  if (isGeneralLeaderboardDomain(domainOrEmail)) {
+    return 'general'
+  }
+  if (!domainOrEmail) return 'general'
+  const clean = domainOrEmail.toLowerCase().trim()
+  return clean.includes('@') ? extractEmailDomain(clean) : clean
+}
+
+/**
  * Generate a tamper-proof HMAC-SHA256 signed token for a user email.
  * Format: <base64url_payload>.<base64url_signature>
  */

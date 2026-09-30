@@ -2,6 +2,7 @@ import {
   extractBackends,
   extractEmailDomain,
   generateAccountToken,
+  getLeaderboardDomain,
   MEMORY_STORE,
   type StorageBackend,
   type SubscriberEntry,
@@ -552,17 +553,19 @@ export async function getDashboardStats(
 
   // Initialize with subscriber domains
   for (const sub of subscribers) {
-    if (sub.domain && !domainMap.has(sub.domain)) {
-      domainMap.set(sub.domain, { players: new Set(), scores: [], topScore: 0 })
+    const d = getLeaderboardDomain(sub.domain)
+    if (d && !domainMap.has(d)) {
+      domainMap.set(d, { players: new Set(), scores: [], topScore: 0 })
     }
   }
 
   for (const play of allPlays) {
     if (!play.domain) continue
-    let dStats = domainMap.get(play.domain)
+    const d = getLeaderboardDomain(play.domain)
+    let dStats = domainMap.get(d)
     if (!dStats) {
       dStats = { players: new Set(), scores: [], topScore: 0 }
-      domainMap.set(play.domain, dStats)
+      domainMap.set(d, dStats)
     }
     dStats.players.add(play.email)
     if (play.hasWon && play.score > 0) {
@@ -573,7 +576,7 @@ export async function getDashboardStats(
 
   const domainRankings: DomainStats[] = Array.from(domainMap.entries())
     .map(([domain, data]) => {
-      const subCount = subscribers.filter(s => s.domain === domain).length
+      const subCount = subscribers.filter(s => getLeaderboardDomain(s.domain) === domain).length
       const avgScore = data.scores.length > 0
         ? Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length)
         : 0

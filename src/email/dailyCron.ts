@@ -1,6 +1,6 @@
 import { getDailyPuzzle, getPuzzleDateForSendCron, formatPrettyDate, getRedactedText, getOrCreateGameState, buildStatePayload, GAME_MESSAGES, type DailyPuzzle } from '../game'
 import { EMAIL_HTML } from './emailHtml'
-import { generateAccountToken, getAccountUrl, extractEmailDomain, type Bindings, type DailyEmailDispatchResult, type StorageBackend } from '../core'
+import { generateAccountToken, getAccountUrl, extractEmailDomain, getLeaderboardDomain, type Bindings, type DailyEmailDispatchResult, type StorageBackend } from '../core'
 import { sendMailgunEmail } from './emailService'
 import { applyEmailTheme, type EmailTheme } from './emailThemes'
 import { recordUserActivity, getCoworkerCount, getPlayerCount, getUserEmail, getSubscribers, isDevTester, getDevTesters } from '../services'
@@ -19,12 +19,13 @@ export async function buildPuzzleEmailContent(
   const isDev = options?.isDev !== undefined ? options.isDev : await isDevTester(kv, userEmail)
   const { state, puzzle } = await getOrCreateGameState(kv, userEmail, dateOrPuzzleParam, { isDev })
   const domain = extractEmailDomain(userEmail)
+  const leaderboardDomain = getLeaderboardDomain(userEmail)
   const secret = authSecret || process.env.AUTH_SECRET
   const userToken = generateAccountToken(userEmail, secret)
   const origin = (currentOrigin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
 
   const encodedEmail = encodeURIComponent(userEmail)
-  const encodedDomain = encodeURIComponent(domain)
+  const encodedDomain = encodeURIComponent(leaderboardDomain)
 
   const profile = await recordUserActivity(kv, userEmail, puzzle.date)
   const theme: EmailTheme = themeOverride || profile.theme || 'light'

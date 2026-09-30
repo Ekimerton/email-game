@@ -1,5 +1,5 @@
 import { OAuth2Client } from 'google-auth-library'
-import { extractEmailDomain, kvGet, kvPut, withKeyLock, type StorageBackend } from '../core'
+import { extractEmailDomain, getLeaderboardDomain, kvGet, kvPut, withKeyLock, type StorageBackend } from '../core'
 import type { UserSettings } from '../core'
 import { getDailyPuzzle } from '../game'
 import { getSubscribers } from './subscribers'
@@ -136,15 +136,16 @@ export async function getCoworkerCount(
 ): Promise<number> {
   const subscribers = await getSubscribers(kv)
   const coworkerEmails = new Set<string>()
+  const targetDomain = getLeaderboardDomain(domain)
 
   for (const sub of subscribers) {
-    if (sub.domain === domain) {
+    if (getLeaderboardDomain(sub.domain) === targetDomain) {
       coworkerEmails.add(sub.email.toLowerCase())
     }
   }
 
   const puzzle = getDailyPuzzle(puzzleOrDate)
-  const leaderboard = await getDomainLeaderboard(kv, domain, puzzle.id, puzzle.date)
+  const leaderboard = await getDomainLeaderboard(kv, targetDomain, puzzle.id, puzzle.date)
   for (const entry of leaderboard) {
     coworkerEmails.add(entry.email.toLowerCase())
   }

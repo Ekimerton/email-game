@@ -1,11 +1,52 @@
 import { describe, it, expect } from 'vitest'
-import { generateAccountToken, verifyAccountToken, getAccountUrl, extractEmailDomain, generateConfirmationToken, verifyConfirmationToken } from '../src/core'
+import {
+  generateAccountToken,
+  verifyAccountToken,
+  getAccountUrl,
+  extractEmailDomain,
+  generateConfirmationToken,
+  verifyConfirmationToken,
+  isGeneralLeaderboardDomain,
+  getLeaderboardDomain
+} from '../src/core'
 
 describe('Spoof-Proof Auth Tokens (HMAC-SHA256)', () => {
   it('should extract domain properly from email', () => {
     expect(extractEmailDomain('alice@acme.com')).toBe('acme.com')
     expect(extractEmailDomain('bob@engineering.nvidia.com')).toBe('engineering.nvidia.com')
     expect(extractEmailDomain('invalid')).toBe('public')
+  })
+
+  it('should correctly classify and normalize general leaderboard domains', () => {
+    // Gmail and Googlemail
+    expect(isGeneralLeaderboardDomain('alice@gmail.com')).toBe(true)
+    expect(isGeneralLeaderboardDomain('bob@googlemail.com')).toBe(true)
+    expect(isGeneralLeaderboardDomain('gmail.com')).toBe(true)
+    expect(isGeneralLeaderboardDomain('googlemail.com')).toBe(true)
+    expect(getLeaderboardDomain('alice@gmail.com')).toBe('general')
+    expect(getLeaderboardDomain('bob@googlemail.com')).toBe('general')
+    expect(getLeaderboardDomain('gmail.com')).toBe('general')
+
+    // Yahoo mail variants
+    expect(isGeneralLeaderboardDomain('user@yahoo.com')).toBe(true)
+    expect(isGeneralLeaderboardDomain('user@yahoo.co.uk')).toBe(true)
+    expect(isGeneralLeaderboardDomain('user@yahoo.fr')).toBe(true)
+    expect(isGeneralLeaderboardDomain('user@ymail.com')).toBe(true)
+    expect(isGeneralLeaderboardDomain('user@mail.yahoo.com')).toBe(true)
+    expect(getLeaderboardDomain('user@yahoo.com')).toBe('general')
+    expect(getLeaderboardDomain('user@yahoo.co.uk')).toBe('general')
+    expect(getLeaderboardDomain('yahoo.com')).toBe('general')
+
+    // Corporate / custom domains
+    expect(isGeneralLeaderboardDomain('alice@stripe.com')).toBe(false)
+    expect(isGeneralLeaderboardDomain('bob@company.org')).toBe(false)
+    expect(getLeaderboardDomain('alice@stripe.com')).toBe('stripe.com')
+    expect(getLeaderboardDomain('stripe.com')).toBe('stripe.com')
+
+    // Edge cases
+    expect(isGeneralLeaderboardDomain('general')).toBe(true)
+    expect(getLeaderboardDomain('general')).toBe('general')
+    expect(getLeaderboardDomain('')).toBe('general')
   })
 
   it('should generate and successfully verify a valid signed account token', () => {

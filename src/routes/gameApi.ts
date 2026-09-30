@@ -1,5 +1,5 @@
 import type { Hono } from 'hono'
-import { kvPut, withKeyLock, type Bindings, type LeaderboardEntry } from '../core'
+import { kvPut, withKeyLock, getLeaderboardDomain, type Bindings, type LeaderboardEntry } from '../core'
 import {
   GAME_MESSAGES,
   formatPrettyDate,
@@ -131,6 +131,8 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
           state.letterMask = puzzle.word.split('')
           state.lastMessage = GAME_MESSAGES.puzzleSolved(puzzle.word, state.guessCount, state.score)
 
+          const leaderboardDomain = getLeaderboardDomain(userEmail)
+
           const leaderboardEntry: LeaderboardEntry = {
             email: userEmail,
             displayEmail: formatDisplayEmail(userEmail),
@@ -142,7 +144,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
 
           const updatedLeaderboard = await updateDomainLeaderboard(
             c.env,
-            domain,
+            leaderboardDomain,
             puzzle.id,
             leaderboardEntry
           )
@@ -150,7 +152,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
           const rank = updatedLeaderboard.findIndex((e) => e.email === userEmail) + 1
 
           state.shareText = `Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)})\nSolved in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
-            }!\nScore: ${state.score} pts | Org Rank: #${rank} (${domain})\n\nPlay at: https://inboxed.fun`
+            }!\nScore: ${state.score} pts | Org Rank: #${rank} (${leaderboardDomain})\n\nPlay at: https://inboxed.fun`
         } else {
           if (state.revealedCount < puzzle.definitions.length) {
             state.revealedCount += 1
@@ -249,7 +251,8 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
   app.get('/api/leaderboard', async (c) => {
     try {
       const userEmail = await getUserEmail(c)
-      const domain = c.req.query('domain') || extractDomain(userEmail)
+      const requestedDomain = c.req.query('domain')
+      const domain = getLeaderboardDomain(requestedDomain || userEmail)
       const isDev = await isDevTester(c.env, userEmail)
       const puzzleIdParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
       const dateParam = c.req.query('date')
