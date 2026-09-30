@@ -8,7 +8,7 @@ export interface DevDashboardViewParams {
   source?: 'prod' | 'local'
   prodOrigin?: string
   fetchError?: string
-  activeTab?: 'gameplay' | 'subscribers'
+  activeTab?: 'gameplay' | 'subscribers' | 'settings'
 }
 
 export function getDevDashboardPageHtml(params: DevDashboardViewParams): string {
@@ -130,11 +130,58 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
         <td><span class="status-pill ${statusClass}">${statusText}</span></td>
         <td>
           <div class="sub-actions-wrapper">
+            <button type="button" class="btn-action" onclick="openUserSettings('${safeEmail}')" title="Inspect user profile & preferences">👤 Settings</button>
             <button type="button" class="btn-action btn-dev-toggle ${isDev ? 'btn-dev-active' : ''}" onclick="toggleDevStatus('${safeEmail}', this)" title="${isDev ? 'Remove from dev prescreen list' : 'Add to dev prescreen list (42 days ahead)'}">${isDev ? '🧪 Remove Dev' : '🧪 Make Dev'}</button>
             <a href="/dev/page/account?email=${encodeURIComponent(sub.email)}" target="_blank" class="btn-action" title="Open user account preferences">⚙️ Account</a>
             <button type="button" class="btn-action" onclick="toggleStatus('${safeEmail}', this)" title="Toggle active/unsubscribed">${isActive ? 'Deactivate' : 'Activate'}</button>
             <button type="button" class="btn-action btn-purge" onclick="purgeSubscriber('${safeEmail}', this)" title="Permanently delete subscriber">🗑️</button>
           </div>
+        </td>
+      </tr>
+    `
+  }).join('\n')
+
+  // User profile directory rows
+  const userProfiles = stats.userProfiles || []
+  const userDirectoryRowsHtml = userProfiles.map((user) => {
+    const safeEmail = escapeHtml(user.email)
+    const safeDomain = escapeHtml(user.domain || '')
+    const initial = (user.email[0] || '?').toUpperCase()
+    const devBadge = user.isDev ? `<span class="dev-badge-small" title="Dev tester prescreen track">🧪 Dev</span>` : ''
+    const visBadge = user.showOnLeaderboard
+      ? `<span class="badge-vis-public">👁️ Visible</span>`
+      : `<span class="badge-vis-hidden">🔒 Hidden</span>`
+    const themeBadge = user.theme === 'dark'
+      ? `<span class="badge-theme-dark">🌙 Dark</span>`
+      : `<span class="badge-theme-light">☀️ Light</span>`
+    const subBadge = user.isSubscribed
+      ? `<span class="status-pill status-won">Active</span>`
+      : `<span class="status-pill status-lost">Unsubscribed</span>`
+    const trackBadge = user.isDev
+      ? `<span class="badge-dev-prescreen" style="font-size: 11px;">42d Ahead</span>`
+      : `<span style="color: #64748b; font-size: 12px;">Standard</span>`
+
+    return `
+      <tr class="user-profile-row" data-email="${safeEmail}" data-domain="${safeDomain}" data-subscribed="${user.isSubscribed}" data-dev="${user.isDev}" data-played="${user.daysPlayed > 0}">
+        <td>
+          <div class="player-cell">
+            <div class="avatar">${initial}</div>
+            <div class="player-details">
+              <span class="player-email">${safeEmail} ${devBadge}</span>
+              <button type="button" class="copy-btn" onclick="copyText('${safeEmail}', this)" title="Copy email address">📋</button>
+            </div>
+          </div>
+        </td>
+        <td><span class="domain-pill">@${safeDomain}</span></td>
+        <td>${visBadge}</td>
+        <td>${themeBadge}</td>
+        <td><strong style="color: #38bdf8;">${user.daysPlayed}</strong> <span style="font-size: 11px; color: #64748b;">day${user.daysPlayed === 1 ? '' : 's'}</span></td>
+        <td>${subBadge}</td>
+        <td>${trackBadge}</td>
+        <td>
+          <button type="button" class="btn-inspect" onclick="openUserSettings('${safeEmail}')" title="Inspect user profile & preferences">
+            🔍 Inspect
+          </button>
         </td>
       </tr>
     `
@@ -279,13 +326,16 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
       </div>
     </section>
 
-    <!-- Main Section Tabs: Gameplay vs Subscribed Emails -->
+    <!-- Main Section Tabs: Gameplay vs Subscribed Emails vs User Settings -->
     <nav class="dashboard-nav-tabs">
       <button type="button" id="tab-btn-gameplay" class="nav-tab-btn ${initialTab === 'gameplay' ? 'active' : ''}" onclick="switchDashboardTab('gameplay')">
         🎮 Gameplay &amp; Scores
       </button>
       <button type="button" id="tab-btn-subscribers" class="nav-tab-btn ${initialTab === 'subscribers' ? 'active' : ''}" onclick="switchDashboardTab('subscribers')">
         👥 Subscribed Emails &amp; Dev Testers <span class="nav-tab-badge">${stats.subscribers.total}</span>
+      </button>
+      <button type="button" id="tab-btn-settings" class="nav-tab-btn ${initialTab === 'settings' ? 'active' : ''}" onclick="switchDashboardTab('settings')">
+        👤 User Settings &amp; Profiles <span class="nav-tab-badge" id="tab-badge-users">${userProfiles.length}</span>
       </button>
     </nav>
 
@@ -493,6 +543,232 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
         </div>
       </section>
     </div>
+
+    <!-- TAB 3: USER SETTINGS & PROFILES SECTION -->
+    <div id="section-user-settings" style="display: ${initialTab === 'settings' ? 'block' : 'none'};">
+      <!-- Active User Inspector Card -->
+      <section class="inspector-card" id="user-inspector-card">
+        <div class="inspector-header">
+          <div class="inspector-identity">
+            <div class="inspector-avatar" id="inspector-avatar">?</div>
+            <div class="inspector-titles">
+              <div class="inspector-email-row">
+                <span class="inspector-email" id="inspector-email">—</span>
+                <button type="button" class="copy-btn" onclick="copyInspectorEmail()" title="Copy email address">📋</button>
+                <span id="inspector-dev-badge" class="badge-dev-prescreen" style="display: none;">🧪 42 Days Ahead</span>
+              </div>
+              <div class="inspector-tags-row">
+                <span class="domain-pill" id="inspector-domain">@company</span>
+                <span id="inspector-sub-status" class="status-pill status-won">Active</span>
+                <span id="inspector-visibility-pill" class="badge-vis-public">👁️ Public</span>
+                <span id="inspector-theme-pill" class="badge-theme-light">☀️ Light</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <a id="inspector-account-link" href="#" target="_blank" class="btn btn-secondary" title="Open user's private account settings page in new tab">
+              🔗 Open User Account Page
+            </a>
+            <button type="button" class="btn btn-secondary" onclick="copyInspectorAccountLink()" title="Copy user's tamper-proof account link">
+              📋 Copy Link
+            </button>
+          </div>
+        </div>
+
+        <!-- 3-Column Settings Grid -->
+        <div class="inspector-grid">
+          <!-- Col 1: Preferences & Privacy -->
+          <div class="inspector-section">
+            <div class="inspector-section-title">
+              <span>🔒 Preferences &amp; Privacy</span>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-label">Leaderboard Visibility</span>
+                <span class="setting-desc">Visible on workplace &amp; global leaderboards</span>
+              </div>
+              <div class="segmented-toggle" id="toggle-group-leaderboard">
+                <button type="button" class="seg-btn active" id="btn-vis-public" onclick="setUserSetting('showOnLeaderboard', true)">👁️ Visible</button>
+                <button type="button" class="seg-btn" id="btn-vis-hidden" onclick="setUserSetting('showOnLeaderboard', false)">🔒 Hidden</button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-label">Email Theme</span>
+                <span class="setting-desc">Visual theme rendered in daily puzzle emails</span>
+              </div>
+              <div class="segmented-toggle" id="toggle-group-theme">
+                <button type="button" class="seg-btn active-amber" id="btn-theme-light" onclick="setUserSetting('theme', 'light')">☀️ Light</button>
+                <button type="button" class="seg-btn" id="btn-theme-dark" onclick="setUserSetting('theme', 'dark')">🌙 Dark</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Col 2: Account & Access -->
+          <div class="inspector-section">
+            <div class="inspector-section-title">
+              <span>📬 Subscription &amp; Track</span>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-label">Subscription Status</span>
+                <span class="setting-desc">Daily 9:00 AM puzzle email dispatch</span>
+              </div>
+              <div class="segmented-toggle" id="toggle-group-sub">
+                <button type="button" class="seg-btn active-emerald" id="btn-sub-active" onclick="setUserSetting('status', 'active')">Active</button>
+                <button type="button" class="seg-btn" id="btn-sub-unsub" onclick="setUserSetting('status', 'unsubscribed')">Unsubscribed</button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-label">Dev Prescreen Track</span>
+                <span class="setting-desc">Test future puzzles 42 days in advance</span>
+              </div>
+              <div class="segmented-toggle" id="toggle-group-dev">
+                <button type="button" class="seg-btn active" id="btn-track-std" onclick="setUserSetting('isDev', false)">Standard</button>
+                <button type="button" class="seg-btn" id="btn-track-dev" onclick="setUserSetting('isDev', true)">🧪 Dev (42d+)</button>
+              </div>
+            </div>
+
+            <div class="token-container">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Signed Account Token</span>
+                <button type="button" class="copy-btn" onclick="copyInspectorToken()" title="Copy token only">📋</button>
+              </div>
+              <div class="token-code" id="inspector-token-text">—</div>
+            </div>
+          </div>
+
+          <!-- Col 3: Gameplay History & Stats -->
+          <div class="inspector-section">
+            <div class="inspector-section-title">
+              <span>🎮 Gameplay Activity</span>
+            </div>
+
+            <div class="stats-strip">
+              <div class="stat-item">
+                <span class="stat-item-label">Days Played</span>
+                <span class="stat-item-val" id="inspector-stat-days">0</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-item-label">Puzzles</span>
+                <span class="stat-item-val" id="inspector-stat-puzzles">0</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-item-label">Games Won</span>
+                <span class="stat-item-val" id="inspector-stat-won" style="color: #34d399;">0</span>
+              </div>
+            </div>
+
+            <div>
+              <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Played Puzzles:</span>
+              <div class="history-chips-row" id="inspector-played-puzzles-chips">
+                <span style="color: #64748b; font-size: 12px;">No puzzles played yet</span>
+              </div>
+            </div>
+
+            <div>
+              <span style="font-size: 12px; color: #94a3b8; font-weight: 600;">Played Dates:</span>
+              <div class="history-chips-row" id="inspector-played-dates-chips">
+                <span style="color: #64748b; font-size: 12px;">No activity dates recorded</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User's Individual Score Records Table -->
+        <div style="border-top: 1px solid #1e293b; padding-top: 16px;">
+          <div style="font-size: 13px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px;">
+            User Game History Records (<span id="inspector-history-count">0</span>)
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Puzzle</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Score</th>
+                  <th>Guesses</th>
+                  <th>Hints</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="inspector-history-tbody">
+                <tr><td colspan="7" style="text-align: center; color: #64748b; padding: 20px;">No plays found for this user.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- All Users Directory Table Panel -->
+      <section class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>👤 All User Profiles &amp; Settings Directory</span>
+            <span class="panel-count" id="user-table-count">${userProfiles.length} users</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary" onclick="exportUsersJson()" title="Download user profiles as JSON">
+              💾 Export JSON
+            </button>
+          </div>
+        </div>
+
+        <div style="padding: 16px 20px; border-bottom: 1px solid #1f2937; background: #0f172a; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="user-search-input" class="search-input" placeholder="Search users by email or domain..." oninput="applyUserFilters()">
+          </div>
+
+          <div class="filter-tabs">
+            <button type="button" class="tab-btn active" data-userfilter="all" onclick="setUserFilter('all', this)">
+              All (${userProfiles.length})
+            </button>
+            <button type="button" class="tab-btn" data-userfilter="active" onclick="setUserFilter('active', this)">
+              Active Subs (${userProfiles.filter(u => u.isSubscribed).length})
+            </button>
+            <button type="button" class="tab-btn" data-userfilter="dev" onclick="setUserFilter('dev', this)">
+              Dev Testers (${userProfiles.filter(u => u.isDev).length})
+            </button>
+            <button type="button" class="tab-btn" data-userfilter="played" onclick="setUserFilter('played', this)">
+              Has Played (${userProfiles.filter(u => u.daysPlayed > 0).length})
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table id="users-directory-table" style="display: ${userProfiles.length === 0 ? 'none' : 'table'};">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Domain</th>
+                <th>Leaderboard</th>
+                <th>Theme</th>
+                <th>Days Played</th>
+                <th>Subscription</th>
+                <th>Track</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-directory-tbody">
+              ${userDirectoryRowsHtml}
+            </tbody>
+          </table>
+
+          <div id="empty-users" class="empty-state" style="display: ${userProfiles.length === 0 ? 'block' : 'none'};">
+            <div class="empty-icon">👤</div>
+            <div class="empty-text">No user profiles found in database.</div>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <div id="toast" class="toast"></div>
@@ -502,7 +778,11 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
     var currentSource = '${source}';
     var activeFilter = 'all';
     var activeSubFilter = 'all';
+    var activeUserFilter = 'all';
     var currentTab = '${initialTab}';
+    var selectedUserEmail = (currentData.userProfiles && currentData.userProfiles.length > 0)
+      ? currentData.userProfiles[0].email
+      : '';
 
     function showToast(msg) {
       var toast = document.getElementById('toast');
@@ -523,9 +803,15 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
       currentTab = tab;
       document.getElementById('section-gameplay').style.display = tab === 'gameplay' ? 'block' : 'none';
       document.getElementById('section-subscribers').style.display = tab === 'subscribers' ? 'block' : 'none';
+      document.getElementById('section-user-settings').style.display = tab === 'settings' ? 'block' : 'none';
 
       document.getElementById('tab-btn-gameplay').classList.toggle('active', tab === 'gameplay');
       document.getElementById('tab-btn-subscribers').classList.toggle('active', tab === 'subscribers');
+      document.getElementById('tab-btn-settings').classList.toggle('active', tab === 'settings');
+
+      if (tab === 'settings' && selectedUserEmail) {
+        selectUser(selectedUserEmail);
+      }
 
       try {
         var url = new URL(window.location);
@@ -722,7 +1008,7 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
           '<td>' + (play.hintsUsed > 0 ? ('💡 ' + play.hintsUsed) : '—') + '</td>' +
           '<td style="color: #94a3b8; font-size: 12px;">' + timeFormatted + '</td>' +
         '</tr>';
-      }).join('\n');
+      }).join('');
 
       tbody.innerHTML = html;
       if (emptyEl) emptyEl.style.display = 'none';
@@ -749,6 +1035,14 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
       renderScoresTable(data.selectedPlays);
       applyFilters();
       applySubFilters();
+
+      if (data.userProfiles) {
+        currentData.userProfiles = data.userProfiles;
+        var badgeUsers = document.getElementById('tab-badge-users');
+        if (badgeUsers) badgeUsers.textContent = data.userProfiles.length;
+        if (selectedUserEmail) selectUser(selectedUserEmail);
+        applyUserFilters();
+      }
     }
 
     // Subscriber Actions
@@ -977,6 +1271,279 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
       a.download = 'inboxed-dashboard-data.json';
       a.click();
       URL.revokeObjectURL(url);
+    }
+
+    // User Settings & Profile Inspector Actions
+    function openUserSettings(email) {
+      switchDashboardTab('settings');
+      selectUser(email);
+      var card = document.getElementById('user-inspector-card');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function selectUser(email) {
+      if (!email || !currentData || !currentData.userProfiles) return;
+      var clean = email.toLowerCase().trim();
+      var user = currentData.userProfiles.find(function(u) { return u.email.toLowerCase().trim() === clean; });
+      if (!user) return;
+
+      selectedUserEmail = clean;
+
+      // Update Inspector Identity
+      var avatarEl = document.getElementById('inspector-avatar');
+      if (avatarEl) avatarEl.textContent = (clean[0] || '?').toUpperCase();
+      var emailEl = document.getElementById('inspector-email');
+      if (emailEl) emailEl.textContent = clean;
+      var domainEl = document.getElementById('inspector-domain');
+      if (domainEl) domainEl.textContent = user.domain ? ('@' + user.domain) : '—';
+
+      var devBadge = document.getElementById('inspector-dev-badge');
+      if (devBadge) devBadge.style.display = user.isDev ? 'inline-flex' : 'none';
+
+      var subPill = document.getElementById('inspector-sub-status');
+      if (subPill) {
+        subPill.className = 'status-pill ' + (user.isSubscribed ? 'status-won' : 'status-lost');
+        subPill.textContent = user.isSubscribed ? 'Active' : 'Unsubscribed';
+      }
+
+      var visPill = document.getElementById('inspector-visibility-pill');
+      if (visPill) {
+        visPill.className = user.showOnLeaderboard ? 'badge-vis-public' : 'badge-vis-hidden';
+        visPill.textContent = user.showOnLeaderboard ? '👁️ Public' : '🔒 Hidden';
+      }
+
+      var themePill = document.getElementById('inspector-theme-pill');
+      if (themePill) {
+        themePill.className = user.theme === 'dark' ? 'badge-theme-dark' : 'badge-theme-light';
+        themePill.textContent = user.theme === 'dark' ? '🌙 Dark' : '☀️ Light';
+      }
+
+      // Col 1: Privacy & Theme buttons
+      var btnVisPub = document.getElementById('btn-vis-public');
+      var btnVisHid = document.getElementById('btn-vis-hidden');
+      if (btnVisPub && btnVisHid) {
+        btnVisPub.className = 'seg-btn ' + (user.showOnLeaderboard ? 'active' : '');
+        btnVisHid.className = 'seg-btn ' + (!user.showOnLeaderboard ? 'active-rose' : '');
+      }
+
+      var btnThLight = document.getElementById('btn-theme-light');
+      var btnThDark = document.getElementById('btn-theme-dark');
+      if (btnThLight && btnThDark) {
+        btnThLight.className = 'seg-btn ' + (user.theme !== 'dark' ? 'active-amber' : '');
+        btnThDark.className = 'seg-btn ' + (user.theme === 'dark' ? 'active-dark' : '');
+      }
+
+      // Col 2: Sub & Track buttons
+      var btnSubAct = document.getElementById('btn-sub-active');
+      var btnSubUn = document.getElementById('btn-sub-unsub');
+      if (btnSubAct && btnSubUn) {
+        btnSubAct.className = 'seg-btn ' + (user.isSubscribed ? 'active-emerald' : '');
+        btnSubUn.className = 'seg-btn ' + (!user.isSubscribed ? 'active-rose' : '');
+      }
+
+      var btnTrackStd = document.getElementById('btn-track-std');
+      var btnTrackDev = document.getElementById('btn-track-dev');
+      if (btnTrackStd && btnTrackDev) {
+        btnTrackStd.className = 'seg-btn ' + (!user.isDev ? 'active' : '');
+        btnTrackDev.className = 'seg-btn ' + (user.isDev ? 'active-dark' : '');
+      }
+
+      // Token and links
+      var tokenText = user.accountToken || '';
+      var tokenEl = document.getElementById('inspector-token-text');
+      if (tokenEl) tokenEl.textContent = tokenText || 'Not generated';
+
+      var accLink = document.getElementById('inspector-account-link');
+      if (accLink) {
+        var baseOrigin = window.location.origin;
+        accLink.href = tokenText ? (baseOrigin + '/account?token=' + encodeURIComponent(tokenText)) : ('/dev/page/account?email=' + encodeURIComponent(clean));
+      }
+
+      // Col 3: Stats
+      var statDays = document.getElementById('inspector-stat-days');
+      if (statDays) statDays.textContent = user.daysPlayed || 0;
+
+      var statPuzzles = document.getElementById('inspector-stat-puzzles');
+      if (statPuzzles) statPuzzles.textContent = (user.playedPuzzles || []).length;
+
+      // History records for this user from allPlays
+      var userPlays = (currentData.allPlays || []).filter(function(p) { return p.email.toLowerCase().trim() === clean; });
+      var wonCount = userPlays.filter(function(p) { return p.hasWon; }).length;
+      var statWon = document.getElementById('inspector-stat-won');
+      if (statWon) statWon.textContent = wonCount;
+
+      // Played Puzzles chips
+      var puzChips = document.getElementById('inspector-played-puzzles-chips');
+      if (puzChips) {
+        var pList = user.playedPuzzles || [];
+        if (pList.length === 0) {
+          puzChips.innerHTML = '<span style="color: #64748b; font-size: 12px;">No puzzles played yet</span>';
+        } else {
+          puzChips.innerHTML = pList.map(function(pid) {
+            return '<span class="history-chip history-chip-puzzle">#' + escapeHtmlStr(pid) + '</span>';
+          }).join(' ');
+        }
+      }
+
+      // Played Dates chips
+      var dateChips = document.getElementById('inspector-played-dates-chips');
+      if (dateChips) {
+        var dList = user.playedDates || [];
+        if (dList.length === 0) {
+          dateChips.innerHTML = '<span style="color: #64748b; font-size: 12px;">No dates recorded</span>';
+        } else {
+          dateChips.innerHTML = dList.map(function(d) {
+            return '<span class="history-chip">' + escapeHtmlStr(d) + '</span>';
+          }).join(' ');
+        }
+      }
+
+      // History table
+      var histTbody = document.getElementById('inspector-history-tbody');
+      var histCount = document.getElementById('inspector-history-count');
+      if (histCount) histCount.textContent = userPlays.length;
+
+      if (histTbody) {
+        if (userPlays.length === 0) {
+          histTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #64748b; padding: 20px;">No gameplay records found for this user.</td></tr>';
+        } else {
+          histTbody.innerHTML = userPlays.map(function(play) {
+            var statusPill = play.hasWon
+              ? '<span class="status-pill status-won">🎉 Solved</span>'
+              : '<span class="status-pill status-playing">⏳ Playing</span>';
+            var chips = (play.guesses || []).map(function(g) {
+              return '<span class="guess-chip">' + escapeHtmlStr(g) + '</span>';
+            }).join(' ');
+            var timeFormatted = '—';
+            if (play.wonAt || play.updatedAt) {
+              try { timeFormatted = new Date(play.wonAt || play.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch (e) {}
+            }
+            return '<tr>' +
+              '<td><strong style="color: #38bdf8;">#' + escapeHtmlStr(play.puzzleId) + '</strong></td>' +
+              '<td style="color: #94a3b8; font-family: monospace;">' + escapeHtmlStr(play.date || '—') + '</td>' +
+              '<td>' + statusPill + '</td>' +
+              '<td><span class="score-badge score-tier-high">' + play.score + ' pts</span></td>' +
+              '<td><div class="guess-chips">' + (chips || '—') + '</div></td>' +
+              '<td>' + (play.hintsUsed > 0 ? ('💡 ' + play.hintsUsed) : '—') + '</td>' +
+              '<td style="color: #94a3b8; font-size: 12px;">' + timeFormatted + '</td>' +
+            '</tr>';
+          }).join('');
+        }
+      }
+    }
+
+    async function setUserSetting(field, value) {
+      if (!selectedUserEmail) {
+        alert('Please select a user to inspect first.');
+        return;
+      }
+
+      var payload = {
+        email: selectedUserEmail,
+        target: currentSource
+      };
+      payload[field] = value;
+
+      try {
+        var res = await fetch('/dev/api/user-settings/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (data.success) {
+          showToast(data.message || 'Updated user setting successfully!');
+          var user = currentData.userProfiles.find(function(u) { return u.email.toLowerCase().trim() === selectedUserEmail; });
+          if (user) {
+            if (field === 'showOnLeaderboard') user.showOnLeaderboard = value;
+            if (field === 'theme') user.theme = value;
+            if (field === 'status') user.isSubscribed = (value === 'active');
+            if (field === 'isDev') user.isDev = value;
+          }
+          selectUser(selectedUserEmail);
+        } else {
+          alert(data.error || 'Failed to update user setting');
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
+      }
+    }
+
+    function copyInspectorEmail() {
+      if (selectedUserEmail) copyText(selectedUserEmail);
+    }
+
+    function copyInspectorAccountLink() {
+      var accLink = document.getElementById('inspector-account-link');
+      if (accLink && accLink.href) copyText(accLink.href);
+    }
+
+    function copyInspectorToken() {
+      var tokenEl = document.getElementById('inspector-token-text');
+      if (tokenEl && tokenEl.textContent) copyText(tokenEl.textContent);
+    }
+
+    function setUserFilter(filter, btn) {
+      activeUserFilter = filter;
+      document.querySelectorAll('#section-user-settings .tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      applyUserFilters();
+    }
+
+    function applyUserFilters() {
+      var query = (document.getElementById('user-search-input').value || '').toLowerCase().trim();
+      var rows = document.querySelectorAll('#users-directory-tbody .user-profile-row');
+      var visibleCount = 0;
+
+      rows.forEach(function(row) {
+        var email = (row.getAttribute('data-email') || '').toLowerCase();
+        var domain = (row.getAttribute('data-domain') || '').toLowerCase();
+        var isSub = row.getAttribute('data-subscribed') === 'true';
+        var isDev = row.getAttribute('data-dev') === 'true';
+        var hasPlayed = row.getAttribute('data-played') === 'true';
+
+        var matchesQuery = !query || email.includes(query) || domain.includes(query);
+        var matchesFilter = true;
+        if (activeUserFilter === 'active') matchesFilter = isSub;
+        else if (activeUserFilter === 'dev') matchesFilter = isDev;
+        else if (activeUserFilter === 'played') matchesFilter = hasPlayed;
+
+        if (matchesQuery && matchesFilter) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      var emptyEl = document.getElementById('empty-users');
+      var tableEl = document.getElementById('users-directory-table');
+      if (visibleCount === 0) {
+        if (emptyEl) emptyEl.style.display = 'block';
+        if (tableEl) tableEl.style.display = 'none';
+      } else {
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (tableEl) tableEl.style.display = 'table';
+      }
+      document.getElementById('user-table-count').textContent = visibleCount + ' shown';
+    }
+
+    function exportUsersJson() {
+      if (!currentData || !currentData.userProfiles) return;
+      var blob = new Blob([JSON.stringify(currentData.userProfiles, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'inboxed-user-profiles.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported user profiles JSON');
+    }
+
+    if (selectedUserEmail) {
+      selectUser(selectedUserEmail);
     }
   </script>
 </body>

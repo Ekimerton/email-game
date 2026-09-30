@@ -1,6 +1,7 @@
 import {
   extractBackends,
   extractEmailDomain,
+  generateAccountToken,
   MEMORY_STORE,
   type StorageBackend,
   type SubscriberEntry,
@@ -8,8 +9,8 @@ import {
   type GameState
 } from '../core'
 import { getDailyPuzzle, getDateForPuzzleId, getPuzzleById, PUZZLES } from '../game'
-import { getSubscribers } from './subscribers'
-import { getDevTesters } from './userService'
+import { getSubscribers, addSubscriber, unsubscribeUser } from './subscribers'
+import { getDevTesters, getUserSettings, updateUserSettings, addDevTester, removeDevTester } from './userService'
 
 export interface PlayerScoreRecord {
   email: string
@@ -28,6 +29,20 @@ export interface PlayerScoreRecord {
   wonAt?: string
   updatedAt?: string
   isDev?: boolean
+}
+
+export interface UserProfileSummary {
+  email: string
+  domain: string
+  showOnLeaderboard: boolean
+  theme: 'light' | 'dark'
+  daysPlayed: number
+  playedDates: string[]
+  playedPuzzles: string[]
+  isSubscribed: boolean
+  isDev: boolean
+  accountToken?: string
+  lastPlayed?: string
 }
 
 export interface DomainStats {
@@ -81,6 +96,7 @@ export interface DashboardStats {
   availablePuzzles: { id: string; date: string; playCount: number }[]
   domainRankings: DomainStats[]
   devTesters: string[]
+  userProfiles: UserProfileSummary[]
   generatedAt: string
 }
 
@@ -484,10 +500,28 @@ export async function getDashboardStats(
 
   // 6. Available Puzzles for dropdown
   const puzzleCounts = new Map<string, { date: string; playCount: number }>()
-  // Guarantee today's puzzle is present
-  puzzleCounts.set(String(todayPuzzle.id), { date: todayPuzzle.date, playCount: 0 })
 
+  // Determine max puzzle ID to show in dropdown:
+  // Include at least today's puzzle, dev prescreen puzzle, selected puzzle, and anything with plays
+  const devTodayPuzzle = getDailyPuzzle(undefined, { isDev: true })
+  const maxPuzzleNum = Math.max(
+    Number(devTodayPuzzle.id) || 44,
+    Number(todayPuzzle.id) || 2,
+    Number(selectedPuzzleId) || 1,
+    ...allPlays.map(p => Number(p.puzzleId) || 0)
+  )
+
+  // Pre-populate all puzzles from 1 to maxPuzzleNum so all puzzle days can be inspected
+  for (let i = 1; i <= maxPuzzleNum; i++) {
+    const pId = String(i)
+    const pDef = getPuzzleById(pId)
+    const pDate = getDateForPuzzleId(pId) || pDef?.date || ''
+    puzzleCounts.set(pId, { date: pDate, playCount: 0 })
+  }
+
+  // Count plays from allPlays
   for (const play of allPlays) {
+    if (!/^\d+$/.test(play.puzzleId)) continue
     const existing = puzzleCounts.get(play.puzzleId)
     if (existing) {
       existing.playCount += 1
@@ -499,6 +533,10 @@ export async function getDashboardStats(
       })
     }
   }
+
+  // Ensure today's puzzle has its proper date
+  const todayEntry = puzzleCounts.get(String(todayPuzzle.id))
+  if (todayEntry) todayEntry.date = todayPuzzle.date
 
   const availablePuzzles = Array.from(puzzleCounts.entries())
     .filter(([id]) => /^\d+$/.test(id))
@@ -550,6 +588,137 @@ export async function getDashboardStats(
     })
     .sort((a, b) => b.playerCount - a.playerCount || b.subscriberCount - a.subscriberCount)
 
+  // 8. User Profiles & Settings Consolidation
+  const userProfilesMap = new Map<string, any>()
+
+  // A. Query D1 for user:profile:%
+  if (db) {
+    try {
+      const profileRows = await db
+        .prepare("SELECT key, value FROM kv_store WHERE key LIKE 'user:profile:%'")
+        .all<{ key: string; value: string }>()
+
+      if (profileRows && Array.isArray(profileRows.results)) {
+        for (const row of profileRows.results) {
+          try {
+            const val = JSON.parse(row.value)
+            const cleanEmail = (val.email || row.key.replace('user:profile:', '')).toLowerCase().trim()
+            if (cleanEmail && cleanEmail.includes('@')) {
+              userProfilesMap.set(cleanEmail, val)
+            }
+          } catch (_) {}
+        }
+      }
+    } catch (err) {
+      console.warn('[Dashboard] Error querying D1 user profiles:', err)
+    }
+  }
+
+  // B. Fallback to KV list if D1 didn't return profiles
+  if (kv && userProfilesMap.size === 0 && typeof (kv as any).list === 'function') {
+    try {
+      let cursor: string | undefined = undefined
+      let keys: string[] = []
+      do {
+        const listRes: any = await kv.list({ prefix: 'user:profile:', cursor })
+        if (listRes?.keys) {
+          keys.push(...listRes.keys.map((k: any) => k.name))
+        }
+        cursor = listRes?.list_complete ? undefined : listRes?.cursor
+      } while (cursor && keys.length < 500)
+
+      for (const k of keys) {
+        const val = await kv.get(k, { type: 'json' })
+        if (val) {
+          const cleanEmail = ((val as any).email || k.replace('user:profile:', '')).toLowerCase().trim()
+          if (cleanEmail && cleanEmail.includes('@')) {
+            userProfilesMap.set(cleanEmail, val)
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[Dashboard] Error querying KV user profiles:', err)
+    }
+  }
+
+  // C. In-Memory Store
+  for (const [k, v] of MEMORY_STORE.entries()) {
+    if (k.startsWith('user:profile:')) {
+      const cleanEmail = k.replace('user:profile:', '').toLowerCase().trim()
+      if (cleanEmail && cleanEmail.includes('@')) {
+        userProfilesMap.set(cleanEmail, v)
+      }
+    }
+  }
+
+  // Consolidated list of all known users across subscribers, plays, dev testers, and profile records
+  const allUserEmails = new Set<string>()
+  for (const sub of subscribers) {
+    if (sub.email) allUserEmails.add(sub.email.toLowerCase().trim())
+  }
+  for (const play of allPlays) {
+    if (play.email) allUserEmails.add(play.email.toLowerCase().trim())
+  }
+  for (const dev of devTesters) {
+    if (dev) allUserEmails.add(dev.toLowerCase().trim())
+  }
+  for (const email of userProfilesMap.keys()) {
+    allUserEmails.add(email)
+  }
+
+  const userProfiles: UserProfileSummary[] = Array.from(allUserEmails).map((cleanEmail) => {
+    const domain = extractEmailDomain(cleanEmail)
+    const saved = userProfilesMap.get(cleanEmail) || {}
+    const subEntry = subscribers.find(s => s.email.toLowerCase().trim() === cleanEmail)
+    const isSubscribed = subEntry ? subEntry.status === 'active' : false
+    const isDev = devSet.has(cleanEmail)
+    const showOnLeaderboard = typeof saved.showOnLeaderboard === 'boolean' ? saved.showOnLeaderboard : true
+    const theme: 'light' | 'dark' = saved.theme === 'dark' ? 'dark' : 'light'
+
+    // Aggregate plays for this user
+    const userPlays = allPlays.filter(p => p.email === cleanEmail)
+    const playedDates = Array.from(new Set([
+      ...(Array.isArray(saved.playedDates) ? saved.playedDates : []),
+      ...userPlays.map(p => p.date).filter(Boolean)
+    ]))
+    const playedPuzzles = Array.from(new Set([
+      ...(Array.isArray(saved.playedPuzzles) ? saved.playedPuzzles.map(String) : []),
+      ...userPlays.map(p => String(p.puzzleId)).filter(p => !p.startsWith('legacy-'))
+    ]))
+    const daysPlayed = Math.max(
+      typeof saved.daysPlayed === 'number' ? saved.daysPlayed : 0,
+      playedDates.length,
+      playedPuzzles.length
+    )
+
+    const latestPlay = userPlays[0]
+    const lastPlayed = latestPlay?.wonAt || latestPlay?.updatedAt || latestPlay?.date
+
+    let accountToken: string | undefined = undefined
+    try {
+      accountToken = generateAccountToken(cleanEmail, process.env.AUTH_SECRET)
+    } catch (_) {}
+
+    return {
+      email: cleanEmail,
+      domain,
+      showOnLeaderboard,
+      theme,
+      daysPlayed,
+      playedDates,
+      playedPuzzles,
+      isSubscribed,
+      isDev,
+      accountToken,
+      lastPlayed
+    }
+  }).sort((a, b) => {
+    // Active subscribers first, then days played desc, then email asc
+    if (a.isSubscribed !== b.isSubscribed) return a.isSubscribed ? -1 : 1
+    if (b.daysPlayed !== a.daysPlayed) return b.daysPlayed - a.daysPlayed
+    return a.email.localeCompare(b.email)
+  })
+
   return {
     todayPuzzle: {
       id: todayPuzzle.id,
@@ -575,6 +744,58 @@ export async function getDashboardStats(
     availablePuzzles,
     domainRankings,
     devTesters,
+    userProfiles,
     generatedAt: new Date().toISOString()
   }
+}
+
+export async function updateUserProfileSettings(
+  storage: StorageBackend,
+  email: string,
+  updates: {
+    showOnLeaderboard?: boolean
+    theme?: 'light' | 'dark'
+    status?: 'active' | 'unsubscribed'
+    isDev?: boolean
+  }
+): Promise<{ success: boolean; profile?: UserProfileSummary; error?: string }> {
+  const cleanEmail = (email || '').toLowerCase().trim()
+  if (!cleanEmail || !cleanEmail.includes('@')) {
+    return { success: false, error: 'A valid email address is required.' }
+  }
+
+  // 1. Update user settings (showOnLeaderboard, theme) if provided
+  if (updates.showOnLeaderboard !== undefined || updates.theme !== undefined) {
+    const current = await getUserSettings(storage, cleanEmail)
+    if (updates.showOnLeaderboard !== undefined) {
+      current.showOnLeaderboard = Boolean(updates.showOnLeaderboard)
+    }
+    if (updates.theme !== undefined) {
+      current.theme = updates.theme === 'dark' ? 'dark' : 'light'
+    }
+    await updateUserSettings(storage, current)
+  }
+
+  // 2. Update subscription status if provided
+  if (updates.status !== undefined) {
+    if (updates.status === 'active') {
+      await addSubscriber(storage, cleanEmail)
+    } else if (updates.status === 'unsubscribed') {
+      await unsubscribeUser(storage, cleanEmail, false)
+    }
+  }
+
+  // 3. Update dev prescreen status if provided
+  if (updates.isDev !== undefined) {
+    if (updates.isDev) {
+      await addDevTester(storage, cleanEmail)
+    } else {
+      await removeDevTester(storage, cleanEmail)
+    }
+  }
+
+  // 4. Return refreshed profile summary
+  const stats = await getDashboardStats(storage)
+  const profile = stats.userProfiles.find(p => p.email === cleanEmail)
+  return { success: true, profile }
 }

@@ -1,7 +1,7 @@
 import type { Hono } from 'hono'
 import { generateConfirmationToken, generateAccountToken, kvPut, withKeyLock, type Bindings, type SubscriberEntry } from '../core'
 import { buildPuzzleEmailContent, renderConfirmationEmailHtml } from '../email'
-import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser, getDevTesters, addDevTester, removeDevTester, isDevTester, getDashboardStats } from '../services'
+import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser, getDevTesters, addDevTester, removeDevTester, isDevTester, getDashboardStats, updateUserProfileSettings } from '../services'
 import {
   getDevWorkbenchHtml,
   getDevSubscribersPageHtml,
@@ -269,7 +269,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
   })
 
   // Development-only Live Production Analytics Dashboard (with activeTab support)
-  const handleDevDashboard = async (c: any, overrideTab?: 'gameplay' | 'subscribers') => {
+  const handleDevDashboard = async (c: any, overrideTab?: 'gameplay' | 'subscribers' | 'settings') => {
     if (!isDevelopment(c)) {
       return c.text('Not Found', 404)
     }
@@ -278,7 +278,10 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const sourceParam = c.req.query('source') || 'prod'
     const isLocalSource = sourceParam === 'local'
     const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id') || c.req.query('date')
-    const activeTab = overrideTab || (c.req.query('tab') === 'subscribers' ? 'subscribers' : 'gameplay')
+    const activeTab = overrideTab || (
+      c.req.query('tab') === 'subscribers' ? 'subscribers' :
+      (c.req.query('tab') === 'settings' ? 'settings' : 'gameplay')
+    )
 
     let stats: any = null
     let dataSource: 'prod' | 'local' = isLocalSource ? 'local' : 'prod'
@@ -323,6 +326,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
   app.get('/dev/dashboard', (c) => handleDevDashboard(c))
   app.get('/dev/page/dashboard', (c) => handleDevDashboard(c))
   app.get('/dev/page/subscribers', (c) => handleDevDashboard(c, 'subscribers'))
+  app.get('/dev/page/settings', (c) => handleDevDashboard(c, 'settings'))
 
   // Dev API Proxy for asynchronous dashboard refreshes
   app.get('/dev/api/dashboard-data', async (c) => {
@@ -807,6 +811,77 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
       })
     } catch (err: any) {
       return c.json({ success: false, error: err.message || 'Failed to toggle dev tester status' }, 500)
+    }
+  })
+
+  // Development-only API to update user profile settings (privacy, theme, sub status, dev track)
+  app.post('/dev/api/user-settings/update', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+    try {
+      const body = (await c.req.json().catch(() => ({}))) as Record<string, any>
+      const email = (body.email as string || c.req.query('email') || '').toLowerCase().trim()
+      const target = (body.target as string) || c.req.query('target') || 'local'
+
+      if (!email || !email.includes('@')) {
+        return c.json({ success: false, error: 'A valid email address is required.' }, 400)
+      }
+
+      const updates: {
+        showOnLeaderboard?: boolean
+        theme?: 'light' | 'dark'
+        status?: 'active' | 'unsubscribed'
+        isDev?: boolean
+      } = {}
+
+      if (body.showOnLeaderboard !== undefined) updates.showOnLeaderboard = Boolean(body.showOnLeaderboard)
+      if (body.theme !== undefined) updates.theme = body.theme === 'dark' ? 'dark' : 'light'
+      if (body.status !== undefined) updates.status = body.status === 'unsubscribed' ? 'unsubscribed' : 'active'
+      if (body.isDev !== undefined) updates.isDev = Boolean(body.isDev)
+
+      if (target === 'prod') {
+        const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+        const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
+        const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        if (adminSecret) headers['Authorization'] = `Bearer ${adminSecret}`
+
+        const prodRes = await fetch(`${prodOrigin}/api/admin/user-settings`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ email, ...updates })
+        })
+
+        if (!prodRes.ok) {
+          const errData = (await prodRes.json().catch(() => ({}))) as any
+          throw new Error(errData.error || `Production returned HTTP ${prodRes.status}`)
+        }
+
+        const prodData = (await prodRes.json().catch(() => ({}))) as any
+
+        // Mirror locally for consistency
+        await updateUserProfileSettings(c.env, email, updates)
+
+        return c.json({
+          success: true,
+          target: 'prod',
+          message: prodData.message || `Updated settings for ${email} on production!`,
+          profile: prodData.profile
+        })
+      } else {
+        const result = await updateUserProfileSettings(c.env, email, updates)
+        if (!result.success) {
+          return c.json({ success: false, error: result.error || 'Failed to update settings' }, 400)
+        }
+        return c.json({
+          success: true,
+          target: 'local',
+          message: `Updated settings for ${email} in local database!`,
+          profile: result.profile
+        })
+      }
+    } catch (err: any) {
+      return c.json({ success: false, error: err.message || 'Failed to update user settings' }, 500)
     }
   })
 }

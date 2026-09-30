@@ -340,4 +340,192 @@ describe('Live Production Analytics Dashboard (/dev/dashboard & /api/admin/dashb
       expect(html).toContain('Puzzle #1')
     })
   })
+
+  describe('User Settings & Profile Inspector (/api/admin/user-settings & /dev/page/settings)', () => {
+    it('should include consolidated userProfiles in /api/admin/dashboard-data', async () => {
+      // Seed a subscriber
+      const subscribers: SubscriberEntry[] = [
+        {
+          email: 'profiletest@acme.com',
+          domain: 'acme.com',
+          subscribedAt: '2026-09-28T10:00:00.000Z',
+          status: 'active'
+        }
+      ]
+      MEMORY_STORE.set('subscribers:list', subscribers)
+
+      // Seed custom profile preferences in storage
+      MEMORY_STORE.set('user:profile:profiletest@acme.com', {
+        email: 'profiletest@acme.com',
+        domain: 'acme.com',
+        showOnLeaderboard: false,
+        theme: 'dark',
+        daysPlayed: 1,
+        playedDates: ['2026-09-28'],
+        playedPuzzles: ['1']
+      })
+
+      const res = await app.request('/api/admin/dashboard-data')
+      expect(res.status).toBe(200)
+      const data = await res.json() as any
+      expect(data.success).toBe(true)
+      expect(Array.isArray(data.userProfiles)).toBe(true)
+
+      const user = data.userProfiles.find((u: any) => u.email === 'profiletest@acme.com')
+      expect(user).toBeDefined()
+      expect(user.domain).toBe('acme.com')
+      expect(user.showOnLeaderboard).toBe(false)
+      expect(user.theme).toBe('dark')
+      expect(user.isSubscribed).toBe(true)
+      expect(user.isDev).toBe(false)
+      expect(user.daysPlayed).toBe(1)
+      expect(user.accountToken).toBeDefined()
+    })
+
+    it('should enforce ADMIN_SECRET on POST /api/admin/user-settings when configured', async () => {
+      const origSecret = process.env.ADMIN_SECRET
+      try {
+        process.env.ADMIN_SECRET = 'adminsecretkey'
+
+        // 1. Without auth header -> 401
+        const unauthRes = await app.request('/api/admin/user-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'user@test.com', theme: 'dark' })
+        })
+        expect(unauthRes.status).toBe(401)
+
+        // 2. With valid auth header -> 200
+        const authRes = await app.request('/api/admin/user-settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer adminsecretkey'
+          },
+          body: JSON.stringify({ email: 'user@test.com', theme: 'dark' })
+        })
+        expect(authRes.status).toBe(200)
+        const json = await authRes.json() as any
+        expect(json.success).toBe(true)
+        expect(json.profile.theme).toBe('dark')
+      } finally {
+        if (origSecret === undefined) {
+          delete process.env.ADMIN_SECRET
+        } else {
+          process.env.ADMIN_SECRET = origSecret
+        }
+      }
+    })
+
+    it('should update showOnLeaderboard and theme via POST /api/admin/user-settings', async () => {
+      const email = 'alex@techfirm.com'
+      const res = await app.request('/api/admin/user-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          showOnLeaderboard: false,
+          theme: 'dark'
+        })
+      })
+      expect(res.status).toBe(200)
+      const data = await res.json() as any
+      expect(data.success).toBe(true)
+      expect(data.profile.email).toBe(email)
+      expect(data.profile.showOnLeaderboard).toBe(false)
+      expect(data.profile.theme).toBe('dark')
+
+      // Verify toggle back
+      const toggleRes = await app.request('/api/admin/user-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          showOnLeaderboard: true,
+          theme: 'light'
+        })
+      })
+      const toggleData = await toggleRes.json() as any
+      expect(toggleData.success).toBe(true)
+      expect(toggleData.profile.showOnLeaderboard).toBe(true)
+      expect(toggleData.profile.theme).toBe('light')
+    })
+
+    it('should update subscription status and dev tester track via POST /api/admin/user-settings', async () => {
+      const email = 'sam@startup.io'
+
+      // Set active and dev
+      const res = await app.request('/api/admin/user-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          status: 'active',
+          isDev: true
+        })
+      })
+      expect(res.status).toBe(200)
+      const data = await res.json() as any
+      expect(data.profile.isSubscribed).toBe(true)
+      expect(data.profile.isDev).toBe(true)
+
+      // Unsubscribe and remove dev
+      const unsubRes = await app.request('/api/admin/user-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          status: 'unsubscribed',
+          isDev: false
+        })
+      })
+      const unsubData = await unsubRes.json() as any
+      expect(unsubData.profile.isSubscribed).toBe(false)
+      expect(unsubData.profile.isDev).toBe(false)
+    })
+
+    it('should update user settings via POST /dev/api/user-settings/update locally', async () => {
+      const email = 'localdev@test.com'
+      const res = await app.request('http://localhost:8787/dev/api/user-settings/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          target: 'local',
+          theme: 'dark',
+          showOnLeaderboard: false
+        })
+      })
+      expect(res.status).toBe(200)
+      const data = await res.json() as any
+      expect(data.success).toBe(true)
+      expect(data.target).toBe('local')
+      expect(data.profile.theme).toBe('dark')
+      expect(data.profile.showOnLeaderboard).toBe(false)
+    })
+
+    it('should block POST /dev/api/user-settings/update on production domain (inboxed.fun)', async () => {
+      const res = await app.request('https://inboxed.fun/dev/api/user-settings/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'test@example.com' })
+      })
+      expect(res.status).toBe(404)
+    })
+
+    it('should serve /dev/dashboard?tab=settings and /dev/page/settings in development', async () => {
+      const res = await app.request('http://localhost:8787/dev/dashboard?tab=settings&source=local')
+      expect(res.status).toBe(200)
+      const html = await res.text()
+      expect(html).toContain('User Settings &amp; Profiles')
+      expect(html).toContain('section-user-settings')
+      expect(html).toContain('user-inspector-card')
+      expect(html).toContain('users-directory-table')
+
+      const pageRes = await app.request('http://localhost:8787/dev/page/settings?source=local')
+      expect(pageRes.status).toBe(200)
+      const pageHtml = await pageRes.text()
+      expect(pageHtml).toContain('section-user-settings')
+    })
+  })
 })

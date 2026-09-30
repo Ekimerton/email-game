@@ -13,7 +13,8 @@ import {
   isDevTester,
   addDevTester,
   removeDevTester,
-  getDashboardStats
+  getDashboardStats,
+  updateUserProfileSettings
 } from '../services'
 import { getDailyPuzzle, getPuzzleDateForSendCron, getSendDailyPuzzle } from '../game'
 import { getUnsubscribeHtml } from '../views'
@@ -432,6 +433,47 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
     } catch (err: any) {
       console.error('[Admin Dashboard Data Error]:', err)
       return c.json({ success: false, error: err.message || 'Failed to fetch dashboard data' }, 500)
+    }
+  })
+
+  // Admin: Update User Profile & Settings
+  app.post('/api/admin/user-settings', async (c) => {
+    if (!verifyAdmin(c)) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+
+    try {
+      const body = (await c.req.json().catch(() => ({}))) as Record<string, any>
+      const email = (body.email as string || c.req.query('email') || '').toLowerCase().trim()
+      if (!email || !email.includes('@')) {
+        return c.json({ success: false, error: 'A valid email address is required.' }, 400)
+      }
+
+      const updates: {
+        showOnLeaderboard?: boolean
+        theme?: 'light' | 'dark'
+        status?: 'active' | 'unsubscribed'
+        isDev?: boolean
+      } = {}
+
+      if (body.showOnLeaderboard !== undefined) updates.showOnLeaderboard = Boolean(body.showOnLeaderboard)
+      if (body.theme !== undefined) updates.theme = body.theme === 'dark' ? 'dark' : 'light'
+      if (body.status !== undefined) updates.status = body.status === 'unsubscribed' ? 'unsubscribed' : 'active'
+      if (body.isDev !== undefined) updates.isDev = Boolean(body.isDev)
+
+      const result = await updateUserProfileSettings(c.env, email, updates)
+      if (!result.success) {
+        return c.json({ success: false, error: result.error || 'Failed to update user profile' }, 400)
+      }
+
+      return c.json({
+        success: true,
+        message: `Updated profile settings for ${email}`,
+        profile: result.profile
+      })
+    } catch (err: any) {
+      console.error('[Admin User Settings Error]:', err)
+      return c.json({ success: false, error: err.message || 'Failed to update user settings' }, 500)
     }
   })
 }
