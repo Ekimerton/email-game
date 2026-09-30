@@ -614,8 +614,12 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
       document.getElementById('sub-table-count').textContent = visibleCount + ' shown';
     }
 
-    async function handlePuzzleChange(puzzleId) {
-      await refreshData(puzzleId);
+    function handlePuzzleChange(puzzleId) {
+      var url = new URL(window.location.href);
+      url.searchParams.set('puzzle', puzzleId);
+      if (currentSource) url.searchParams.set('source', currentSource);
+      if (currentTab) url.searchParams.set('tab', currentTab);
+      window.location.href = url.toString();
     }
 
     async function refreshData(puzzleId) {
@@ -643,6 +647,90 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
       }
     }
 
+    function escapeHtmlStr(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function renderScoresTable(plays) {
+      var tbody = document.getElementById('scores-tbody');
+      if (!tbody) return;
+
+      var emptyEl = document.getElementById('empty-scores');
+      var tableEl = document.getElementById('scores-table');
+
+      if (!plays || plays.length === 0) {
+        tbody.innerHTML = '';
+        if (emptyEl) emptyEl.style.display = 'block';
+        if (tableEl) tableEl.style.display = 'none';
+        var rowCountEl = document.getElementById('table-row-count');
+        if (rowCountEl) rowCountEl.textContent = '0 plays';
+        return;
+      }
+
+      var html = plays.map(function(play) {
+        var safeEmail = escapeHtmlStr(play.email);
+        var safeDomain = escapeHtmlStr(play.domain || '');
+        var initial = (play.email[0] || '?').toUpperCase();
+        var devBadge = play.isDev ? '<span class="dev-badge-small" title="Dev tester prescreen track">🧪 Dev</span>' : '';
+
+        var statusPill = play.hasWon
+          ? '<span class="status-pill status-won">🎉 Solved</span>'
+          : '<span class="status-pill status-playing">⏳ Playing</span>';
+
+        var scoreTierClass = play.score >= 900
+          ? 'score-tier-high'
+          : (play.score >= 700 ? 'score-tier-med' : (play.score > 0 ? 'score-tier-low' : 'score-tier-zero'));
+
+        var guessesChips = (play.guesses || []).map(function(g, idx) {
+          var isLastAndWon = play.hasWon && idx === play.guesses.length - 1;
+          return '<span class="guess-chip ' + (isLastAndWon ? 'guess-chip-target' : '') + '">' + escapeHtmlStr(g) + '</span>';
+        }).join(' ');
+
+        var guessLabel = play.guessCount === 1 ? '1 guess' : (play.guessCount + ' guesses');
+
+        var timeFormatted = '—';
+        if (play.wonAt || play.updatedAt) {
+          try {
+            timeFormatted = new Date(play.wonAt || play.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          } catch (e) {}
+        }
+
+        return '<tr class="score-row" data-email="' + safeEmail + '" data-domain="' + safeDomain + '" data-status="' + play.status + '">' +
+          '<td>' +
+            '<div class="player-cell">' +
+              '<div class="avatar">' + initial + '</div>' +
+              '<div class="player-details">' +
+                '<span class="player-email">' + safeEmail + ' ' + devBadge + '</span>' +
+                '<span class="domain-pill">@' + safeDomain + '</span>' +
+              '</div>' +
+            '</div>' +
+          '</td>' +
+          '<td>' + statusPill + '</td>' +
+          '<td><span class="score-badge ' + scoreTierClass + '">' + play.score + ' pts</span></td>' +
+          '<td>' +
+            '<div class="guesses-wrapper">' +
+              '<span class="guess-count-pill">' + guessLabel + '</span>' +
+              '<div class="guess-chips">' + guessesChips + '</div>' +
+            '</div>' +
+          '</td>' +
+          '<td>' + (play.hintsUsed > 0 ? ('💡 ' + play.hintsUsed) : '—') + '</td>' +
+          '<td style="color: #94a3b8; font-size: 12px;">' + timeFormatted + '</td>' +
+        '</tr>';
+      }).join('\n');
+
+      tbody.innerHTML = html;
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (tableEl) tableEl.style.display = 'table';
+      var rowCountEl = document.getElementById('table-row-count');
+      if (rowCountEl) rowCountEl.textContent = plays.length + (plays.length === 1 ? ' play' : ' plays');
+    }
+
     function updateDashboardUI(data) {
       document.getElementById('kpi-active-subs').textContent = data.subscribers.activeCount;
       document.getElementById('kpi-domains-count').textContent = data.subscribers.uniqueDomainsCount;
@@ -658,6 +746,7 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
       document.getElementById('count-won').textContent = data.selectedPuzzleStats.totalWon;
       document.getElementById('count-playing').textContent = data.selectedPuzzleStats.totalPlaying;
 
+      renderScoresTable(data.selectedPlays);
       applyFilters();
       applySubFilters();
     }

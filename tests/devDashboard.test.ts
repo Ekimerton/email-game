@@ -260,6 +260,57 @@ describe('Live Production Analytics Dashboard (/dev/dashboard & /api/admin/dashb
       expect(p44Plays[0].score).toBe(550)
       expect(p44Plays[0].guesses).toEqual(['GIST', 'SECT', 'CLAS', 'CODE'])
     })
+
+    it('should isolate legacy word guesses from current puzzle word and length', async () => {
+      // Puzzle #2 in PUZZLES is "CONVERT" (7 letters)
+      // Legacy test play had puzzleId '2', but word was 'SPRING' (6 letters)
+      const legacyState: Partial<GameState> = {
+        puzzleId: '2',
+        date: '2026-08-05',
+        guessCount: 2,
+        guessedWords: ['SPRUNG', 'SPRING'],
+        score: 900,
+        hasWon: true,
+        updatedAt: '2026-08-05T01:17:00.000Z'
+      }
+      MEMORY_STORE.set('game:2:dev:legacy@corp.com', legacyState)
+      MEMORY_STORE.set('leaderboard:corp.com:2', [
+        {
+          email: 'legacy@corp.com',
+          displayEmail: 'le•••y@corp.com',
+          score: 900,
+          guessCount: 2,
+          hintsUsed: 0,
+          wonAt: '2026-08-05T01:17:00.000Z'
+        }
+      ])
+
+      // Real play on Puzzle #2 with "CONVERT"
+      const realState: Partial<GameState> = {
+        puzzleId: '2',
+        date: '2026-08-18',
+        guessCount: 1,
+        guessedWords: ['CONVERT'],
+        score: 1000,
+        hasWon: true,
+        updatedAt: '2026-08-18T08:39:00.000Z'
+      }
+      MEMORY_STORE.set('game:2:molly@corp.com', realState)
+
+      // Query Puzzle #2
+      const res = await app.request('/api/admin/dashboard-data?puzzle=2')
+      expect(res.status).toBe(200)
+      const data = await res.json() as any
+
+      // Molly must be present
+      const mollyPlay = data.selectedPlays.find((p: any) => p.email === 'molly@corp.com')
+      expect(mollyPlay).toBeDefined()
+      expect(mollyPlay.guesses).toEqual(['CONVERT'])
+
+      // Legacy player with SPRING must NOT appear under Puzzle #2 (CONVERT)
+      const legacyPlay = data.selectedPlays.find((p: any) => p.email === 'legacy@corp.com')
+      expect(legacyPlay).toBeUndefined()
+    })
   })
 
   describe('Dev API Proxy (/dev/api/dashboard-data)', () => {
@@ -270,6 +321,23 @@ describe('Live Production Analytics Dashboard (/dev/dashboard & /api/admin/dashb
       expect(json.success).toBe(true)
       expect(json.todayPuzzle).toBeDefined()
       expect(json.subscribers).toBeDefined()
+    })
+
+    it('should return specific puzzle scores when puzzle param is passed to /dev/dashboard', async () => {
+      // Seed play for puzzle 1
+      MEMORY_STORE.set('game:1:p1@corp.com', {
+        puzzleId: '1',
+        guessCount: 1,
+        guessedWords: ['LOAD'],
+        score: 1000,
+        hasWon: true
+      })
+
+      const res = await app.request('http://localhost:8787/dev/dashboard?puzzle=1&source=local')
+      expect(res.status).toBe(200)
+      const html = await res.text()
+      expect(html).toContain('p1@corp.com')
+      expect(html).toContain('Puzzle #1')
     })
   })
 })

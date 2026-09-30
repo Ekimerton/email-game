@@ -7,7 +7,7 @@ import {
   type LeaderboardEntry,
   type GameState
 } from '../core'
-import { getDailyPuzzle, getDateForPuzzleId, PUZZLES } from '../game'
+import { getDailyPuzzle, getDateForPuzzleId, getPuzzleById, PUZZLES } from '../game'
 import { getSubscribers } from './subscribers'
 import { getDevTesters } from './userService'
 
@@ -16,6 +16,7 @@ export interface PlayerScoreRecord {
   displayEmail: string
   domain: string
   puzzleId: string
+  legacyOriginalPuzzleId?: string
   date: string
   score: number
   guessCount: number
@@ -155,6 +156,28 @@ function parseStateRecord(
 
     if (!puzzleId) puzzleId = '1'
 
+    // Validation: Verify that the winning guess belongs to this puzzle
+    // This prevents legacy test game states (e.g. won with word "SPRING") from polluting
+    // a different puzzle (e.g. puzzle #2 whose word is "CONVERT").
+    let legacyOriginalPuzzleId: string | undefined = undefined
+    const puzzle = getPuzzleById(puzzleId)
+    if (puzzle && hasWon && guesses.length > 0) {
+      const lastGuess = guesses[guesses.length - 1]?.toUpperCase().trim()
+
+      if (lastGuess && lastGuess !== puzzle.word.toUpperCase()) {
+        legacyOriginalPuzzleId = puzzleId
+        // Winning word doesn't match this puzzle!
+        // Check if winning word matches any other puzzle in PUZZLES
+        const correctPuzzle = PUZZLES.find(p => p.word.toUpperCase() === lastGuess)
+        if (correctPuzzle) {
+          puzzleId = String(correctPuzzle.id)
+        } else {
+          // Obsolete/legacy puzzle word from dev (e.g. SPRING)
+          puzzleId = `legacy-${lastGuess.toLowerCase()}`
+        }
+      }
+    }
+
     const date = state.date || getDateForPuzzleId(puzzleId) || ''
     const guessCount = typeof state.guessCount === 'number' ? state.guessCount : (state.guessesHistory?.length || guesses.length || 0)
     const hintsUsed = typeof state.hintsUsed === 'number' ? state.hintsUsed : 0
@@ -176,6 +199,7 @@ function parseStateRecord(
       displayEmail,
       domain,
       puzzleId,
+      legacyOriginalPuzzleId,
       date,
       score,
       guessCount,
@@ -211,6 +235,19 @@ export async function getDashboardStats(
 
   // 2. Fetch all game:* and leaderboard:* records
   const playRecordsMap = new Map<string, PlayerScoreRecord>()
+  const legacyRemappedKeys = new Set<string>()
+
+  const addPlayRecord = (record: PlayerScoreRecord | null) => {
+    if (!record) return
+    if (record.legacyOriginalPuzzleId && record.legacyOriginalPuzzleId !== record.puzzleId) {
+      legacyRemappedKeys.add(`${record.email}:${record.legacyOriginalPuzzleId}`)
+    }
+    const dedupKey = `${record.email}:${record.puzzleId}`
+    const existing = playRecordsMap.get(dedupKey)
+    if (!existing || (record.hasWon && !existing.hasWon) || record.score > existing.score) {
+      playRecordsMap.set(dedupKey, record)
+    }
+  }
 
   // A. Try D1
   if (db) {
@@ -222,13 +259,7 @@ export async function getDashboardStats(
       if (rows && Array.isArray(rows.results)) {
         for (const row of rows.results) {
           const record = parseStateRecord(row.key, row.value, row.updated_at, devSet)
-          if (record) {
-            const dedupKey = `${record.email}:${record.puzzleId}`
-            const existing = playRecordsMap.get(dedupKey)
-            if (!existing || (record.hasWon && !existing.hasWon) || record.score > existing.score) {
-              playRecordsMap.set(dedupKey, record)
-            }
-          }
+          addPlayRecord(record)
         }
       }
     } catch (err) {
@@ -252,13 +283,7 @@ export async function getDashboardStats(
       for (const k of keys) {
         const val = await kv.get(k, { type: 'json' })
         const record = parseStateRecord(k, val, undefined, devSet)
-        if (record) {
-          const dedupKey = `${record.email}:${record.puzzleId}`
-          const existing = playRecordsMap.get(dedupKey)
-          if (!existing || (record.hasWon && !existing.hasWon) || record.score > existing.score) {
-            playRecordsMap.set(dedupKey, record)
-          }
-        }
+        addPlayRecord(record)
       }
     } catch (err) {
       console.warn('[Dashboard] Error querying KV game records:', err)
@@ -269,13 +294,7 @@ export async function getDashboardStats(
   for (const [k, v] of MEMORY_STORE.entries()) {
     if (k.startsWith('game:')) {
       const record = parseStateRecord(k, v, undefined, devSet)
-      if (record) {
-        const dedupKey = `${record.email}:${record.puzzleId}`
-        const existing = playRecordsMap.get(dedupKey)
-        if (!existing || (record.hasWon && !existing.hasWon) || record.score > existing.score) {
-          playRecordsMap.set(dedupKey, record)
-        }
-      }
+      addPlayRecord(record)
     }
   }
 
@@ -302,6 +321,10 @@ export async function getDashboardStats(
               if (Array.isArray(entries)) {
                 for (const entry of entries) {
                   const cleanEmail = entry.email.toLowerCase().trim()
+                  if (legacyRemappedKeys.has(`${cleanEmail}:${pId}`)) {
+                    // Legacy dev play with mismatched word - skip associating with this puzzle
+                    continue
+                  }
                   const dedupKey = `${cleanEmail}:${pId}`
                   const existing = playRecordsMap.get(dedupKey)
                   if (existing) {
@@ -353,6 +376,9 @@ export async function getDashboardStats(
         }
         for (const entry of v as LeaderboardEntry[]) {
           const cleanEmail = entry.email.toLowerCase().trim()
+          if (legacyRemappedKeys.has(`${cleanEmail}:${pId}`)) {
+            continue
+          }
           const dedupKey = `${cleanEmail}:${pId}`
           const existing = playRecordsMap.get(dedupKey)
           if (existing) {
@@ -475,6 +501,7 @@ export async function getDashboardStats(
   }
 
   const availablePuzzles = Array.from(puzzleCounts.entries())
+    .filter(([id]) => /^\d+$/.test(id))
     .map(([id, info]) => ({
       id,
       date: info.date,

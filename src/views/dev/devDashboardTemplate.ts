@@ -2038,8 +2038,12 @@ tr:hover td {
       document.getElementById('table-row-count').textContent = visibleCount + ' plays';
     }
 
-    async function handlePuzzleChange(puzzleId) {
-      await refreshData(puzzleId);
+    function handlePuzzleChange(puzzleId) {
+      var url = new URL(window.location.href);
+      url.searchParams.set('puzzle', puzzleId);
+      if (currentSource) url.searchParams.set('source', currentSource);
+      if (currentTab) url.searchParams.set('tab', currentTab);
+      window.location.href = url.toString();
     }
 
     async function refreshData(puzzleId) {
