@@ -201,6 +201,65 @@ describe('Live Production Analytics Dashboard (/dev/dashboard & /api/admin/dashb
       expect(data.selectedPuzzleStats.totalWon).toBe(1)
       expect(data.selectedPuzzleStats.topScore).toBe(1000)
     })
+
+    it('should pull strictly by game number and never duplicate or merge different puzzles played on the same date', async () => {
+      // User played Puzzle #2 (CONVERT) on 2026-09-29
+      const p2State: Partial<GameState> = {
+        puzzleId: '2',
+        date: '2026-09-29',
+        guessCount: 2,
+        guessedWords: ['REPLACE', 'CONVERT'],
+        score: 900,
+        hasWon: true,
+        updatedAt: '2026-09-29T08:04:00.000Z'
+      }
+      MEMORY_STORE.set('game:2026-09-29:player1@corp.com', p2State)
+
+      // User also played Puzzle #44 (CODE) on the same date 2026-09-29
+      const p44State: Partial<GameState> = {
+        puzzleId: '44',
+        date: '2026-09-29',
+        guessCount: 4,
+        guessedWords: ['GIST', 'SECT', 'CLAS', 'CODE'],
+        score: 550,
+        hasWon: true,
+        updatedAt: '2026-09-29T09:40:00.000Z'
+      }
+      MEMORY_STORE.set('game:2026-09-29:dev:player1@corp.com', p44State)
+
+      // Leaderboard also has player1 for puzzle 2
+      MEMORY_STORE.set('leaderboard:corp.com:2', [
+        {
+          email: 'player1@corp.com',
+          displayEmail: 'pl•••1@corp.com',
+          score: 900,
+          guessCount: 2,
+          hintsUsed: 0,
+          wonAt: '2026-09-29T08:04:00.000Z'
+        }
+      ])
+
+      // Query Puzzle #2
+      const resP2 = await app.request('/api/admin/dashboard-data?puzzle=2')
+      expect(resP2.status).toBe(200)
+      const dataP2 = await resP2.json() as any
+      expect(dataP2.selectedPuzzle.id).toBe('2')
+      // Player 1 must appear only ONCE under Puzzle #2
+      const player1Entries = dataP2.selectedPlays.filter((p: any) => p.email === 'player1@corp.com')
+      expect(player1Entries.length).toBe(1)
+      expect(player1Entries[0].score).toBe(900)
+      expect(player1Entries[0].guesses).toEqual(['REPLACE', 'CONVERT'])
+
+      // Query Puzzle #44
+      const resP44 = await app.request('/api/admin/dashboard-data?puzzle=44')
+      expect(resP44.status).toBe(200)
+      const dataP44 = await resP44.json() as any
+      expect(dataP44.selectedPuzzle.id).toBe('44')
+      const p44Plays = dataP44.selectedPlays.filter((p: any) => p.email === 'player1@corp.com')
+      expect(p44Plays.length).toBe(1)
+      expect(p44Plays[0].score).toBe(550)
+      expect(p44Plays[0].guesses).toEqual(['GIST', 'SECT', 'CLAS', 'CODE'])
+    })
   })
 
   describe('Dev API Proxy (/dev/api/dashboard-data)', () => {

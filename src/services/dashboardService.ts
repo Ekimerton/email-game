@@ -7,7 +7,7 @@ import {
   type LeaderboardEntry,
   type GameState
 } from '../core'
-import { getDailyPuzzle, getDateForPuzzleId } from '../game'
+import { getDailyPuzzle, getDateForPuzzleId, PUZZLES } from '../game'
 import { getSubscribers } from './subscribers'
 import { getDevTesters } from './userService'
 
@@ -116,14 +116,47 @@ function parseStateRecord(
     if (!cleanEmail || !cleanEmail.includes('@')) return null
 
     const domain = extractEmailDomain(cleanEmail)
-    const puzzleId = String(state.puzzleId || '').trim() || (dateFromKey ? getDailyPuzzle(dateFromKey, { isDev: isDevKey }).id : '1')
-    const date = state.date || dateFromKey || ''
     const hasWon = Boolean(state.hasWon)
-    const guessCount = typeof state.guessCount === 'number' ? state.guessCount : (state.guessesHistory?.length || 0)
     const guesses: string[] = Array.isArray(state.guessedWords) && state.guessedWords.length > 0
       ? state.guessedWords
       : (Array.isArray(state.guessesHistory) ? state.guessesHistory.map(g => (typeof g === 'string' ? g : g.guess)).filter(Boolean) : [])
 
+    // Determine normalized puzzleId (game number)
+    let puzzleId = ''
+    if (state.puzzleId) {
+      const cleanStateId = String(state.puzzleId).replace('#', '').trim()
+      if (/^\d+$/.test(cleanStateId)) {
+        puzzleId = cleanStateId
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(cleanStateId)) {
+        const found = PUZZLES.find(p => p.date === cleanStateId) || getDailyPuzzle(cleanStateId)
+        if (found) puzzleId = String(found.id)
+      }
+    }
+
+    // If state.puzzleId was not a valid number, attempt to match the winning word if won
+    if (!puzzleId && hasWon && guesses.length > 0) {
+      const lastGuess = guesses[guesses.length - 1].toUpperCase().trim()
+      const matchingPuzzle = PUZZLES.find(p => p.word.toUpperCase() === lastGuess)
+      if (matchingPuzzle) {
+        puzzleId = String(matchingPuzzle.id)
+      }
+    }
+
+    // Fall back to key's second part (puzzleId or date)
+    if (!puzzleId) {
+      const cleanKeyPart = dateFromKey.replace('#', '').trim()
+      if (/^\d+$/.test(cleanKeyPart)) {
+        puzzleId = cleanKeyPart
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(cleanKeyPart)) {
+        const found = PUZZLES.find(p => p.date === cleanKeyPart) || getDailyPuzzle(cleanKeyPart, { isDev: isDevKey })
+        if (found) puzzleId = String(found.id)
+      }
+    }
+
+    if (!puzzleId) puzzleId = '1'
+
+    const date = state.date || getDateForPuzzleId(puzzleId) || ''
+    const guessCount = typeof state.guessCount === 'number' ? state.guessCount : (state.guessesHistory?.length || guesses.length || 0)
     const hintsUsed = typeof state.hintsUsed === 'number' ? state.hintsUsed : 0
     const score = typeof state.score === 'number' ? state.score : 0
     const revealedCount = typeof state.revealedCount === 'number' ? state.revealedCount : 0
@@ -255,10 +288,15 @@ export async function getDashboardStats(
 
       if (lbRows && Array.isArray(lbRows.results)) {
         for (const row of lbRows.results) {
-          // leaderboard:<domain>:<puzzleId>
+          // leaderboard:<domain>:<puzzleId> or legacy leaderboard:<domain>:<date>
           const parts = row.key.split(':')
           if (parts.length >= 3) {
-            const pId = parts[2]
+            const rawId = parts[parts.length - 1].replace('#', '').trim()
+            let pId = rawId
+            if (/^\d{4}-\d{2}-\d{2}$/.test(rawId)) {
+              const matched = PUZZLES.find(p => p.date === rawId) || getDailyPuzzle(rawId)
+              if (matched) pId = String(matched.id)
+            }
             try {
               const entries = JSON.parse(row.value) as LeaderboardEntry[]
               if (Array.isArray(entries)) {
@@ -307,7 +345,12 @@ export async function getDashboardStats(
     if (k.startsWith('leaderboard:')) {
       const parts = k.split(':')
       if (parts.length >= 3 && Array.isArray(v)) {
-        const pId = parts[2]
+        const rawId = parts[parts.length - 1].replace('#', '').trim()
+        let pId = rawId
+        if (/^\d{4}-\d{2}-\d{2}$/.test(rawId)) {
+          const matched = PUZZLES.find(p => p.date === rawId) || getDailyPuzzle(rawId)
+          if (matched) pId = String(matched.id)
+        }
         for (const entry of v as LeaderboardEntry[]) {
           const cleanEmail = entry.email.toLowerCase().trim()
           const dedupKey = `${cleanEmail}:${pId}`
@@ -351,7 +394,7 @@ export async function getDashboardStats(
   // 3. Today's puzzle determination
   const todayPuzzle = getDailyPuzzle()
   const todayPlays = allPlays.filter(
-    p => String(p.puzzleId) === String(todayPuzzle.id) || p.date === todayPuzzle.date
+    p => String(p.puzzleId) === String(todayPuzzle.id)
   )
 
   // 4. Selected puzzle determination
@@ -360,17 +403,18 @@ export async function getDashboardStats(
 
   if (targetPuzzleOrDate) {
     const cleanTarget = String(targetPuzzleOrDate).replace(/^#/, '').trim()
-    if (/^\d{4}-\d{2}-\d{2}$/.test(cleanTarget)) {
-      selectedDate = cleanTarget
-      selectedPuzzleId = getDailyPuzzle(cleanTarget).id
-    } else if (/^\d+$/.test(cleanTarget)) {
+    if (/^\d+$/.test(cleanTarget)) {
       selectedPuzzleId = cleanTarget
       selectedDate = getDateForPuzzleId(cleanTarget) || todayPuzzle.date
+    } else if (/^\d{4}-\d{2}-\d{2}$/.test(cleanTarget)) {
+      selectedDate = cleanTarget
+      const p = PUZZLES.find(puzz => puzz.date === cleanTarget) || getDailyPuzzle(cleanTarget)
+      selectedPuzzleId = String(p.id)
     }
   }
 
   const selectedPlays = allPlays.filter(
-    p => String(p.puzzleId) === String(selectedPuzzleId) || (selectedDate && p.date === selectedDate)
+    p => String(p.puzzleId) === String(selectedPuzzleId)
   )
 
   // 5. Compute Stats helper
