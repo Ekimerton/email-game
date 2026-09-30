@@ -112,7 +112,7 @@ function parseStateRecord(
     const dateFromKey = parts[1]
     const isDevKey = parts[2] === 'dev'
     const emailFromKey = isDevKey ? (parts[3] || '') : (parts[2] || '')
-    const cleanEmail = (state.email || emailFromKey || '').toLowerCase().trim()
+    const cleanEmail = ((state as any).email || emailFromKey || '').toLowerCase().trim()
     if (!cleanEmail || !cleanEmail.includes('@')) return null
 
     const domain = extractEmailDomain(cleanEmail)
