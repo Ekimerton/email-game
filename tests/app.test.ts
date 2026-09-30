@@ -480,10 +480,11 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     })
     expect(sendRes.status).toBe(200)
 
+    const currentDaily = getDailyPuzzle()
     const sentCall = warnSpy.mock.calls.find((call) =>
       call[0]?.includes(devEmail) && call[0]?.includes('Inboxed #')
     )
-    expect(sentCall?.[0]).toContain('Inboxed #1')
+    expect(sentCall?.[0]).toContain(`Inboxed #${currentDaily.id}`)
     expect(sentCall?.[0]).not.toContain('Inboxed #43')
 
     warnSpy.mockRestore()
@@ -518,6 +519,61 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     const data = await res.json() as any
     expect(data.success).toBe(true)
     expect(data.status).toBe('not_found')
+  })
+
+  it('should enforce ADMIN_SECRET on GET /api/subscribers when configured', async () => {
+    const origSecret = process.env.ADMIN_SECRET
+    try {
+      process.env.ADMIN_SECRET = 'test-admin-secret'
+
+      // Missing auth header -> 401
+      const unauthRes = await app.request('/api/subscribers')
+      expect(unauthRes.status).toBe(401)
+      const unauthJson = await unauthRes.json() as any
+      expect(unauthJson.error).toBe('Unauthorized')
+
+      // Wrong auth header -> 401
+      const wrongRes = await app.request('/api/subscribers', {
+        headers: { 'Authorization': 'Bearer wrong-secret' }
+      })
+      expect(wrongRes.status).toBe(401)
+
+      // Valid auth header -> 200
+      const authRes = await app.request('/api/subscribers', {
+        headers: { 'Authorization': 'Bearer test-admin-secret' }
+      })
+      expect(authRes.status).toBe(200)
+      const authJson = await authRes.json() as any
+      expect(authJson.total).toBeDefined()
+    } finally {
+      process.env.ADMIN_SECRET = origSecret
+    }
+  })
+
+  it('should enforce ADMIN_SECRET on POST /api/admin/unsubscribe when configured', async () => {
+    const origSecret = process.env.ADMIN_SECRET
+    try {
+      process.env.ADMIN_SECRET = 'test-admin-secret'
+
+      const unauthRes = await app.request('/api/admin/unsubscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'target@company.com' }),
+      })
+      expect(unauthRes.status).toBe(401)
+
+      const authRes = await app.request('/api/admin/unsubscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer test-admin-secret',
+        },
+        body: JSON.stringify({ email: 'target@company.com' }),
+      })
+      expect(authRes.status).toBe(200)
+    } finally {
+      process.env.ADMIN_SECRET = origSecret
+    }
   })
 
   it('should serve the logo image at GET /logo.png', async () => {

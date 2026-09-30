@@ -18,6 +18,16 @@ import { getDailyPuzzle, getPuzzleDateForSendCron, getSendDailyPuzzle } from '..
 import { getUnsubscribeHtml } from '../views'
 
 export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) {
+  // Helper to authenticate admin requests
+  const verifyAdmin = (c: any) => {
+    const authHeader = (c.req.header('Authorization') || c.req.header('authorization') || '').trim()
+    const adminSecret = (c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET || '').trim()
+    if (adminSecret && authHeader !== `Bearer ${adminSecret}`) {
+      return false
+    }
+    return true
+  }
+
   // Subscribe Endpoint (Double Opt-In Email Confirmation Dispatch)
   app.post('/api/subscribe', async (c) => {
     try {
@@ -142,8 +152,11 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
     }
   })
 
-  // Get Subscribers Endpoint
-  app.get('/api/subscribers', async (c) => {
+  // Get Subscribers Endpoint (Admin protected)
+  const handleGetSubscribers = async (c: any) => {
+    if (!verifyAdmin(c)) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
     try {
       const subscribers = await getSubscribers(c.env)
       return c.json({
@@ -154,7 +167,10 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
     } catch (error: any) {
       return c.json({ error: 'Failed to fetch subscribers' }, 500)
     }
-  })
+  }
+
+  app.get('/api/subscribers', handleGetSubscribers)
+  app.get('/api/admin/subscribers', handleGetSubscribers)
 
   // Get subscription status
   app.get('/api/sub-status', async (c) => {
@@ -172,9 +188,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
   // Admin endpoint to reset a user's save state for a given day
   const handleResetUserDay = async (c: any) => {
     try {
-      const authHeader = c.req.header('Authorization')
-      const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
-      if (adminSecret && authHeader !== `Bearer ${adminSecret}`) {
+      if (!verifyAdmin(c)) {
         return c.json({ success: false, error: 'Unauthorized' }, 401)
       }
 
@@ -226,9 +240,7 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
 
   // Admin endpoint to manually trigger the daily cron email dispatch
   app.all('/api/admin/trigger-daily-cron', async (c) => {
-    const authHeader = c.req.header('Authorization')
-    const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
-    if (adminSecret && authHeader !== `Bearer ${adminSecret}`) {
+    if (!verifyAdmin(c)) {
       return c.json({ success: false, error: 'Unauthorized' }, 401)
     }
 
@@ -277,6 +289,10 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
 
   // Admin Unsubscribe Endpoint (supports purge)
   app.all('/api/admin/unsubscribe', async (c) => {
+    if (!verifyAdmin(c)) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+
     try {
       let email = c.req.query('email')
       let purge = c.req.query('purge') === 'true' || c.req.query('delete') === 'true'
@@ -304,16 +320,6 @@ export function registerSubscribersApiRoutes(app: Hono<{ Bindings: Bindings }>) 
       return c.json({ success: false, error: err.message || 'Failed to unsubscribe user' }, 500)
     }
   })
-
-  // Helper to authenticate admin requests
-  const verifyAdmin = (c: any) => {
-    const authHeader = c.req.header('Authorization')
-    const adminSecret = c.env?.ADMIN_SECRET || process.env.ADMIN_SECRET
-    if (adminSecret && authHeader !== `Bearer ${adminSecret}`) {
-      return false
-    }
-    return true
-  }
 
   // Admin: Get all Dev Testers
   app.get('/api/admin/dev-testers', async (c) => {
