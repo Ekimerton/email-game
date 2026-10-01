@@ -737,11 +737,123 @@ export const EMAIL_HTML = `<!doctype html>
             display: inline-block;
             font-weight: 700;
         }
+
+        .footer-dot {
+            display: inline-block;
+            margin: 0 5px;
+            font-size: 10px;
+            line-height: 1;
+            color: #a1a1aa;
+            vertical-align: middle;
+        }
+
+        /* Updates & News Announcement Box (Edge to edge horizontally) */
+        .news-ticker-container {
+            width: 100%;
+            margin: 0 0 12px 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .news-ticker-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 7px 12px;
+            background-color: #fafafa;
+            border: 1px solid #e4e4e7;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #18181b;
+            font-size: 12px;
+            line-height: 1.3;
+            box-sizing: border-box;
+            cursor: default;
+        }
+
+        .news-ticker-content {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .news-ticker-label {
+            color: #71717a;
+            font-weight: 600;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .news-ticker-sep {
+            color: #a1a1aa;
+            font-size: 10px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .news-ticker-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #18181b;
+            font-weight: 600;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .news-ticker-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background-color: #C4F7CA;
+            border: none;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #000000;
+            line-height: 1.2;
+            flex-shrink: 0;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .news-ticker-btn:hover {
+            background-color: #bbf4c3;
+        }
+
+        .news-ticker-btn svg {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            flex-shrink: 0;
+            vertical-align: middle;
+            stroke-width: 2.5;
+        }
     </style>
 </head>
 
 <body>
     <div class="email-wrapper">
+        <!-- Updates / News Announcement Box -->
+        <div class="news-ticker-container">
+            <a href="https://inboxed.fun/updates" class="news-ticker-box" target="_blank" aria-label="Updates: First update & where Inboxed is headed">
+                <span class="news-ticker-content">
+                    <span class="news-ticker-text">First update &amp; where Inboxed is headed</span>
+                </span>
+                <span class="news-ticker-btn">
+                    Read more
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-arrow-out-up-right preview-icon"><path d="M21 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/><path d="m21 3-9 9"/><path d="M15 3h6v6"/></svg>
+                </span>
+            </a>
+        </div>
+
         <h4 class="game-header" aria-label="Inboxed">
             <span class="logo-tiles">
                 <span class="logo-tile rotate-neg tile-blue">I</span>
@@ -1005,7 +1117,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         <!-- Footer -->
         <div class="footer">
-            <a class="account-link" href="https://inboxed.fun/account?token=default-dev-token">Manage Account & Preferences</a> &bull; <a class="account-link" href="https://forms.gle/o3rAMb56i7cL1T1n8" target="_blank">Give Feedback</a>
+            <a class="account-link" href="https://inboxed.fun/account?token=default-dev-token">Manage Account & Preferences</a> <span class="footer-dot" aria-hidden="true">&bull;</span> <a class="account-link" href="https://forms.gle/o3rAMb56i7cL1T1n8" target="_blank">Give Feedback</a>
         </div>
     </div>
 </body>

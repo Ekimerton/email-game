@@ -97,6 +97,31 @@ describe('Cloudflare Daily Cron & Email Dispatch', () => {
     expect(result.recipients).toEqual([])
   })
 
+  it('should not dispatch puzzle emails to unsubscribed users', async () => {
+    const { addSubscriber, removeSubscriber } = await import('../src/services')
+    const testStorage: any = {}
+
+    // Add subscribers and unsubscribe one of them
+    await addSubscriber(testStorage, 'active_user@example.com')
+    await addSubscriber(testStorage, 'unsub_user@example.com')
+    await removeSubscriber(testStorage, 'unsub_user@example.com')
+
+    const result = await sendDailyPuzzleEmails(
+      {
+        DB: testStorage,
+        PUBLIC_HTTPS_URL: 'https://inboxed.fun',
+      },
+      {
+        isDryRun: true,
+        mode: 'subscribers',
+      }
+    )
+
+    expect(result.recipients).toContain('active_user@example.com')
+    expect(result.recipients).not.toContain('unsub_user@example.com')
+    expect(result.total).toBe(1)
+  })
+
   it('should execute scheduled handler for daily cron (0 15 * * *) to send exclusively to subscribers', async () => {
     const mockEvent = {
       cron: '0 15 * * *',

@@ -709,6 +709,105 @@ export const DARK_THEME_CSS = `
             display: inline-block;
             font-weight: 700;
         }
+
+        .footer-dot {
+            display: inline-block;
+            margin: 0 5px;
+            font-size: 10px;
+            line-height: 1;
+            color: #52525b;
+            vertical-align: middle;
+        }
+
+        /* Updates & News Announcement Box (Edge to edge horizontally - Dark Mode) */
+        .news-ticker-container {
+            width: 100%;
+            margin: 0 0 12px 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .news-ticker-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 7px 12px;
+            background-color: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #f4f4f5;
+            font-size: 12px;
+            line-height: 1.3;
+            box-sizing: border-box;
+            cursor: default;
+        }
+
+        .news-ticker-content {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .news-ticker-label {
+            color: #a1a1aa;
+            font-weight: 600;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .news-ticker-sep {
+            color: #52525b;
+            font-size: 10px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .news-ticker-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #f4f4f5;
+            font-weight: 600;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .news-ticker-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background-color: #C4F7CA;
+            border: none;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #000000;
+            line-height: 1.2;
+            flex-shrink: 0;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .news-ticker-btn:hover {
+            background-color: #bbf4c3;
+        }
+
+        .news-ticker-btn svg {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            flex-shrink: 0;
+            vertical-align: middle;
+            stroke-width: 2.5;
+        }
 `
 
 /**

@@ -10,6 +10,7 @@ import {
   getConfirmationPageHtml,
   getInvalidConfirmationHtml,
   getPrivacyPolicyHtml,
+  getUpdatesHtml,
   getAccountPageHtml,
 } from '../views'
 
@@ -118,6 +119,8 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
       html = getInvalidConfirmationHtml()
     } else if (page === 'privacy') {
       html = getPrivacyPolicyHtml()
+    } else if (page === 'updates') {
+      html = getUpdatesHtml()
     } else if (page === 'subscribers') {
       const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
       const sourceParam = c.req.query('source') || 'prod'
@@ -256,6 +259,13 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
       return c.text('Not Found', 404)
     }
     return c.html(getPrivacyPolicyHtml())
+  })
+
+  app.get('/dev/page/updates', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+    return c.html(getUpdatesHtml())
   })
 
   app.get('/dev/page/account', async (c) => {

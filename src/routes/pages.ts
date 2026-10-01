@@ -6,6 +6,7 @@ import { renderAmpGame, type EmailTheme } from '../email'
 import {
   getSignupHtml,
   getPrivacyPolicyHtml,
+  getUpdatesHtml,
   getInvalidConfirmationHtml,
   getConfirmationPageHtml,
   getAccountPageHtml,
@@ -117,6 +118,11 @@ export function registerPageRoutes(app: Hono<{ Bindings: Bindings }>) {
   // Privacy Policy page route
   app.get('/privacy', (c) => {
     return c.html(getPrivacyPolicyHtml())
+  })
+
+  // Updates & Patch Notes page route
+  app.get('/updates', (c) => {
+    return c.html(getUpdatesHtml())
   })
 
   // Double Opt-In Email Confirmation route

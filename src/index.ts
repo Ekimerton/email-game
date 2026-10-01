@@ -24,6 +24,7 @@ export {
   getConfirmationPageHtml,
   getInvalidConfirmationHtml,
   getPrivacyPolicyHtml,
+  getUpdatesHtml,
   getAccountPageHtml,
   getFallbackHtml,
   getUnsubscribeHtml,

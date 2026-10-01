@@ -733,6 +733,7 @@ export const DEV_WORKBENCH_HTML = `  return \`<!doctype html>
       <button type="button" class="page-tab-btn" data-page="fallback">✉️ Fallback Email</button>
       <button type="button" class="page-tab-btn" data-page="invalid">⚠️ Invalid / Expired Token</button>
       <button type="button" class="page-tab-btn" data-page="privacy">🔒 Privacy Policy</button>
+      <button type="button" class="page-tab-btn" data-page="updates">📢 Updates &amp; Patch Notes</button>
       <a href="/dev/dashboard" target="_blank" class="page-tab-btn" style="text-decoration: none; display: inline-flex; align-items: center; color: #38bdf8; font-weight: 700;">📊 Live Dashboard ↗</a>
       <button type="button" class="page-tab-btn" data-page="brand">🎨 Brand Assets</button>
     </div>
@@ -866,6 +867,12 @@ export const DEV_WORKBENCH_HTML = `  return \`<!doctype html>
         desc: 'Official Inboxed privacy policy (GET /privacy).',
         badge: 'Document',
         url: '/dev/page/privacy'
+      },
+      updates: {
+        title: '📢 Updates &amp; Patch Notes',
+        desc: 'Official Inboxed updates and patch notes page (GET /updates).',
+        badge: 'Changelog',
+        url: '/dev/page/updates'
       },
       brand: {
         title: '🎨 Brand Assets (Favicon & Social Share Cards)',

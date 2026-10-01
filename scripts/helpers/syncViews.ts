@@ -63,6 +63,7 @@ export function syncAllViews() {
   syncView('confirm', 'confirm', 'CONFIRM')
   syncView('invalid', 'invalid', 'INVALID')
   syncView('privacy', 'privacy', 'PRIVACY')
+  syncView('updates', 'updates', 'UPDATES')
   syncView('account', 'account', 'ACCOUNT')
   syncView('fallback', 'fallback', 'FALLBACK')
   syncView('unsubscribe', 'unsubscribe', 'UNSUBSCRIBE')
