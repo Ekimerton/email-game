@@ -59,7 +59,7 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
     expect(html).toContain('background-color: #C4F7CA')
     expect(html).toContain('border: none')
     expect(html).toContain('Read more')
-    expect(html).toContain('lucide-square-arrow-out-up-right')
+    expect(html).not.toContain('&nearr;')
     expect(html).toContain('/updates')
   })
 

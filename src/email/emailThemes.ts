@@ -742,7 +742,6 @@ export const DARK_THEME_CSS = `
             font-size: 12px;
             line-height: 1.3;
             box-sizing: border-box;
-            cursor: default;
         }
 
         .news-ticker-content {
@@ -752,20 +751,6 @@ export const DARK_THEME_CSS = `
             min-width: 0;
             overflow: hidden;
             text-align: left;
-        }
-
-        .news-ticker-label {
-            color: #a1a1aa;
-            font-weight: 600;
-            font-size: 12px;
-            flex-shrink: 0;
-        }
-
-        .news-ticker-sep {
-            color: #52525b;
-            font-size: 10px;
-            line-height: 1;
-            flex-shrink: 0;
         }
 
         .news-ticker-text {
@@ -793,20 +778,10 @@ export const DARK_THEME_CSS = `
             flex-shrink: 0;
             white-space: nowrap;
             cursor: pointer;
-            transition: background-color 0.15s ease;
         }
 
         .news-ticker-btn:hover {
             background-color: #bbf4c3;
-        }
-
-        .news-ticker-btn svg {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            flex-shrink: 0;
-            vertical-align: middle;
-            stroke-width: 2.5;
         }
 `
 
