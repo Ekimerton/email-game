@@ -3,6 +3,7 @@ import {
   extractEmailDomain,
   generateAccountToken,
   getLeaderboardDomain,
+  parseColorCombo,
   MEMORY_STORE,
   type StorageBackend,
   type SubscriberEntry,
@@ -37,6 +38,9 @@ export interface UserProfileSummary {
   domain: string
   showOnLeaderboard: boolean
   theme: 'light' | 'dark'
+  colorCombo?: string
+  primaryColor?: string
+  secondaryColor?: string
   daysPlayed: number
   playedDates: string[]
   playedPuzzles: string[]
@@ -702,11 +706,18 @@ export async function getDashboardStats(
       accountToken = generateAccountToken(cleanEmail, process.env.AUTH_SECRET)
     } catch (_) {}
 
+    const colorCombo = saved.colorCombo || 'amber-blue'
+    const primaryColor = saved.primaryColor
+    const secondaryColor = saved.secondaryColor
+
     return {
       email: cleanEmail,
       domain,
       showOnLeaderboard,
       theme,
+      colorCombo,
+      primaryColor,
+      secondaryColor,
       daysPlayed,
       playedDates,
       playedPuzzles,
@@ -758,6 +769,7 @@ export async function updateUserProfileSettings(
   updates: {
     showOnLeaderboard?: boolean
     theme?: 'light' | 'dark'
+    colorCombo?: string
     status?: 'active' | 'unsubscribed'
     isDev?: boolean
   }
@@ -767,14 +779,20 @@ export async function updateUserProfileSettings(
     return { success: false, error: 'A valid email address is required.' }
   }
 
-  // 1. Update user settings (showOnLeaderboard, theme) if provided
-  if (updates.showOnLeaderboard !== undefined || updates.theme !== undefined) {
+  // 1. Update user settings (showOnLeaderboard, theme, colorCombo) if provided
+  if (updates.showOnLeaderboard !== undefined || updates.theme !== undefined || updates.colorCombo !== undefined) {
     const current = await getUserSettings(storage, cleanEmail)
     if (updates.showOnLeaderboard !== undefined) {
       current.showOnLeaderboard = Boolean(updates.showOnLeaderboard)
     }
     if (updates.theme !== undefined) {
       current.theme = updates.theme === 'dark' ? 'dark' : 'light'
+    }
+    if (updates.colorCombo !== undefined) {
+      current.colorCombo = updates.colorCombo
+      const { primary, secondary } = parseColorCombo(updates.colorCombo)
+      current.primaryColor = primary
+      current.secondaryColor = secondary
     }
     await updateUserSettings(storage, current)
   }

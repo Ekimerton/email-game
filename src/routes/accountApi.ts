@@ -1,5 +1,5 @@
 import type { Hono } from 'hono'
-import { verifyAccountToken, type Bindings, type EmailTheme } from '../core'
+import { verifyAccountToken, COLOR_COMBINATIONS, parseColorCombo, getColorComboLabel, type Bindings, type EmailTheme } from '../core'
 import {
   getUserSettings,
   updateUserSettings,
@@ -23,6 +23,8 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
     const isSubscribed = subscribers.some(s => s.email.toLowerCase() === verified.email.toLowerCase() && s.status === 'active')
     const theme = userProfile.theme || 'light'
 
+    const colorCombo = userProfile.colorCombo || 'amber-blue'
+
     return c.json({
       success: true,
       email: userProfile.email,
@@ -31,7 +33,11 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       isSubscribed,
       showOnLeaderboard: userProfile.showOnLeaderboard,
       theme,
-      darkMode: theme === 'dark'
+      darkMode: theme === 'dark',
+      colorCombo,
+      primaryColor: userProfile.primaryColor,
+      secondaryColor: userProfile.secondaryColor,
+      colorCombos: COLOR_COMBINATIONS,
     })
   })
 
@@ -128,6 +134,43 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       })
     } catch (error: any) {
       return c.json({ success: false, message: 'Failed to update theme preference.' }, 500)
+    }
+  })
+
+  // React API Endpoint: Toggle Color Combination (AJAX)
+  app.post('/api/account/toggle-color-combo', async (c) => {
+    try {
+      const body = await c.req.json()
+      const token = body?.token
+      const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+      const verified = verifyAccountToken(token, authSecret)
+
+      if (!verified) {
+        return c.json({ success: false, message: 'Invalid authentication token.' }, 401)
+      }
+
+      const requestedCombo = typeof body.colorCombo === 'string' ? body.colorCombo.trim() : undefined
+      if (!requestedCombo) {
+        return c.json({ success: false, message: 'Missing colorCombo in request body.' }, 400)
+      }
+
+      const { primary, secondary } = parseColorCombo(requestedCombo)
+      const userProfile = await getUserSettings(c.env, verified.email)
+      userProfile.colorCombo = requestedCombo
+      userProfile.primaryColor = primary
+      userProfile.secondaryColor = secondary
+      await updateUserSettings(c.env, userProfile)
+
+      const comboLabel = getColorComboLabel(requestedCombo)
+      return c.json({
+        success: true,
+        colorCombo: requestedCombo,
+        primaryColor: primary,
+        secondaryColor: secondary,
+        message: `🎨 Color palette updated to ${comboLabel}!`
+      })
+    } catch (error: any) {
+      return c.json({ success: false, message: 'Failed to update color preference.' }, 500)
     }
   })
 }

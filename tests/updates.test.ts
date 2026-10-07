@@ -3,12 +3,13 @@ import { app } from '../src/index'
 import { UPDATES, LATEST_UPDATE, getUpdatesHtml } from '../src/views'
 
 describe('Updates & Patch Notes Feature (/updates)', () => {
-  it('should have valid updates data structure with First update & where Inboxed is headed', () => {
+  it('should have valid updates data structure with October 6 update and First update', () => {
     expect(UPDATES).toBeDefined()
     expect(Array.isArray(UPDATES)).toBe(true)
-    expect(UPDATES.length).toBeGreaterThanOrEqual(1)
-    expect(LATEST_UPDATE.title).toBe('First update & where Inboxed is headed')
-    expect(LATEST_UPDATE.id).toBe('first-update')
+    expect(UPDATES.length).toBeGreaterThanOrEqual(2)
+    expect(LATEST_UPDATE.title).toBe('New styles & customizable colors in user preferences!')
+    expect(LATEST_UPDATE.id).toBe('october-6-2026')
+    expect(UPDATES.some(u => u.id === 'first-update')).toBe(true)
   })
 
   it('should render the updates page at GET /updates with 200 OK', async () => {
@@ -18,6 +19,9 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
 
     const html = await res.text()
     expect(html).toContain('Updates &amp; Patch Notes')
+    expect(html).toContain('New styles &amp; customizable colors in user preferences!')
+    expect(html).toContain('actively working on a mascot')
+    expect(html).toContain('pick your own color combinations')
     expect(html).toContain('First update &amp; where Inboxed is headed')
     expect(html).toContain('Hello! Thank you for playing Inboxed.')
     expect(html).toContain('much to the chagrin of Steve Jobs')
@@ -30,14 +34,22 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
   it('getUpdatesHtml function should produce complete HTML with accordion', () => {
     const html = getUpdatesHtml()
     expect(html).toContain('<!doctype html>')
+    expect(html).toContain('New styles &amp; customizable colors in user preferences!')
     expect(html).toContain('First update &amp; where Inboxed is headed')
     expect(html).toContain('class="update-accordion"')
     expect(html).toContain('class="update-header"')
     expect(html).toContain('class="update-date"')
     expect(html).toContain('class="update-title"')
+    expect(html).toContain('October 6, 2026')
     expect(html).toContain('September 2026')
-    expect(html).toContain('Hello! Thank you for playing Inboxed.')
     expect(html).not.toContain('class="update-tag"')
+  })
+
+  it('should only expand the latest update accordion by default', () => {
+    const html = getUpdatesHtml()
+    expect(html).toContain('id="october-6-2026" open')
+    expect(html).toContain('id="first-update"')
+    expect(html).not.toContain('id="first-update" open')
   })
 
   it('should render the news ticker announcement box in the game interface with borderless card, left aligned text, and right aligned read more button', async () => {
@@ -53,7 +65,7 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
     expect(html).toContain('class="news-ticker-text"')
     expect(html).toContain('class="news-ticker-tag"')
     expect(html).toContain('Update October 6th:')
-    expect(html).toContain('New style and more!')
+    expect(html).toContain('New styles & customizable colors in user preferences!')
     expect(html).toContain('color: #000000')
     expect(html).toContain('class="news-ticker-btn"')
     expect(html).toContain('.news-ticker-btn:hover')

@@ -26,6 +26,7 @@
       const [updatingSub, setUpdatingSub] = useState(false);
       const [updatingPriv, setUpdatingPriv] = useState(false);
       const [updatingTheme, setUpdatingTheme] = useState(false);
+      const [updatingColor, setUpdatingColor] = useState(false);
 
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token') || '';
@@ -133,6 +134,33 @@
           showToast('Failed to update theme preference');
         }
         setUpdatingTheme(false);
+      };
+
+      const handleSelectColorCombo = async (comboId) => {
+        if (user.colorCombo === comboId) return;
+        setUpdatingColor(true);
+        try {
+          const res = await fetch('/api/account/toggle-color-combo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: user.token, colorCombo: comboId })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setUser(prev => ({
+              ...prev,
+              colorCombo: data.colorCombo,
+              primaryColor: data.primaryColor,
+              secondaryColor: data.secondaryColor,
+            }));
+            showToast(data.message);
+          } else {
+            showToast(data.message || 'Failed to update');
+          }
+        } catch (_) {
+          showToast('Failed to update color preference');
+        }
+        setUpdatingColor(false);
       };
 
       if (loading) {
@@ -268,6 +296,39 @@
                 />
                 <span className="slider"></span>
               </label>
+            </div>
+          </div>
+
+          <hr className="section-divider" />
+
+          {/* Color Palette Theme Setting */}
+          <div className="setting-section">
+            <div className="setting-header">
+              <span className="setting-title">🎨 Color Palette</span>
+            </div>
+            <div className="setting-desc">
+              Choose the accent color combination for your daily puzzle emails.
+            </div>
+            <div className="color-combo-grid">
+              {(user.colorCombos || []).map(combo => {
+                const isSelected = (user.colorCombo || 'amber-blue') === combo.id;
+                return (
+                  <button
+                    key={combo.id}
+                    type="button"
+                    className={`color-combo-card ${isSelected ? 'selected' : ''}`}
+                    onClick={() => handleSelectColorCombo(combo.id)}
+                    disabled={updatingColor}
+                  >
+                    <div className="color-swatches">
+                      <span className="color-swatch" style={{ backgroundColor: combo.preview.primary }} title={`Primary: ${combo.primary}`} />
+                      <span className="color-swatch" style={{ backgroundColor: combo.preview.secondary }} title={`Secondary: ${combo.secondary}`} />
+                    </div>
+                    <span className="color-combo-name">{combo.name}</span>
+                    {isSelected && <span className="color-combo-check">✓</span>}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

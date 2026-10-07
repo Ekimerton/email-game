@@ -359,4 +359,117 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(html).toContain('/api/account/toggle-theme')
     expect(html).toContain('body.dark-theme')
   })
+
+  it('should return exactly four color combinations in GET /api/account', async () => {
+    const res = await app.request(`/api/account?token=${encodeURIComponent(validToken)}`)
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as any
+    expect(data.colorCombo).toBeDefined()
+    expect(Array.isArray(data.colorCombos)).toBe(true)
+    expect(data.colorCombos.length).toBe(4)
+    const ids = data.colorCombos.map((c: any) => c.id)
+    expect(ids).toEqual(['amber-blue', 'purple-blue', 'yellow-lime', 'red-indigo'])
+  })
+
+  it('should update color combination via POST /api/account/toggle-color-combo', async () => {
+    const res = await app.request('/api/account/toggle-color-combo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: validToken, colorCombo: 'red-indigo' })
+    })
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as any
+    expect(data.success).toBe(true)
+    expect(data.colorCombo).toBe('red-indigo')
+    expect(data.primaryColor).toBe('red')
+    expect(data.secondaryColor).toBe('indigo')
+    expect(data.message).toContain('Red & Indigo')
+
+    // Verify GET /api/account reflects updated colorCombo
+    const getRes = await app.request(`/api/account?token=${encodeURIComponent(validToken)}`)
+    const getData = (await getRes.json()) as any
+    expect(getData.colorCombo).toBe('red-indigo')
+  })
+
+  it('should reject toggle-color-combo with invalid token or missing colorCombo', async () => {
+    const res1 = await app.request('/api/account/toggle-color-combo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: 'bad-token', colorCombo: 'red-indigo' })
+    })
+    expect(res1.status).toBe(401)
+
+    const res2 = await app.request('/api/account/toggle-color-combo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: validToken })
+    })
+    expect(res2.status).toBe(400)
+  })
+
+  it('should render AMP email with dynamic color combination (red-indigo)', async () => {
+    const res = await app.request(`/?email=${encodeURIComponent(testEmail)}&colorCombo=red-indigo&forceHttps=true`)
+    expect(res.status).toBe(200)
+    const html = await res.text()
+
+    // Red-300 replaces Amber-300 for buttons/active tabs (#fca5a5)
+    expect(html).toContain('#fca5a5')
+    // Indigo-200 replaces Blue-200 for current player/news box (#c7d2fe)
+    expect(html).toContain('#c7d2fe')
+  })
+
+  it('should use the saved user preference color combination when rendering without query params', async () => {
+    // alice@example.com saved 'red-indigo' in previous test
+    const res = await app.request(`/?email=${encodeURIComponent(testEmail)}&forceHttps=true`)
+    expect(res.status).toBe(200)
+    const html = await res.text()
+    expect(html).toContain('#fca5a5')
+    expect(html).toContain('#c7d2fe')
+  })
+
+  it('should render AMP email with dynamic color combination (purple-blue)', async () => {
+    const res = await app.request(`/?email=${encodeURIComponent(testEmail)}&colorCombo=purple-blue&forceHttps=true`)
+    expect(res.status).toBe(200)
+    const html = await res.text()
+
+    // Purple-300 replaces Amber-300 (#d8b4fe)
+    expect(html).toContain('#d8b4fe')
+    // Blue-200 for secondary (#bfdbfe)
+    expect(html).toContain('#bfdbfe')
+  })
+
+  it('should render AMP email with dynamic color combination (yellow-lime)', async () => {
+    const res = await app.request(`/?email=${encodeURIComponent(testEmail)}&colorCombo=yellow-lime&forceHttps=true`)
+    expect(res.status).toBe(200)
+    const html = await res.text()
+
+    // Yellow-300 replaces Amber-300 (#fde047)
+    expect(html).toContain('#fde047')
+    // Lime-200 replaces Blue-200 (#d9f99d)
+    expect(html).toContain('#d9f99d')
+  })
+
+  it('should render AMP email with dark mode AND custom color combination', async () => {
+    const res = await app.request(`/?email=${encodeURIComponent(testEmail)}&theme=dark&colorCombo=red-indigo&forceHttps=true`)
+    expect(res.status).toBe(200)
+    const html = await res.text()
+
+    // Dark mode page background
+    expect(html).toContain('#121212')
+    // Red-300 primary accent
+    expect(html).toContain('#fca5a5')
+    // Indigo-200 secondary accent
+    expect(html).toContain('#c7d2fe')
+  })
+
+  it('should render the Color Palette section in the account preferences page', async () => {
+    const res = await app.request('/account?token=' + encodeURIComponent(validToken))
+    expect(res.status).toBe(200)
+    const html = await res.text()
+
+    expect(html).toContain('Color Palette')
+    expect(html).toContain('/api/account/toggle-color-combo')
+    expect(html).toContain('color-combo-grid')
+    expect(html).toContain('color-combo-card')
+  })
 })

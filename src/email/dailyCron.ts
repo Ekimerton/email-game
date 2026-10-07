@@ -14,8 +14,8 @@ export async function buildPuzzleEmailContent(
   currentOrigin?: string,
   authSecret?: string,
   themeOverride?: EmailTheme,
-  options?: { isDev?: boolean }
-): Promise<{ ampHtml: string; fallbackHtml: string; subject: string; text: string; puzzle: DailyPuzzle; theme: EmailTheme }> {
+  options?: { isDev?: boolean; colorComboOverride?: string }
+): Promise<{ ampHtml: string; fallbackHtml: string; subject: string; text: string; puzzle: DailyPuzzle; theme: EmailTheme; colorCombo: string }> {
   const isDev = options?.isDev !== undefined ? options.isDev : await isDevTester(kv, userEmail)
   const { state, puzzle } = await getOrCreateGameState(kv, userEmail, dateOrPuzzleParam, { isDev })
   const domain = extractEmailDomain(userEmail)
@@ -29,6 +29,7 @@ export async function buildPuzzleEmailContent(
 
   const profile = await recordUserActivity(kv, userEmail, puzzle.date)
   const theme: EmailTheme = themeOverride || profile.theme || 'light'
+  const colorCombo: string = options?.colorComboOverride || profile.colorCombo || 'amber-blue'
 
   let ampHtml = EMAIL_HTML
     .replaceAll('https://inboxed.fun', origin)
@@ -38,7 +39,7 @@ export async function buildPuzzleEmailContent(
     .replaceAll('USER_PUZZLE_ID_PLACEHOLDER', puzzle.id)
     .replaceAll('default-dev-token', userToken)
 
-  ampHtml = applyEmailTheme(ampHtml, theme)
+  ampHtml = applyEmailTheme(ampHtml, theme, colorCombo)
 
   ampHtml = ampHtml
     .replaceAll('"wordLength": 7', `"wordLength": ${puzzle.word.length}`)
@@ -108,12 +109,13 @@ export async function buildPuzzleEmailContent(
     playUrl,
     accountUrl,
     theme,
+    colorCombo,
   })
 
   const subject = `Inboxed #${puzzle.id} - ${formatPrettyDate(puzzle.date)}`
   const text = `Play today's Inboxed puzzle (#${puzzle.id}): ${origin}/?email=${encodedEmail}`
 
-  return { ampHtml, fallbackHtml, subject, text, puzzle, theme }
+  return { ampHtml, fallbackHtml, subject, text, puzzle, theme, colorCombo }
 }
 
 // Serve AMP HTML preview page helper
@@ -124,6 +126,7 @@ export async function renderAmpGame(c: any) {
   const dateParam = c.req.query('date')
   const target = puzzleParam || dateParam || getPuzzleDateForSendCron(new Date(), cronStr)
   const themeParam = c.req.query('theme') as EmailTheme | undefined
+  const colorComboParam = c.req.query('colorCombo') || c.req.query('combo') || c.req.query('colors')
   const reqUrl = new URL(c.req.url)
   const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
   const forceHttps = c.req.query('forceHttps') === 'true'
@@ -131,7 +134,15 @@ export async function renderAmpGame(c: any) {
   const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
   const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
-  const content = await buildPuzzleEmailContent(c.env?.DB || c.env?.GAME_STATE_KV, userEmail, target, currentOrigin, authSecret, themeParam)
+  const content = await buildPuzzleEmailContent(
+    c.env?.DB || c.env?.GAME_STATE_KV,
+    userEmail,
+    target,
+    currentOrigin,
+    authSecret,
+    themeParam,
+    { colorComboOverride: colorComboParam }
+  )
   return c.html(content.ampHtml)
 }
 

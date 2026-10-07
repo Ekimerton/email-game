@@ -77,6 +77,9 @@ export async function getUserSettings(kv: StorageBackend, email: string): Promis
       playedDates: existing.playedDates,
       playedPuzzles: existing.playedPuzzles,
       theme: existing.theme === 'dark' ? 'dark' : 'light',
+      colorCombo: existing.colorCombo || 'amber-blue',
+      primaryColor: existing.primaryColor,
+      secondaryColor: existing.secondaryColor,
     }
   }
 
@@ -85,6 +88,7 @@ export async function getUserSettings(kv: StorageBackend, email: string): Promis
     domain,
     showOnLeaderboard: true,
     theme: 'light',
+    colorCombo: 'amber-blue',
   }
 }
 

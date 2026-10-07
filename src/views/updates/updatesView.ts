@@ -4,7 +4,7 @@ import { UPDATES_HTML } from './updatesTemplate'
 
 export { UPDATES, LATEST_UPDATE, type PatchNote }
 
-export function renderUpdateCard(update: PatchNote): string {
+export function renderUpdateCard(update: PatchNote, isOpen = true): string {
   const paragraphsHtml = (update.paragraphs || []).map((p) => `<p>${p}</p>`).join('')
 
   const sectionsHtml = (update.sections || []).map((sec) => {
@@ -22,8 +22,10 @@ export function renderUpdateCard(update: PatchNote): string {
     ? `<div class="update-body">${leadHtml}${paragraphsHtml}${sectionsWrapper}</div>`
     : ''
 
+  const openAttr = isOpen ? ' open' : ''
+
   return `
-    <details class="update-accordion" id="${escapeHtml(update.id)}" open>
+    <details class="update-accordion" id="${escapeHtml(update.id)}"${openAttr}>
       <summary class="update-header">
         <div class="update-header-info">
           <span class="update-date">${escapeHtml(update.date)}</span>
@@ -41,6 +43,6 @@ export function renderUpdateCard(update: PatchNote): string {
 }
 
 export function getUpdatesHtml(): string {
-  const updatesContent = UPDATES.map(renderUpdateCard).join('\n')
+  const updatesContent = UPDATES.map((update, index) => renderUpdateCard(update, index === 0)).join('\n')
   return UPDATES_HTML.replace('{{UPDATES_CONTENT}}', updatesContent)
 }

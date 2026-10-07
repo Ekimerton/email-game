@@ -213,6 +213,65 @@ input:checked + .slider:before {
   text-decoration: underline;
 }
 
+/* Color Combinations Grid */
+.color-combo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+.color-combo-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background-color: #f4f4f5;
+  border: 1.5px solid #e4e4e7;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181b;
+  width: 100%;
+  box-sizing: border-box;
+}
+.color-combo-card:hover:not(:disabled) {
+  border-color: #d4d4d8;
+  background-color: #ececee;
+}
+.color-combo-card.selected {
+  border-color: #18181b;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 1px #18181b, 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+.color-swatches {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+.color-combo-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.color-combo-check {
+  font-weight: 800;
+  font-size: 13px;
+  color: #18181b;
+}
+
 /* Dark Mode Theme Overrides for Account Preferences SPA */
 body.dark-theme {
   background-color: #121212;
@@ -239,6 +298,26 @@ body.dark-theme .slider {
 }
 body.dark-theme .slider:before {
   background-color: #f4f4f5;
+}
+body.dark-theme .color-combo-card {
+  background-color: #18181b;
+  border-color: #27272a;
+  color: #f4f4f5;
+}
+body.dark-theme .color-combo-card:hover:not(:disabled) {
+  background-color: #222226;
+  border-color: #3f3f46;
+}
+body.dark-theme .color-combo-card.selected {
+  border-color: #f4f4f5;
+  background-color: #27272a;
+  box-shadow: 0 0 0 1px #f4f4f5, 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+body.dark-theme .color-combo-check {
+  color: #f4f4f5;
+}
+body.dark-theme .color-swatch {
+  border-color: rgba(255, 255, 255, 0.2);
 }
 body.dark-theme .footer-text {
   color: #a1a1aa;
@@ -474,6 +553,65 @@ input:checked + .slider:before {
   text-decoration: underline;
 }
 
+/* Color Combinations Grid */
+.color-combo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+.color-combo-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background-color: #f4f4f5;
+  border: 1.5px solid #e4e4e7;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181b;
+  width: 100%;
+  box-sizing: border-box;
+}
+.color-combo-card:hover:not(:disabled) {
+  border-color: #d4d4d8;
+  background-color: #ececee;
+}
+.color-combo-card.selected {
+  border-color: #18181b;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 1px #18181b, 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+.color-swatches {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+.color-combo-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.color-combo-check {
+  font-weight: 800;
+  font-size: 13px;
+  color: #18181b;
+}
+
 /* Dark Mode Theme Overrides for Account Preferences SPA */
 body.dark-theme {
   background-color: #121212;
@@ -501,6 +639,26 @@ body.dark-theme .slider {
 body.dark-theme .slider:before {
   background-color: #f4f4f5;
 }
+body.dark-theme .color-combo-card {
+  background-color: #18181b;
+  border-color: #27272a;
+  color: #f4f4f5;
+}
+body.dark-theme .color-combo-card:hover:not(:disabled) {
+  background-color: #222226;
+  border-color: #3f3f46;
+}
+body.dark-theme .color-combo-card.selected {
+  border-color: #f4f4f5;
+  background-color: #27272a;
+  box-shadow: 0 0 0 1px #f4f4f5, 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+body.dark-theme .color-combo-check {
+  color: #f4f4f5;
+}
+body.dark-theme .color-swatch {
+  border-color: rgba(255, 255, 255, 0.2);
+}
 body.dark-theme .footer-text {
   color: #a1a1aa;
 }
@@ -521,6 +679,7 @@ body.dark-theme .footer-text a {
       const [updatingSub, setUpdatingSub] = useState(false);
       const [updatingPriv, setUpdatingPriv] = useState(false);
       const [updatingTheme, setUpdatingTheme] = useState(false);
+      const [updatingColor, setUpdatingColor] = useState(false);
 
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token') || '';
@@ -628,6 +787,33 @@ body.dark-theme .footer-text a {
           showToast('Failed to update theme preference');
         }
         setUpdatingTheme(false);
+      };
+
+      const handleSelectColorCombo = async (comboId) => {
+        if (user.colorCombo === comboId) return;
+        setUpdatingColor(true);
+        try {
+          const res = await fetch('/api/account/toggle-color-combo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: user.token, colorCombo: comboId })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setUser(prev => ({
+              ...prev,
+              colorCombo: data.colorCombo,
+              primaryColor: data.primaryColor,
+              secondaryColor: data.secondaryColor,
+            }));
+            showToast(data.message);
+          } else {
+            showToast(data.message || 'Failed to update');
+          }
+        } catch (_) {
+          showToast('Failed to update color preference');
+        }
+        setUpdatingColor(false);
       };
 
       if (loading) {
@@ -763,6 +949,39 @@ body.dark-theme .footer-text a {
                 />
                 <span className="slider"></span>
               </label>
+            </div>
+          </div>
+
+          <hr className="section-divider" />
+
+          {/* Color Palette Theme Setting */}
+          <div className="setting-section">
+            <div className="setting-header">
+              <span className="setting-title">🎨 Color Palette</span>
+            </div>
+            <div className="setting-desc">
+              Choose the accent color combination for your daily puzzle emails.
+            </div>
+            <div className="color-combo-grid">
+              {(user.colorCombos || []).map(combo => {
+                const isSelected = (user.colorCombo || 'amber-blue') === combo.id;
+                return (
+                  <button
+                    key={combo.id}
+                    type="button"
+                    className={\`color-combo-card \${isSelected ? 'selected' : ''}\`}
+                    onClick={() => handleSelectColorCombo(combo.id)}
+                    disabled={updatingColor}
+                  >
+                    <div className="color-swatches">
+                      <span className="color-swatch" style={{ backgroundColor: combo.preview.primary }} title={\`Primary: \${combo.primary}\`} />
+                      <span className="color-swatch" style={{ backgroundColor: combo.preview.secondary }} title={\`Secondary: \${combo.secondary}\`} />
+                    </div>
+                    <span className="color-combo-name">{combo.name}</span>
+                    {isSelected && <span className="color-combo-check">✓</span>}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

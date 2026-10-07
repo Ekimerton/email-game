@@ -31,6 +31,9 @@ export interface UserSettings {
   playedDates?: string[]
   playedPuzzles?: string[]
   theme?: EmailTheme
+  colorCombo?: string
+  primaryColor?: string
+  secondaryColor?: string
 }
 
 export interface GameState {

@@ -1,5 +1,5 @@
 import { getDailyPuzzle, escapeHtml } from '../../game'
-import { getAccountUrl, type EmailTheme } from '../../core'
+import { getAccountUrl, parseColorCombo, TAILWIND_PALETTES, type EmailTheme } from '../../core'
 import { COMMON_EMAIL_DOMAINS } from '../../services'
 
 export interface FallbackOptions {
@@ -11,10 +11,11 @@ export interface FallbackOptions {
   playUrl: string
   accountUrl?: string
   theme?: EmailTheme
+  colorCombo?: string
 }
 
 export function getFallbackHtml(options: FallbackOptions): string {
-  const { email, domain, coworkerCount, playerCount = 0, playUrl, theme = 'light' } = options
+  const { email, domain, coworkerCount, playerCount = 0, playUrl, theme = 'light', colorCombo = 'amber-blue' } = options
   const puzzle = getDailyPuzzle()
   const isDark = theme === 'dark'
 
@@ -41,7 +42,14 @@ export function getFallbackHtml(options: FallbackOptions): string {
   const dividerColor = isDark ? '#27272a' : '#e4e4e7'
   const mutedText = isDark ? '#a1a1aa' : '#71717a'
   const subStrongText = isDark ? '#d4d4d8' : '#52525b'
-  const ctaColor = isDark ? '#C4F7CA' : '#14532d'
+
+  const { primary } = parseColorCombo(colorCombo)
+  const primaryPalette = TAILWIND_PALETTES[primary] || TAILWIND_PALETTES.amber
+  const defaultCtaColor = isDark ? '#C4F7CA' : '#14532d'
+  const ctaColor = (!colorCombo || colorCombo === 'amber-blue')
+    ? defaultCtaColor
+    : (isDark ? (primaryPalette['300'] || defaultCtaColor) : (primaryPalette['700'] || defaultCtaColor))
+
 
   return `<!doctype html>
 <html lang="en">

@@ -1,5 +1,71 @@
 import type { EmailTheme } from '../core'
+import { parseColorCombo, TAILWIND_PALETTES, type TailwindShade } from '../core'
 export type { EmailTheme }
+
+/**
+ * Light theme CSS variables definition.
+ * Consolidates all colors for the standard light mode experience.
+ */
+export const LIGHT_THEME_VARS = `
+        :root {
+            /* Black & White */
+            --color-white: #ffffff;
+            --color-black: #000000;
+            --color-surface: #ffffff;
+
+            /* Tailwind Amber Scale (Game Accent Palette) */
+            --color-amber-50: #fffbeb;
+            --color-amber-100: #fef3c7;
+            --color-amber-200: #fde68a;
+            --color-amber-300: #fcd34d;   /* Primary Button, Active Clue Tab, Logo Tile, CTA Button */
+            --color-amber-400: #fbbf24;
+            --color-amber-500: #f59e0b;
+            --color-amber-600: #d97706;
+            --color-amber-700: #b45309;
+            --color-amber-800: #92400e;
+            --color-amber-900: #78350f;
+            --color-amber-950: #451a03;
+
+            /* Tailwind Yellow */
+            --color-yellow-950: #422006;
+
+            /* Tailwind Blue Scale */
+            --color-blue-200: #bfdbfe;
+            --color-blue-300: #93c5fd;
+            --color-blue-400: #60a5fa;
+            --color-blue-500: #3b82f6;
+
+            /* Tailwind Zinc Scale */
+            --color-zinc-50: #fafafa;
+            --color-zinc-100: #f4f4f5;
+            --color-zinc-150: #f4f4f6;
+            --color-zinc-200: #e4e4e7;
+            --color-zinc-225: #e9e9ec;
+            --color-zinc-250: #dcdce0;
+            --color-zinc-300: #d4d4d8;
+            --color-zinc-350: #cacacf;
+            --color-zinc-400: #a1a1aa;
+            --color-zinc-450: #8e8e96;
+            --color-zinc-500: #71717a;
+            --color-zinc-600: #52525b;
+            --color-zinc-700: #3f3f46;
+            --color-zinc-800: #27272a;
+            --color-zinc-900: #18181b;
+            --color-zinc-950: #09090b;
+
+            /* Tailwind Slate */
+            --color-slate-500: #64748b;
+
+            /* Shadows & Alpha Transparency */
+            --color-shadow-sm: rgba(0, 0, 0, 0.05);
+            --color-shadow-md: rgba(0, 0, 0, 0.08);
+            --color-shadow-inset: rgba(0, 0, 0, 0.06);
+            --color-tile-shadow: rgba(0, 0, 0, 0.25);
+            --color-mask-shadow: rgba(0, 0, 0, 0.1);
+            --color-overlay-bg: rgba(255, 255, 255, 0.95);
+            --color-tab-locked-faint: rgba(161, 161, 170, 0.5);
+        }
+`
 
 /**
  * Dark theme CSS variables definition.
@@ -905,7 +971,44 @@ export function resolveCssVariables(css: string, vars: Record<string, string>): 
   return resolved
 }
 
+export const LIGHT_THEME_VARS_MAP = parseCssVariables(LIGHT_THEME_VARS)
 export const DARK_THEME_VARS_MAP = parseCssVariables(DARK_THEME_VARS)
+
+const ALL_SHADES: TailwindShade[] = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950']
+
+/**
+ * Returns the CSS variables dictionary for a given theme and color combination.
+ * Primary palette replaces the --color-amber-XXX scale,
+ * and Secondary palette replaces the --color-blue-XXX scale.
+ */
+export function getThemeVariables(
+  theme: EmailTheme = 'light',
+  colorCombo: string = 'amber-blue'
+): Record<string, string> {
+  const baseVars = theme === 'dark' ? { ...DARK_THEME_VARS_MAP } : { ...LIGHT_THEME_VARS_MAP }
+  const { primary, secondary } = parseColorCombo(colorCombo)
+
+  const primaryPalette = TAILWIND_PALETTES[primary]
+  const secondaryPalette = TAILWIND_PALETTES[secondary]
+
+  if (primaryPalette) {
+    for (const shade of ALL_SHADES) {
+      if (primaryPalette[shade]) {
+        baseVars[`--color-amber-${shade}`] = primaryPalette[shade]
+      }
+    }
+  }
+
+  if (secondaryPalette) {
+    for (const shade of ALL_SHADES) {
+      if (secondaryPalette[shade]) {
+        baseVars[`--color-blue-${shade}`] = secondaryPalette[shade]
+      }
+    }
+  }
+
+  return baseVars
+}
 
 /**
  * Full compiled CSS string for dark mode theme (variables resolved for AMP4EMAIL).
@@ -913,16 +1016,31 @@ export const DARK_THEME_VARS_MAP = parseCssVariables(DARK_THEME_VARS)
 export const DARK_THEME_CSS = resolveCssVariables(SHARED_GAME_CSS, DARK_THEME_VARS_MAP).trim()
 
 /**
- * Inlines either Light or Dark CSS into the AMP email HTML template.
- * For 'dark', the <style amp-custom> block is replaced with DARK_THEME_CSS.
- * For 'light' (or default), the original light CSS is retained.
+ * Compiles SHARED_GAME_CSS into concrete values for any theme and color combination.
  */
-export function applyEmailTheme(ampHtml: string, theme: EmailTheme = 'light'): string {
-  if (theme === 'dark') {
-    return ampHtml.replace(
-      /<style amp-custom>[\s\S]*?<\/style>/i,
-      `<style amp-custom>\n${DARK_THEME_CSS}\n    </style>`
-    )
-  }
-  return ampHtml
+export function getThemeCss(theme: EmailTheme = 'light', colorCombo: string = 'amber-blue'): string {
+  const vars = getThemeVariables(theme, colorCombo)
+  return resolveCssVariables(SHARED_GAME_CSS, vars).trim()
 }
+
+/**
+ * Inlines theme and color combo CSS into the AMP email HTML template.
+ * For default light mode with amber-blue, the original pre-compiled CSS is retained.
+ * For dark mode or custom color combinations, the <style amp-custom> block is replaced.
+ */
+export function applyEmailTheme(
+  ampHtml: string,
+  theme: EmailTheme = 'light',
+  colorCombo: string = 'amber-blue'
+): string {
+  const isDefault = theme === 'light' && (!colorCombo || colorCombo === 'amber-blue')
+  if (isDefault) {
+    return ampHtml
+  }
+  const themeCss = getThemeCss(theme, colorCombo)
+  return ampHtml.replace(
+    /<style amp-custom>[\s\S]*?<\/style>/i,
+    `<style amp-custom>\n${themeCss}\n    </style>`
+  )
+}
+
