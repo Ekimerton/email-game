@@ -1,22 +1,35 @@
-import type { EmailTheme } from '../core'
-export type { EmailTheme }
+<!doctype html>
+<html ⚡4email data-css-strict>
 
-/**
- * Dark theme CSS variables definition.
- * Consolidates all colors for the dark mode experience.
- */
-export const DARK_THEME_VARS = `
+<head>
+    <meta charset="utf-8">
+    <script async src="https://cdn.ampproject.org/v0.js"></script>
+    <script async custom-element="amp-form" src="https://cdn.ampproject.org/v0/amp-form-0.1.js"></script>
+    <script async custom-element="amp-bind" src="https://cdn.ampproject.org/v0/amp-bind-0.1.js"></script>
+    <script async custom-element="amp-list" src="https://cdn.ampproject.org/v0/amp-list-0.1.js"></script>
+    <script async custom-template="amp-mustache" src="https://cdn.ampproject.org/v0/amp-mustache-0.2.js"></script>
+
+    <style amp4email-boilerplate>
+        body {
+            visibility: hidden
+        }
+    </style>
+    <style amp-custom>
+                /* ========================================================
+           GAME COLOR PALETTE (Tailwind CSS Variables - Amber Theme)
+           Both the button and the active clue tab use --color-amber-300.
+           ======================================================== */
         :root {
             /* Black & White */
-            --color-white: #121212;                 /* Inverted page bg in dark mode */
-            --color-black: #ffffff;                 /* Inverted black elements in dark mode */
-            --color-surface: #18181b;               /* Dark card surface (definitions card, etc.) */
+            --color-white: #ffffff;
+            --color-black: #000000;
+            --color-surface: #ffffff;
 
             /* Tailwind Amber Scale (Game Accent Palette) */
             --color-amber-50: #fffbeb;
-            --color-amber-100: #fef3c7;             /* Cream amber for text and button */
+            --color-amber-100: #fef3c7;
             --color-amber-200: #fde68a;
-            --color-amber-300: #fcd34d;             /* Main Accent: Button, Active Tab, Logo, CTA */
+            --color-amber-300: #fcd34d;   /* Primary Button, Active Clue Tab, Logo Tile, CTA Button */
             --color-amber-400: #fbbf24;
             --color-amber-500: #f59e0b;
             --color-amber-600: #d97706;
@@ -34,43 +47,38 @@ export const DARK_THEME_VARS = `
             --color-blue-400: #60a5fa;
             --color-blue-500: #3b82f6;
 
-            /* Tailwind Zinc Scale (Dark Mode Inverted) */
-            --color-zinc-50: #18181b;               /* Ticker bg in dark mode */
-            --color-zinc-100: #27272a;              /* Tab bg in dark mode */
-            --color-zinc-150: #3f3f46;
-            --color-zinc-200: #27272a;              /* Section dividers in dark mode */
-            --color-zinc-225: #3f3f46;
-            --color-zinc-250: #323238;
-            --color-zinc-300: #3f3f46;              /* Card borders in dark mode */
-            --color-zinc-350: #52525b;              /* Disabled tab text in dark mode */
-            --color-zinc-400: #71717a;              /* Faint text/borders in dark mode */
-            --color-zinc-450: #52525b;
-            --color-zinc-500: #a1a1aa;              /* Secondary text in dark mode */
-            --color-zinc-600: #a1a1aa;              /* Muted text in dark mode */
+            /* Tailwind Zinc Scale */
+            --color-zinc-50: #fafafa;
+            --color-zinc-100: #f4f4f5;
+            --color-zinc-150: #f4f4f6;
+            --color-zinc-200: #e4e4e7;
+            --color-zinc-225: #e9e9ec;
+            --color-zinc-250: #dcdce0;
+            --color-zinc-300: #d4d4d8;
+            --color-zinc-350: #cacacf;
+            --color-zinc-400: #a1a1aa;
+            --color-zinc-450: #8e8e96;
+            --color-zinc-500: #71717a;
+            --color-zinc-600: #52525b;
             --color-zinc-700: #3f3f46;
-            --color-zinc-800: #27272a;              /* Dark surface border in dark mode */
-            --color-zinc-900: #f4f4f5;              /* Primary text in dark mode */
-            --color-zinc-950: #ffffff;              /* Title heading in dark mode */
+            --color-zinc-800: #27272a;
+            --color-zinc-900: #18181b;
+            --color-zinc-950: #09090b;
 
             /* Tailwind Slate */
             --color-slate-500: #64748b;
 
             /* Shadows & Alpha Transparency */
-            --color-shadow-sm: rgba(0, 0, 0, 0.2);
-            --color-shadow-md: rgba(0, 0, 0, 0.3);
-            --color-shadow-inset: rgba(0, 0, 0, 0.3);
-            --color-tile-shadow: rgba(0, 0, 0, 0.4);
-            --color-mask-shadow: rgba(0, 0, 0, 0.4);
-            --color-overlay-bg: rgba(24, 24, 27, 0.95);
-            --color-tab-locked-faint: rgba(161, 161, 170, 0.4);
+            --color-shadow-sm: rgba(0, 0, 0, 0.05);
+            --color-shadow-md: rgba(0, 0, 0, 0.08);
+            --color-shadow-inset: rgba(0, 0, 0, 0.06);
+            --color-tile-shadow: rgba(0, 0, 0, 0.25);
+            --color-mask-shadow: rgba(0, 0, 0, 0.1);
+            --color-overlay-bg: rgba(255, 255, 255, 0.95);
+            --color-tab-locked-faint: rgba(161, 161, 170, 0.5);
         }
-`
 
-/**
- * Shared structural CSS rules for the game (using CSS variables).
- */
-export const SHARED_GAME_CSS = `
-/* Josh Comeau's Modern CSS Reset (AMP4EMAIL Adapted) */
+        /* Josh Comeau's Modern CSS Reset (AMP4EMAIL Adapted) */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -880,49 +888,291 @@ export const SHARED_GAME_CSS = `
         .news-ticker-btn:hover {
             background-color: var(--color-zinc-100);
         }
-`
+    </style>
+</head>
 
-export function parseCssVariables(css: string): Record<string, string> {
-  const rootMatch = css.match(/:root\s*\{([\s\S]*?)\}/)
-  const vars: Record<string, string> = {}
-  if (rootMatch) {
-    for (const match of rootMatch[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
-      vars[match[1].trim()] = match[2].trim()
-    }
-  }
-  return vars
-}
+<body>
+    <div class="email-wrapper">
+        <!-- Updates / News Announcement Box -->
+        <div class="news-ticker-container">
+            <div class="news-ticker-box">
+                <span class="news-ticker-content">
+                    <span class="news-ticker-text"><span class="news-ticker-tag">Update October 6th:</span> New style and more!</span>
+                </span>
+                <a href="https://inboxed.fun/updates" class="news-ticker-btn" target="_blank" aria-label="Updates: Update October 6th: New style and more!">
+                    Read more
+                </a>
+            </div>
+        </div>
 
-export function resolveCssVariables(css: string, vars: Record<string, string>): string {
-  let resolved = css.replace(/(?:\/\*[\s\S]*?\*\/\s*)?:root\s*\{[\s\S]*?\}\s*/, '')
-  for (let i = 0; i < 3; i++) {
-    resolved = resolved.replace(/var\((--[\w-]+)(?:\s*,\s*([^)]+))?\)/g, (fullMatch, varName, fallback) => {
-      if (vars[varName]) return vars[varName]
-      if (fallback) return fallback.trim()
-      return fullMatch
-    })
-  }
-  return resolved
-}
+        <!--
+        <h4 class="game-header" aria-label="Inboxed">
+            <span class="logo-tiles">
+                <span class="logo-tile rotate-neg tile-blue">I</span>
+                <span class="logo-tile rotate-pos tile-red">N</span>
+                <span class="logo-tile rotate-neg tile-blue">B</span>
+                <span class="logo-tile rotate-pos tile-red">O</span>
+                <span class="logo-tile rotate-neg tile-blue">X</span>
+                <span class="logo-tile rotate-pos tile-red">E</span>
+                <span class="logo-tile rotate-neg tile-blue">D</span>
+            </span>
+        </h4>
+        -->
 
-export const DARK_THEME_VARS_MAP = parseCssVariables(DARK_THEME_VARS)
+        <!-- Dynamic State Store for interactive binding & hiding form on win -->
+        <amp-state id="gameState">
+            <script type="application/json">
+                {
+                    "hasWon": false,
+                    "wordLength": 7,
+                    "version": 0
+                }
+            </script>
+        </amp-state>
 
-/**
- * Full compiled CSS string for dark mode theme (variables resolved for AMP4EMAIL).
- */
-export const DARK_THEME_CSS = resolveCssVariables(SHARED_GAME_CSS, DARK_THEME_VARS_MAP).trim()
+        <!-- Form Submission State to prevent concurrent double-submits / hint clicks -->
+        <amp-state id="uiState">
+            <script type="application/json">
+                {
+                    "submitting": false
+                }
+            </script>
+        </amp-state>
 
-/**
- * Inlines either Light or Dark CSS into the AMP email HTML template.
- * For 'dark', the <style amp-custom> block is replaced with DARK_THEME_CSS.
- * For 'light' (or default), the original light CSS is retained.
- */
-export function applyEmailTheme(ampHtml: string, theme: EmailTheme = 'light'): string {
-  if (theme === 'dark') {
-    return ampHtml.replace(
-      /<style amp-custom>[\s\S]*?<\/style>/i,
-      `<style amp-custom>\n${DARK_THEME_CSS}\n    </style>`
-    )
-  }
-  return ampHtml
-}
+        <!-- Active Clue Selection State -->
+        <amp-state id="clueView">
+            <script type="application/json">
+                {}
+            </script>
+        </amp-state>
+
+        <!-- Live Typed Word State for Real-Time Wordle Tile Rendering -->
+        <amp-state id="typed">
+            <script type="application/json">
+                {
+                    "word": ""
+                }
+            </script>
+        </amp-state>
+
+
+        <!-- 1. Main Game -->
+        <div class="game-section">
+            <div class="game-body">
+                <!-- Dynamic State Section - fetched fresh on every email open -->
+                <amp-list id="stateList" width="auto" height="216" layout="fixed-height" diffable
+                    src="https://inboxed.fun/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
+                    <template type="amp-mustache">
+                        <div class="state-container">
+                            <div class="definitions-section">
+                                <div class="active-clue-card">
+                                    {{#definitions}}
+                                    <div class="clue-content"
+                                        [hidden]="(clueView.activeClue || {{revealedCount}}) != {{num}}">
+                                        <div class="clue-text {{^isRevealed}}blurred{{/isRevealed}}"
+                                            [class]="'clue-text' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? '' : ' blurred')">{{text}}</div>
+                                    </div>
+                                    {{/definitions}}
+                                </div>
+                                <div class="clue-tabs-bar">
+                                    {{#definitions}}
+                                    <button type="button"
+                                        class="clue-tab-btn {{#isRevealed}}unlocked{{/isRevealed}}{{^isRevealed}}locked{{/isRevealed}} {{#isLatest}}active{{/isLatest}}"
+                                        [class]="'clue-tab-btn ' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? 'unlocked' : 'locked') + ((clueView.activeClue || {{revealedCount}}) == {{num}} ? ' active' : '')"
+                                        on="tap:AMP.setState({ clueView: { activeClue: {{num}} } })">
+                                        {{num}}
+                                    </button>
+                                    {{/definitions}}
+                                </div>
+                            </div>
+
+                            <div class="message-banner {{#hasWon}}message-banner-win{{/hasWon}}"
+                                [class]="'message-banner' + (gameState.hasWon ? ' message-banner-win' : '')"
+                                [text]="gameState.lastMessage || '{{lastMessage}}'">{{lastMessage}}</div>
+
+                            <div class="revealed-letters-section">
+                                <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                    {{#formattedLetterMask}}
+                                    <span class="mask-tile {{#isRevealed}}tile-revealed{{/isRevealed}}"
+                                        [class]="'mask-tile ' + ((typed.word || '').slice({{index}}, {{indexNext}}) ? 'tile-typed' : ((gameState.letterMask && gameState.letterMask[{{index}}] != '_') ? 'tile-revealed' : '{{#isRevealed}}tile-revealed{{/isRevealed}}'))"
+                                        [text]="(typed.word || '').slice({{index}}, {{indexNext}}) || ((gameState.letterMask && gameState.letterMask[{{index}}] != '_') ? gameState.letterMask[{{index}}] : '{{char}}')">{{char}}</span>
+                                    {{/formattedLetterMask}}
+                                </label>
+                            </div>
+                        </div>
+                    </template>
+                    <div placeholder>
+                        <div class="state-container">
+                            <div class="definitions-section">
+                                __PLACEHOLDER_DEFS__
+                            </div>
+                            <div class="message-banner" [text]="gameState.lastMessage || 'Guess the word!'">Guess the word!</div>
+                            <div class="revealed-letters-section">
+                                <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                    __PLACEHOLDER_MASK_TILES__
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div fallback>
+                        <div class="state-container">
+                            <div class="definitions-section">
+                                __PLACEHOLDER_DEFS__
+                            </div>
+                            <div class="message-banner message-banner-retry" role="button" tabindex="0" on="tap:stateList.refresh" [text]="gameState.lastMessage || 'Connection issue &bull; Tap to reconnect'">Connection issue &bull; Tap to reconnect</div>
+                            <div class="revealed-letters-section">
+                                <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                    __PLACEHOLDER_MASK_TILES__
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </amp-list>
+
+                <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
+                <div class="form-container">
+                    <form id="guess-form" method="POST"
+                        action-xhr="https://inboxed.fun/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
+                        on="submit:AMP.setState({ uiState: { submitting: true } });
+                            submit-success:AMP.setState({ gameState: (!gameState.version || (event.response.version && event.response.version >= gameState.version)) ? event.response : gameState, clueView: { activeClue: event.response.hasWon ? (clueView.activeClue || 1) : event.response.revealedCount }, typed: { word: '' }, uiState: { submitting: false } }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
+                            submit-error:AMP.setState({ gameState: { lastMessage: (event.response && (event.response.lastMessage || event.response.error)) ? (event.response.lastMessage || event.response.error) : 'Connection issue — tap Submit Guess to try again.' }, uiState: { submitting: false } })">
+
+                        <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
+                        <input type="hidden" name="date" value="USER_DATE_PLACEHOLDER">
+
+                        <div class="wordle-input-wrapper">
+                            <input type="text" id="guess-input" name="user-guess" class="hidden-guess-input"
+                                placeholder=" " autocomplete="off" required aria-label="Enter word guess"
+                                maxlength="7" [maxlength]="gameState.wordLength || 7"
+                                on="input-throttled:AMP.setState({ typed: { word: event.value.toUpperCase().slice(0, gameState.wordLength || 7) } })">
+                        </div>
+
+                        <div class="action-buttons">
+                            <button type="button" class="btn btn-hint"
+                                [disabled]="uiState.submitting"
+                                [class]="'btn btn-hint' + (uiState.submitting ? ' btn-disabled' : '')"
+                                on="tap:AMP.setState({ uiState: { submitting: true } }),hint-form.submit">
+                                Letter Hint
+                            </button>
+                            <button type="submit" class="btn btn-primary"
+                                [disabled]="uiState.submitting"
+                                [class]="'btn btn-primary' + (uiState.submitting ? ' btn-disabled' : '')">
+                                <span class="btn-text-default">Submit Guess</span>
+                                <span class="btn-text-submitting">Submitting...</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Hidden Form for Letter Hint Button -->
+                    <form id="hint-form" method="POST"
+                        action-xhr="https://inboxed.fun/api/hint?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
+                        hidden
+                        on="submit-success:AMP.setState({ gameState: (!gameState.version || (event.response.version && event.response.version >= gameState.version)) ? event.response : gameState, uiState: { submitting: false } }),stateList.refresh;
+                            submit-error:AMP.setState({ gameState: { lastMessage: (event.response && (event.response.lastMessage || event.response.error)) ? (event.response.lastMessage || event.response.error) : 'Connection issue — tap Letter Hint to try again.' }, uiState: { submitting: false } })">
+                        <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
+                        <input type="hidden" name="date" value="USER_DATE_PLACEHOLDER">
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Mini Tutorial / Instructions -->
+        <div class="mini-tutorial">
+            Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within your email
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- 2. Organization Leaderboard -->
+        <div class="leaderboard-section">
+            <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" diffable
+                src="https://inboxed.fun/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER&puzzleId=USER_PUZZLE_ID_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
+                <template type="amp-mustache">
+                    <div class="leaderboard-container">
+                        {{^hasWon}}
+                        <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon">
+                            Solve today's puzzle to reveal the leaderboard!
+                        </div>
+                        {{/hasWon}}
+
+                        <div class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
+                            {{#players}}
+                            <div class="leaderboard-item {{#isCurrentPlayer}}current-player{{/isCurrentPlayer}}">
+                                <span class="rank-number">#{{rank}}</span>
+                                <span class="player-email">{{displayEmail}}</span>
+                                <span class="player-score">{{score}}</span>
+                            </div>
+                            {{/players}}
+                            {{^players}}
+                            <div class="leaderboard-empty">No scores recorded for
+                                this domain yet today!</div>
+                            {{/players}}
+                        </div>
+                    </div>
+                </template>
+                <div placeholder>
+                    <div class="leaderboard-container">
+                        <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon">
+                            Solve today's puzzle to reveal the leaderboard!
+                        </div>
+                        <div class="leaderboard-blur-content" [class]="gameState.hasWon ? 'leaderboard-items' : 'leaderboard-blur-content'">
+                            <div class="leaderboard-item">
+                                <span class="rank-number">#1</span>
+                                <span class="player-email">alex@company.com</span>
+                                <span class="player-score">925 points &bull; 1 guess</span>
+                            </div>
+                            <div class="leaderboard-item">
+                                <span class="rank-number">#2</span>
+                                <span class="player-email">sarah@company.com</span>
+                                <span class="player-score">850 points &bull; 2 guesses</span>
+                            </div>
+                            <div class="leaderboard-item">
+                                <span class="rank-number">#3</span>
+                                <span class="player-email">david@company.com</span>
+                                <span class="player-score">775 points &bull; 3 guesses</span>
+                            </div>
+                            <div class="leaderboard-item">
+                                <span class="rank-number">#4</span>
+                                <span class="player-email">emily@company.com</span>
+                                <span class="player-score">710 points &bull; 4 guesses</span>
+                            </div>
+                            <div class="leaderboard-item">
+                                <span class="rank-number">#5</span>
+                                <span class="player-email">michael@company.com</span>
+                                <span class="player-score">650 points &bull; 5 guesses</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div fallback>
+                    <div class="leaderboard-container">
+                        <div class="leaderboard-lock-banner message-banner-retry" role="button" tabindex="0" on="tap:leaderboardList.refresh">
+                            Connection issue &bull; Tap to load leaderboard
+                        </div>
+                    </div>
+                </div>
+            </amp-list>
+
+            <div class="ticket-stub-divider" aria-hidden="true">
+                <span class="stub-notch stub-notch-left"></span>
+                <span class="stub-dashed-line"></span>
+                <span class="stub-notch stub-notch-right"></span>
+            </div>
+
+            <div class="share-friends-text">
+                Have someone you think would like this game? Forward this email to invite them!
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Footer -->
+        <div class="footer">
+            <a class="account-link" href="https://inboxed.fun/account?token=default-dev-token">Manage Account & Preferences</a> <span class="footer-dot" aria-hidden="true">&bull;</span> <a class="account-link" href="https://forms.gle/o3rAMb56i7cL1T1n8" target="_blank">Give Feedback</a>
+        </div>
+    </div>
+</body>
+
+</html>

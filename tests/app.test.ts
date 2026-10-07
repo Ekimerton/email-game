@@ -942,7 +942,7 @@ describe('Cold Start & Network Resilience Handling', () => {
   })
 
   it('should include diffable and fallback on amp-list components in EMAIL_HTML', () => {
-    expect(EMAIL_HTML).toContain('<amp-list id="stateList" width="auto" height="204" layout="fixed-height" diffable')
+    expect(EMAIL_HTML).toContain('<amp-list id="stateList" width="auto" height="216" layout="fixed-height" diffable')
     expect(EMAIL_HTML).toContain('<amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" diffable')
     expect(EMAIL_HTML).toContain('on="tap:stateList.refresh"')
     expect(EMAIL_HTML).toContain('on="tap:leaderboardList.refresh"')

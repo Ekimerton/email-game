@@ -5,10 +5,51 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '../..')
 
-// 1. Sync src/email.html -> src/email/emailHtml.ts
-function syncEmailHtml() {
+export function parseCssVariables(css: string): Record<string, string> {
+  const rootMatch = css.match(/:root\s*\{([\s\S]*?)\}/)
+  const vars: Record<string, string> = {}
+  if (rootMatch) {
+    for (const match of rootMatch[1].matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
+      vars[match[1].trim()] = match[2].trim()
+    }
+  }
+  return vars
+}
+
+export function resolveCssVariables(css: string, customVars: Record<string, string> = {}): string {
+  const rootVars = parseCssVariables(css)
+  const vars = { ...rootVars, ...customVars }
+  let resolved = css.replace(/(?:\/\*[\s\S]*?\*\/\s*)?:root\s*\{[\s\S]*?\}\s*/, '')
+  for (let i = 0; i < 3; i++) {
+    resolved = resolved.replace(/var\((--[\w-]+)(?:\s*,\s*([^)]+))?\)/g, (fullMatch, varName, fallback) => {
+      if (vars[varName]) return vars[varName]
+      if (fallback) return fallback.trim()
+      return fullMatch
+    })
+  }
+  return resolved
+}
+
+// 1. Sync src/email.template.html -> src/email.html -> src/email/emailHtml.ts
+export function syncEmailHtml() {
+  const templatePath = path.join(rootDir, 'src/email.template.html')
   const htmlPath = path.join(rootDir, 'src/email.html')
   const domainTsPath = path.join(rootDir, 'src/email/emailHtml.ts')
+
+  // Compile CSS variables from template into concrete AMP4EMAIL-valid styles
+  if (fs.existsSync(templatePath)) {
+    const templateHtml = fs.readFileSync(templatePath, 'utf8')
+    const styleMatch = templateHtml.match(/<style amp-custom>([\s\S]*?)<\/style>/)
+    if (styleMatch) {
+      const resolvedCss = resolveCssVariables(styleMatch[1])
+      const compiledHtml = templateHtml.replace(
+        /<style amp-custom>[\s\S]*?<\/style>/,
+        `<style amp-custom>\n${resolvedCss.trim()}\n    </style>`
+      )
+      fs.writeFileSync(htmlPath, compiledHtml, 'utf8')
+      console.log('✅ Compiled src/email.template.html -> src/email.html (resolved CSS variables for AMP)')
+    }
+  }
 
   if (fs.existsSync(htmlPath)) {
     const html = fs.readFileSync(htmlPath, 'utf8')

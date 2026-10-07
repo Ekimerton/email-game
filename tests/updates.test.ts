@@ -40,7 +40,7 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
     expect(html).not.toContain('class="update-tag"')
   })
 
-  it('should render the news ticker announcement box in the game interface with border on all sides, left aligned text, and right aligned read more button', async () => {
+  it('should render the news ticker announcement box in the game interface with borderless card, left aligned text, and right aligned read more button', async () => {
     const res = await app.request('/?email=player@company.com&forceHttps=true')
     expect(res.status).toBe(200)
     const html = await res.text()
@@ -48,35 +48,37 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
     // Announcement bar under the header
     expect(html).toContain('class="news-ticker-container"')
     expect(html).toContain('class="news-ticker-box"')
-    expect(html).toContain('border: 1px solid #e4e4e7')
     expect(html).toContain('border-radius: 6px')
     expect(html).toContain('class="news-ticker-content"')
     expect(html).toContain('class="news-ticker-text"')
-    expect(html).toContain('First update &amp; where Inboxed is headed')
+    expect(html).toContain('class="news-ticker-tag"')
+    expect(html).toContain('Update October 6th:')
+    expect(html).toContain('New style and more!')
+    expect(html).toContain('color: #000000')
     expect(html).toContain('class="news-ticker-btn"')
     expect(html).toContain('.news-ticker-btn:hover')
     expect(html).not.toContain('.news-ticker-box:hover')
-    expect(html).toContain('background-color: #C4F7CA')
+    expect(html).toContain('background-color: #bfdbfe')
+    expect(html).toContain('background-color: #ffffff')
     expect(html).toContain('border: none')
     expect(html).toContain('Read more')
     expect(html).not.toContain('&nearr;')
     expect(html).toContain('/updates')
   })
 
-  it('should support news ticker styling in dark theme with full border and read more button', async () => {
+  it('should support news ticker styling in dark theme with borderless card and read more button', async () => {
     const res = await app.request('/?email=player@company.com&forceHttps=true&theme=dark')
     expect(res.status).toBe(200)
     const html = await res.text()
 
     expect(html).toContain('.news-ticker-box')
-    expect(html).toContain('border: 1px solid #27272a')
     expect(html).toContain('border-radius: 6px')
     expect(html).toContain('justify-content: space-between')
     expect(html).toContain('.news-ticker-btn')
     expect(html).toContain('.news-ticker-btn:hover')
     expect(html).not.toContain('.news-ticker-box:hover')
-    expect(html).toContain('background-color: #C4F7CA')
-    expect(html).toContain('#18181b')
+    expect(html).toContain('background-color: #bfdbfe')
+    expect(html).toContain('background-color: #121212')
     expect(html).toContain('Read more')
     expect(html).not.toContain('&nearr;')
   })

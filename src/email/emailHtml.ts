@@ -15,7 +15,7 @@ export const EMAIL_HTML = `<!doctype html>
         }
     </style>
     <style amp-custom>
-        /* Josh Comeau's Modern CSS Reset (AMP4EMAIL Adapted) */
+/* Josh Comeau's Modern CSS Reset (AMP4EMAIL Adapted) */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -63,6 +63,7 @@ export const EMAIL_HTML = `<!doctype html>
             margin: 0 auto;
             max-width: 480px;
             padding: 0;
+            background-color: #ffffff;
         }
 
         .game-section {
@@ -107,15 +108,16 @@ export const EMAIL_HTML = `<!doctype html>
             justify-content: center;
             width: 28px;
             height: 28px;
+            background-color: #fef3c7;
             color: #000000;
             font-size: 15px;
             font-weight: 800;
             border-radius: 4px;
-            border: 1.5px solid #000000;
+            border: none;
             text-align: center;
             box-sizing: border-box;
             margin-right: -4px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 1px 0 #fde68a, 0 2px 3px rgba(0, 0, 0, 0.25);
             position: relative;
         }
 
@@ -124,15 +126,17 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .logo-tile:nth-child(odd),
-        .logo-tile.tile-blue {
-            background-color: #D8FFC5;
-            transform: rotate(-10deg);
+        .logo-tile.tile-blue,
+        .logo-tile.rotate-neg {
+            background-color: #fef3c7;
+            transform: rotate(-8deg);
         }
 
         .logo-tile:nth-child(even),
-        .logo-tile.tile-red {
-            background-color: #C4F7CA;
-            transform: rotate(10deg);
+        .logo-tile.tile-red,
+        .logo-tile.rotate-pos {
+            background-color: #fef3c7;
+            transform: rotate(8deg);
         }
 
         .logo-badge {
@@ -168,7 +172,7 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .domain-badge-compact {
-            background: #14532d;
+            background: #78350f;
             color: #ffffff;
             padding: 2px 8px;
             border-radius: 6px;
@@ -196,19 +200,12 @@ export const EMAIL_HTML = `<!doctype html>
 
         /* Definition Clue Stepper & Active Card */
         .definitions-section {
+            border: 3px double #d4d4d8;
             border-radius: 12px;
             margin-bottom: 22px;
             position: relative;
             box-sizing: border-box;
             background-color: #ffffff;
-            background-image:
-                radial-gradient(circle at center, #a1a1aa 1px, transparent 1.2px),
-                radial-gradient(circle at center, #a1a1aa 1px, transparent 1.2px),
-                radial-gradient(circle at center, #a1a1aa 1px, transparent 1.2px),
-                radial-gradient(circle at center, #a1a1aa 1px, transparent 1.2px);
-            background-position: top left, bottom left, top left, top right;
-            background-size: 7px 2px, 7px 2px, 2px 7px, 2px 7px;
-            background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
             padding-top: 20px;
         }
 
@@ -261,13 +258,13 @@ export const EMAIL_HTML = `<!doctype html>
             border-radius: 50%;
             padding: 0;
             background: #f4f4f5;
-            border: 1px solid #d4d4d8;
+            border: none;
             font-size: 11px;
             font-weight: 700;
             color: #71717a;
             cursor: pointer;
             text-align: center;
-            line-height: 20px;
+            line-height: 22px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -278,27 +275,22 @@ export const EMAIL_HTML = `<!doctype html>
         .clue-tab-btn.unlocked {
             background: #f4f4f5;
             color: #18181b;
-            border-color: #a1a1aa;
         }
 
         .clue-tab-btn.locked {
             color: #a1a1aa;
             background: #f4f4f5;
-            border-color: #e4e4e7;
         }
 
         .clue-tab-btn.active {
-            background: #C4F7CA;
+            background: #fcd34d;
             color: #000000;
-            border-color: #000000;
             opacity: 1;
         }
 
         .clue-tab-btn.locked.active {
-            background: #f4f4f5;
-            color: #cacacf;
-            color: rgba(161, 161, 170, 0.5);
-            border-color: #000000;
+            background: #d4d4d8;
+            color: #3f3f46;
             opacity: 1;
         }
 
@@ -349,18 +341,18 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .mask-tile {
-            width: 32px;
-            height: 32px;
-            min-width: 32px;
-            border-radius: 4px;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border-radius: 6px;
             padding: 0;
             background: #ffffff;
-            border: 1.5px solid #d4d4d8;
-            font-size: 16px;
+            border: 2px solid #d4d4d8;
+            font-size: 20px;
             font-weight: 800;
             color: #18181b;
             text-transform: uppercase;
-            line-height: 32px;
+            line-height: 40px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -375,13 +367,12 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .mask-tile.tile-typed {
-            background: #ffffff;
-            border-color: #7ecc84;
-            color: #18181b;
-            font-weight: 900;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            border: 2px solid #000000;
+            color: #000000;
+            font-weight: 800;
+            box-shadow: none;
         }
-
 
         /* Input Form Section */
         .form-container {
@@ -391,7 +382,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         .wordle-input-wrapper {
             position: relative;
-            margin-top: -32px;
+            margin-top: -40px;
             margin-bottom: 7px;
             display: flex;
             justify-content: center;
@@ -402,7 +393,7 @@ export const EMAIL_HTML = `<!doctype html>
         .hidden-guess-input {
             width: 360px;
             max-width: 100%;
-            height: 32px;
+            height: 40px;
             margin: 0 auto;
             background: transparent;
             border: none;
@@ -422,9 +413,9 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .btn {
-            border: 1.5px solid transparent;
+            border: none;
             border-radius: 8px;
-            padding: 5px 16px;
+            padding: 6px 16px;
             font-size: 11px;
             font-weight: 700;
             cursor: pointer;
@@ -435,37 +426,35 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .btn-primary {
-            background: #C4F7CA;
+            background: #fcd34d;
             color: #000000;
-            border-color: #7ecc84;
-            box-shadow: inset 0 2px 0 0 #dafcdb, 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .btn-primary:hover {
-            background-color: #bbf4c3;
-            border-color: #76c87c;
-            box-shadow: inset 0 2px 0 0 #d1f7d5, 0 2px 4px rgba(0, 0, 0, 0.08);
+            background-color: #fbbf24;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
         }
 
         .btn-primary:active {
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+            box-shadow: none;
+            opacity: 0.9;
         }
 
         .btn-hint {
             background: #e4e4e7;
             color: #27272a;
-            border-color: #a1a1aa;
-            box-shadow: inset 0 2px 0 0 #f4f4f6, 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .btn-hint:hover {
             background-color: #dcdce0;
-            border-color: #8e8e96;
-            box-shadow: inset 0 2px 0 0 #e9e9ec, 0 2px 4px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
         }
 
         .btn-hint:active {
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+            box-shadow: none;
+            opacity: 0.9;
         }
 
         .btn:disabled,
@@ -510,6 +499,7 @@ export const EMAIL_HTML = `<!doctype html>
             font-weight: 600;
             color: #52525b;
             margin-bottom: 10px;
+            border: 1px solid transparent;
         }
 
         .stats-val {
@@ -556,8 +546,8 @@ export const EMAIL_HTML = `<!doctype html>
 
         /* Subscribe Banner Box */
         .subscribe-banner {
-            background: #18181b;
-            border: 1px solid #27272a;
+            background: #78350f;
+            border: 1px solid #92400e;
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 10px;
@@ -582,14 +572,14 @@ export const EMAIL_HTML = `<!doctype html>
 
         .subscribe-desc {
             font-size: 11px;
-            color: #a1a1aa;
+            color: #fef3c7;
             margin-top: 1px;
             line-height: 1.2;
         }
 
         .btn-subscribe {
-            background: #27272a;
-            color: #ffffff;
+            background: #fcd34d;
+            color: #000000;
             width: 100%;
         }
 
@@ -654,7 +644,19 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .leaderboard-item.current-player {
-            background-color: #dcfce7;
+            background-color: #bfdbfe;
+        }
+
+        .leaderboard-item.current-player .player-email {
+            color: #27272a;
+        }
+
+        .leaderboard-item.current-player .player-score {
+            color: #71717a;
+        }
+
+        .leaderboard-item.current-player .rank-number {
+            color: #71717a;
         }
 
         .leaderboard-item:last-child {
@@ -677,6 +679,12 @@ export const EMAIL_HTML = `<!doctype html>
             font-weight: 500;
             color: #71717a;
             font-size: 11px;
+        }
+
+        .leaderboard-empty {
+            text-align: center;
+            color: #64748b;
+            padding: 8px;
         }
 
         /* Ticket Stub Divider */
@@ -762,11 +770,11 @@ export const EMAIL_HTML = `<!doctype html>
             gap: 12px;
             width: 100%;
             padding: 7px 12px;
-            background-color: #fafafa;
-            border: 1px solid #e4e4e7;
+            background-color: #bfdbfe;
+            border: none;
             border-radius: 6px;
             text-decoration: none;
-            color: #18181b;
+            color: #000000;
             font-size: 12px;
             line-height: 1.3;
             box-sizing: border-box;
@@ -785,10 +793,15 @@ export const EMAIL_HTML = `<!doctype html>
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            color: #18181b;
-            font-weight: 600;
+            color: #000000;
+            font-weight: 700;
             font-size: 12px;
             text-align: left;
+        }
+
+        .news-ticker-tag {
+            color: #000000;
+            font-weight: 400;
         }
 
         .news-ticker-btn {
@@ -796,7 +809,7 @@ export const EMAIL_HTML = `<!doctype html>
             align-items: center;
             gap: 4px;
             padding: 4px 10px;
-            background-color: #C4F7CA;
+            background-color: #ffffff;
             border: none;
             border-radius: 5px;
             font-size: 11px;
@@ -806,10 +819,11 @@ export const EMAIL_HTML = `<!doctype html>
             flex-shrink: 0;
             white-space: nowrap;
             cursor: pointer;
+            text-decoration: none;
         }
 
         .news-ticker-btn:hover {
-            background-color: #bbf4c3;
+            background-color: #f4f4f5;
         }
     </style>
 </head>
@@ -818,16 +832,17 @@ export const EMAIL_HTML = `<!doctype html>
     <div class="email-wrapper">
         <!-- Updates / News Announcement Box -->
         <div class="news-ticker-container">
-            <a href="https://inboxed.fun/updates" class="news-ticker-box" target="_blank" aria-label="Updates: First update & where Inboxed is headed">
+            <div class="news-ticker-box">
                 <span class="news-ticker-content">
-                    <span class="news-ticker-text">First update &amp; where Inboxed is headed</span>
+                    <span class="news-ticker-text"><span class="news-ticker-tag">Update October 6th:</span> New style and more!</span>
                 </span>
-                <span class="news-ticker-btn">
+                <a href="https://inboxed.fun/updates" class="news-ticker-btn" target="_blank" aria-label="Updates: Update October 6th: New style and more!">
                     Read more
-                </span>
-            </a>
+                </a>
+            </div>
         </div>
 
+        <!--
         <h4 class="game-header" aria-label="Inboxed">
             <span class="logo-tiles">
                 <span class="logo-tile rotate-neg tile-blue">I</span>
@@ -839,6 +854,7 @@ export const EMAIL_HTML = `<!doctype html>
                 <span class="logo-tile rotate-neg tile-blue">D</span>
             </span>
         </h4>
+        -->
 
         <!-- Dynamic State Store for interactive binding & hiding form on win -->
         <amp-state id="gameState">
@@ -881,7 +897,7 @@ export const EMAIL_HTML = `<!doctype html>
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="204" layout="fixed-height" diffable
+                <amp-list id="stateList" width="auto" height="216" layout="fixed-height" diffable
                     src="https://inboxed.fun/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
@@ -1027,7 +1043,7 @@ export const EMAIL_HTML = `<!doctype html>
                             </div>
                             {{/players}}
                             {{^players}}
-                            <div style="text-align: center; color: #64748b; padding: 8px;">No scores recorded for
+                            <div class="leaderboard-empty">No scores recorded for
                                 this domain yet today!</div>
                             {{/players}}
                         </div>
