@@ -805,21 +805,10 @@ export const SHARED_GAME_CSS = `
         .streak-text {
             background-color: #ffffff;
             color: #ea580c;
-            padding: 2px 4px;
+            padding: 1px 4px;
             margin-right: 2px;
             border-radius: 3px;
             font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            vertical-align: middle;
-            line-height: 1;
-        }
-
-        .streak-fire {
-            font-size: 8px;
-            line-height: 1;
-            display: inline-block;
-            margin-right: 2px;
         }
 
         .leaderboard-empty {

@@ -94,7 +94,7 @@ describe('Streaks Feature', () => {
     })
 
     // 1. When Player A views leaderboard for game 3:
-    // Player A (current player) should have badge "🔥 3 days", Player B should NOT have a badge
+    // Player A (current player) should have badge "🔥 3", Player B should NOT have a badge
     const lbResA = await app.request(`/api/leaderboard?domain=${domain}&email=${encodeURIComponent(playerA)}&puzzle=3`)
     expect(lbResA.status).toBe(200)
     const lbDataA = await lbResA.json() as any
@@ -330,7 +330,6 @@ describe('Inactivity Unsubscribe Feature (7 Days in a Row)', () => {
   it('should render streak and score Mustache binding in compiled email HTML', async () => {
     const { EMAIL_HTML } = await import('../src/email/emailHtml')
     expect(EMAIL_HTML).toContain('.streak-text')
-    expect(EMAIL_HTML).toContain('.streak-fire')
-    expect(EMAIL_HTML).toContain('{{#hasStreak}}<span class="streak-text"><span class="streak-fire">🔥</span>{{streak}}</span> {{/hasStreak}}{{score}}')
+    expect(EMAIL_HTML).toContain('{{#hasStreak}}<span class="streak-text">{{streakBadge}}</span> {{/hasStreak}}{{score}}')
   })
 })
