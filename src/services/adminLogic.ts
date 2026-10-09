@@ -125,6 +125,12 @@ export async function resetUserDayState(
     removedFromPlayedDates = true
   }
 
+  if (userSettings.submittedPuzzles && userSettings.submittedPuzzles.some((p) => puzzlesToRemove.has(p))) {
+    userSettings.submittedPuzzles = userSettings.submittedPuzzles.filter((p) => !puzzlesToRemove.has(p))
+    profileChanged = true
+    removedFromPlayedDates = true
+  }
+
   if (profileChanged) {
     userSettings.daysPlayed = Math.max(
       userSettings.playedDates ? userSettings.playedDates.length : 0,

@@ -1,7 +1,7 @@
 import { OAuth2Client } from 'google-auth-library'
 import { extractEmailDomain, getLeaderboardDomain, kvGet, kvPut, withKeyLock, type StorageBackend } from '../core'
-import type { UserSettings } from '../core'
-import { getDailyPuzzle } from '../game'
+import type { UserSettings, SubscriberEntry } from '../core'
+import { getDailyPuzzle, getPuzzleById } from '../game'
 import { getSubscribers } from './subscribers'
 import { getDomainLeaderboard } from './leaderboard'
 
@@ -76,6 +76,7 @@ export async function getUserSettings(kv: StorageBackend, email: string): Promis
       daysPlayed: existing.daysPlayed,
       playedDates: existing.playedDates,
       playedPuzzles: existing.playedPuzzles,
+      submittedPuzzles: existing.submittedPuzzles,
       theme: existing.theme === 'dark' ? 'dark' : 'light',
       colorCombo: existing.colorCombo || 'amber-blue',
       primaryColor: existing.primaryColor,
@@ -130,6 +131,215 @@ export async function recordUserActivity(
     await kvPut(kv, key, profile)
     return profile
   })
+}
+
+export async function recordUserSubmission(
+  kv: StorageBackend,
+  email: string,
+  puzzleOrDate?: string | number
+): Promise<UserSettings> {
+  const cleanEmail = email.toLowerCase().trim()
+  const key = `user:profile:${cleanEmail}`
+  return withKeyLock(key, async () => {
+    const profile = await getUserSettings(kv, cleanEmail)
+    const puzzle = getDailyPuzzle(puzzleOrDate)
+    const dateStr = puzzle.date
+    const puzzleId = puzzle.id
+
+    if (!profile.playedDates) {
+      profile.playedDates = [dateStr]
+    } else if (!profile.playedDates.includes(dateStr)) {
+      profile.playedDates.push(dateStr)
+    }
+
+    if (!profile.playedPuzzles) {
+      profile.playedPuzzles = [puzzleId]
+    } else if (!profile.playedPuzzles.includes(puzzleId)) {
+      profile.playedPuzzles.push(puzzleId)
+    }
+
+    if (!profile.submittedPuzzles) {
+      profile.submittedPuzzles = [puzzleId]
+    } else if (!profile.submittedPuzzles.includes(puzzleId)) {
+      profile.submittedPuzzles.push(puzzleId)
+    }
+
+    profile.daysPlayed = Math.max(profile.playedDates.length, profile.playedPuzzles.length)
+
+    await kvPut(kv, key, profile)
+    return profile
+  })
+}
+
+export async function getUserStreak(
+  kv: StorageBackend,
+  email: string,
+  targetPuzzleId?: string | number
+): Promise<number> {
+  const cleanEmail = email.toLowerCase().trim()
+  const settings = await getUserSettings(kv, cleanEmail)
+
+  const playedNumbers = new Set<number>()
+  for (const id of settings.playedPuzzles || []) {
+    const num = parseInt(String(id).replace('#', '').trim(), 10)
+    if (!isNaN(num)) playedNumbers.add(num)
+  }
+  for (const id of settings.submittedPuzzles || []) {
+    const num = parseInt(String(id).replace('#', '').trim(), 10)
+    if (!isNaN(num)) playedNumbers.add(num)
+  }
+
+  let currentTargetNum: number
+  if (targetPuzzleId !== undefined && targetPuzzleId !== null && String(targetPuzzleId).trim() !== '') {
+    currentTargetNum = parseInt(String(targetPuzzleId).replace('#', '').trim(), 10)
+  } else {
+    const today = getDailyPuzzle()
+    currentTargetNum = parseInt(today.id, 10)
+  }
+
+  if (isNaN(currentTargetNum)) return 0
+
+  // Check if currentTargetNum was played/won in storage if not already in set
+  if (!playedNumbers.has(currentTargetNum)) {
+    const targetPuzzle = getDailyPuzzle(currentTargetNum) || getPuzzleById(currentTargetNum)
+    if (targetPuzzle) {
+      const stateKey = `game:${targetPuzzle.date}:${cleanEmail}`
+      const st = await kvGet(kv, stateKey)
+      if (st && (st.hasWon || st.guessCount > 0)) {
+        playedNumbers.add(currentTargetNum)
+      } else {
+        const staticPuzzle = getPuzzleById(currentTargetNum)
+        if (staticPuzzle && staticPuzzle.date !== targetPuzzle.date) {
+          const legacySt = await kvGet(kv, `game:${staticPuzzle.date}:${cleanEmail}`)
+          if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0)) {
+            playedNumbers.add(currentTargetNum)
+          }
+        }
+      }
+    }
+    if (!playedNumbers.has(currentTargetNum)) {
+      const domain = extractDomain(cleanEmail)
+      const lb = await getDomainLeaderboard(kv, domain, String(currentTargetNum))
+      if (lb && lb.some(e => e.email.toLowerCase() === cleanEmail)) {
+        playedNumbers.add(currentTargetNum)
+      }
+    }
+  }
+
+  // If the target game wasn't played, current streak is 0
+  if (!playedNumbers.has(currentTargetNum)) {
+    return 0
+  }
+
+  // Count backwards consecutive games
+  let streak = 0
+  let checkNum = currentTargetNum
+  while (true) {
+    if (playedNumbers.has(checkNum)) {
+      streak++
+      checkNum--
+    } else {
+      // Fallback check in KV for checkNum
+      const puzzle = getDailyPuzzle(checkNum) || getPuzzleById(checkNum)
+      let found = false
+      if (puzzle) {
+        const stateKey = `game:${puzzle.date}:${cleanEmail}`
+        const st = await kvGet(kv, stateKey)
+        if (st && (st.hasWon || st.guessCount > 0)) {
+          playedNumbers.add(checkNum)
+          streak++
+          checkNum--
+          found = true
+          continue
+        } else {
+          const staticPuzzle = getPuzzleById(checkNum)
+          if (staticPuzzle && staticPuzzle.date !== puzzle.date) {
+            const legacySt = await kvGet(kv, `game:${staticPuzzle.date}:${cleanEmail}`)
+            if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0)) {
+              playedNumbers.add(checkNum)
+              streak++
+              checkNum--
+              found = true
+              continue
+            }
+          }
+        }
+      }
+
+      if (!found) {
+        const domain = extractDomain(cleanEmail)
+        const lb = await getDomainLeaderboard(kv, domain, String(checkNum))
+        if (lb && lb.some(e => e.email.toLowerCase() === cleanEmail)) {
+          playedNumbers.add(checkNum)
+          streak++
+          checkNum--
+          found = true
+          continue
+        }
+      }
+
+      break
+    }
+  }
+
+  return streak
+}
+
+export async function isSubscriberInactive(
+  kv: StorageBackend,
+  email: string,
+  currentPuzzleId: string | number,
+  subscriber?: SubscriberEntry
+): Promise<boolean> {
+  const cleanEmail = email.toLowerCase().trim()
+  const currentPuzzleNum = parseInt(String(currentPuzzleId).replace('#', '').trim(), 10)
+  if (isNaN(currentPuzzleNum) || currentPuzzleNum <= 7) {
+    return false
+  }
+
+  // If subscriber entry exists with subscribedAt, check if they subscribed less than 7 games ago
+  if (subscriber?.subscribedAt) {
+    const subDateStr = subscriber.subscribedAt.slice(0, 10)
+    const subPuzzle = getDailyPuzzle(subDateStr)
+    const subPuzzleNum = parseInt(subPuzzle.id, 10)
+    if (!isNaN(subPuzzleNum) && subPuzzleNum > currentPuzzleNum - 7) {
+      return false
+    }
+  }
+
+  const settings = await getUserSettings(kv, cleanEmail)
+  const submittedNumbers = new Set<number>()
+  for (const id of settings.submittedPuzzles || []) {
+    const num = parseInt(String(id).replace('#', '').trim(), 10)
+    if (!isNaN(num)) submittedNumbers.add(num)
+  }
+  for (const id of settings.playedPuzzles || []) {
+    const num = parseInt(String(id).replace('#', '').trim(), 10)
+    if (!isNaN(num)) submittedNumbers.add(num)
+  }
+
+  // The 7 games in a row prior to today
+  const windowGames: number[] = []
+  for (let i = 1; i <= 7; i++) {
+    windowGames.push(currentPuzzleNum - i)
+  }
+
+  for (const gameNum of windowGames) {
+    if (submittedNumbers.has(gameNum)) {
+      return false
+    }
+    // Fallback check in KV
+    const puzzle = getPuzzleById(gameNum)
+    if (puzzle) {
+      const stateKey = `game:${puzzle.date}:${cleanEmail}`
+      const st = await kvGet(kv, stateKey)
+      if (st && (st.hasWon || st.guessCount > 0)) {
+        return false
+      }
+    }
+  }
+
+  return true
 }
 
 export async function getCoworkerCount(

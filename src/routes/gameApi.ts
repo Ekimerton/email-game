@@ -19,7 +19,9 @@ import {
   getUserSettings,
   getDomainLeaderboard,
   updateDomainLeaderboard,
-  isDevTester
+  isDevTester,
+  recordUserSubmission,
+  getUserStreak,
 } from '../services'
 
 export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
@@ -118,6 +120,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         state.letterMask = newMask
         state.version = (state.version || 0) + 1
         state.updatedAt = new Date().toISOString()
+        await recordUserSubmission(c.env, userEmail, puzzle.id)
 
         if (isCorrect) {
           state.hasWon = true
@@ -235,6 +238,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         state.lastMessage = GAME_MESSAGES.hintRevealed(targetIdx + 1, puzzle.word[targetIdx])
         state.version = (state.version || 0) + 1
         state.updatedAt = new Date().toISOString()
+        await recordUserSubmission(c.env, userEmail, puzzle.id)
 
         await kvPut(c.env, stateKey, state)
         return buildStatePayload(state, puzzle)
@@ -259,7 +263,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
 
       let puzzle: DailyPuzzle
       if (puzzleIdParam) {
-        puzzle = getPuzzleById(puzzleIdParam) || getDailyPuzzle(puzzleIdParam, { isDev })
+        puzzle = getDailyPuzzle(puzzleIdParam, { isDev }) || getPuzzleById(puzzleIdParam)
       } else {
         puzzle = getDailyPuzzle(dateParam, { isDev })
       }
@@ -274,18 +278,35 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         })
       )
 
-      const allItems = visibleEntriesWithSettings
-        .filter(item => item.showOnLeaderboard)
-        .map((item, index) => {
-          const guessWord = item.entry.guessCount === 1 ? 'guess' : 'guesses'
-          return {
-            rank: index + 1,
-            displayEmail: formatDisplayEmail(item.entry.email),
-            score: `${item.entry.score} points • ${item.entry.guessCount} ${guessWord}`,
-            email: item.entry.email,
-            isCurrentPlayer: item.entry.email.toLowerCase() === userEmail.toLowerCase()
-          }
-        })
+      const allItems = await Promise.all(
+        visibleEntriesWithSettings
+          .filter(item => item.showOnLeaderboard)
+          .map(async (item, index) => {
+            const isCurrentPlayer = item.entry.email.toLowerCase() === userEmail.toLowerCase()
+            let streak: number | undefined = undefined
+            let streakBadge: string | undefined = undefined
+            let hasStreak = false
+
+            if (isCurrentPlayer) {
+              const userStreak = await getUserStreak(c.env, userEmail, puzzle.id)
+              if (userStreak >= 3) {
+                streak = userStreak
+                streakBadge = `🔥 ${userStreak} days`
+                hasStreak = true
+              }
+            }
+
+            return {
+              rank: index + 1,
+              displayEmail: formatDisplayEmail(item.entry.email),
+              score: `${item.entry.score} points`,
+              email: item.entry.email,
+              isCurrentPlayer,
+              hasStreak,
+              ...(streak !== undefined ? { streak, streakBadge } : {})
+            }
+          })
+      )
 
       const top5 = allItems.slice(0, 5)
       const currentPlayerItem = allItems.find(item => item.isCurrentPlayer)

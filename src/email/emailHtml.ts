@@ -681,6 +681,15 @@ export const EMAIL_HTML = `<!doctype html>
             font-size: 11px;
         }
 
+        .streak-text {
+            background-color: #ffffff;
+            color: #ea580c;
+            padding: 1px 4px;
+            margin-right: 2px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
         .leaderboard-empty {
             text-align: center;
             color: #64748b;
@@ -1039,7 +1048,7 @@ export const EMAIL_HTML = `<!doctype html>
                             <div class="leaderboard-item {{#isCurrentPlayer}}current-player{{/isCurrentPlayer}}">
                                 <span class="rank-number">#{{rank}}</span>
                                 <span class="player-email">{{displayEmail}}</span>
-                                <span class="player-score">{{score}}</span>
+                                <span class="player-score">{{#hasStreak}}<span class="streak-text">{{streakBadge}}</span> {{/hasStreak}}{{score}}</span>
                             </div>
                             {{/players}}
                             {{^players}}
@@ -1058,27 +1067,27 @@ export const EMAIL_HTML = `<!doctype html>
                             <div class="leaderboard-item">
                                 <span class="rank-number">#1</span>
                                 <span class="player-email">alex@company.com</span>
-                                <span class="player-score">925 points &bull; 1 guess</span>
+                                <span class="player-score">925 points</span>
                             </div>
                             <div class="leaderboard-item">
                                 <span class="rank-number">#2</span>
                                 <span class="player-email">sarah@company.com</span>
-                                <span class="player-score">850 points &bull; 2 guesses</span>
+                                <span class="player-score">850 points</span>
                             </div>
                             <div class="leaderboard-item">
                                 <span class="rank-number">#3</span>
                                 <span class="player-email">david@company.com</span>
-                                <span class="player-score">775 points &bull; 3 guesses</span>
+                                <span class="player-score">775 points</span>
                             </div>
                             <div class="leaderboard-item">
                                 <span class="rank-number">#4</span>
                                 <span class="player-email">emily@company.com</span>
-                                <span class="player-score">710 points &bull; 4 guesses</span>
+                                <span class="player-score">710 points</span>
                             </div>
                             <div class="leaderboard-item">
                                 <span class="rank-number">#5</span>
                                 <span class="player-email">michael@company.com</span>
-                                <span class="player-score">650 points &bull; 5 guesses</span>
+                                <span class="player-score">650 points</span>
                             </div>
                         </div>
                     </div>

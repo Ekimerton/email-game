@@ -802,6 +802,15 @@ export const SHARED_GAME_CSS = `
             font-size: 11px;
         }
 
+        .streak-text {
+            background-color: #ffffff;
+            color: #ea580c;
+            padding: 1px 4px;
+            margin-right: 2px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
         .leaderboard-empty {
             text-align: center;
             color: var(--color-slate-500);

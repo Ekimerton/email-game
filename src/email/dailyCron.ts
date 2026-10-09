@@ -3,7 +3,7 @@ import { EMAIL_HTML } from './emailHtml'
 import { generateAccountToken, getAccountUrl, extractEmailDomain, getLeaderboardDomain, type Bindings, type DailyEmailDispatchResult, type StorageBackend } from '../core'
 import { sendMailgunEmail } from './emailService'
 import { applyEmailTheme, type EmailTheme } from './emailThemes'
-import { recordUserActivity, getCoworkerCount, getPlayerCount, getUserEmail, getSubscribers, isDevTester, getDevTesters } from '../services'
+import { recordUserActivity, getUserSettings, getCoworkerCount, getPlayerCount, getUserEmail, getSubscribers, processInactiveSubscribers, isDevTester, getDevTesters } from '../services'
 import { getFallbackHtml } from '../views'
 
 // Helper to build full AMP + Fallback HTML content for daily puzzle emails
@@ -27,7 +27,7 @@ export async function buildPuzzleEmailContent(
   const encodedEmail = encodeURIComponent(userEmail)
   const encodedDomain = encodeURIComponent(leaderboardDomain)
 
-  const profile = await recordUserActivity(kv, userEmail, puzzle.date)
+  const profile = await getUserSettings(kv, userEmail)
   const theme: EmailTheme = themeOverride || profile.theme || 'light'
   const colorCombo: string = options?.colorComboOverride || profile.colorCombo || 'amber-blue'
 
@@ -175,6 +175,23 @@ export async function sendDailyPuzzleEmails(
   const authSecret = env?.AUTH_SECRET || process.env.AUTH_SECRET
   const mode = options?.mode || 'all'
 
+  // 0. Process inactive subscribers if dispatching to subscribers
+  let unsubscribedDueToInactivity: string[] = []
+  if (mode === 'subscribers' || mode === 'all') {
+    const inactiveResult = await processInactiveSubscribers(
+      env?.DB || env?.GAME_STATE_KV,
+      puzzle.id,
+      {
+        isDryRun: options?.isDryRun,
+        origin: prodOrigin,
+        mailgunApiKey: env?.MAILGUN_API_KEY || process.env.MAILGUN_API_KEY,
+        mailgunDomain: env?.MAILGUN_DOMAIN || process.env.MAILGUN_DOMAIN,
+        senderEmail: env?.SENDER_EMAIL || process.env.SENDER_EMAIL,
+      }
+    )
+    unsubscribedDueToInactivity = inactiveResult.unsubscribedEmails
+  }
+
   // 1. Determine recipients
   let recipients: string[] = []
   if (options?.targetEmails && options.targetEmails.length > 0) {
@@ -185,8 +202,9 @@ export async function sendDailyPuzzleEmails(
 
     if (mode === 'subscribers' || mode === 'all') {
       const subscribers = await getSubscribers(env?.DB || env?.GAME_STATE_KV)
+      const inactiveSet = new Set(unsubscribedDueToInactivity.map(e => e.toLowerCase().trim()))
       activeSubscribers = subscribers
-        .filter(s => s.status === 'active')
+        .filter(s => s.status === 'active' && !inactiveSet.has(s.email.toLowerCase().trim()))
         .map(s => s.email.toLowerCase().trim())
     }
 
@@ -214,7 +232,7 @@ export async function sendDailyPuzzleEmails(
 
   if (recipients.length === 0) {
     console.log(`[Daily Cron] No recipients found for mode '${mode}'. Skipping email dispatch.`)
-    return { total: 0, sent: 0, failed: 0, recipients: [], errors: {} }
+    return { total: 0, sent: 0, failed: 0, recipients: [], errors: {}, unsubscribedDueToInactivity }
   }
 
   console.log(`[Daily Cron] Dispatching Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${recipients.length} recipient(s): ${recipients.join(', ')}`)
@@ -280,5 +298,5 @@ export async function sendDailyPuzzleEmails(
   }
 
   console.log(`[Daily Cron] Finished dispatch. ${sent} sent, ${failed} failed.`)
-  return { total: recipients.length, sent, failed, recipients, errors, puzzleDate: puzzle.date, puzzleId: puzzle.id }
+  return { total: recipients.length, sent, failed, recipients, errors, puzzleDate: puzzle.date, puzzleId: puzzle.id, unsubscribedDueToInactivity }
 }

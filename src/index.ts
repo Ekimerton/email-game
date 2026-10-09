@@ -16,8 +16,8 @@ export type { EmailTheme } from './core'
 // Explicit function re-exports for tests and helper scripts
 export { kvDelete, kvGet, kvPut } from './core'
 export { isPuzzleSynonym, calculateScore, getPuzzleDateForSendCron, getSendDailyPuzzle } from './game'
-export { resetUserDayState, unsubscribeUser, removeSubscriber } from './services'
-export { buildPuzzleEmailContent, sendDailyPuzzleEmails, renderConfirmationEmailHtml, renderConfirmationEmailText } from './email'
+export { resetUserDayState, unsubscribeUser, removeSubscriber, getUserStreak, recordUserSubmission, isSubscriberInactive, processInactiveSubscribers } from './services'
+export { buildPuzzleEmailContent, sendDailyPuzzleEmails, renderConfirmationEmailHtml, renderConfirmationEmailText, renderInactivityUnsubscribeEmailHtml, renderInactivityUnsubscribeEmailText, sendInactivityUnsubscribeEmail } from './email'
 export { isDevelopment } from './routes'
 export {
   getSignupHtml,

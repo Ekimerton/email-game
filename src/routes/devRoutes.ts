@@ -21,6 +21,24 @@ export function isDevelopment(c: any): boolean {
   return isLocalHost || isDevEnv
 }
 
+export function getDevOrigin(c: any): string {
+  const reqUrl = new URL(c.req.url)
+  const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1' || reqUrl.hostname.endsWith('.localhost') || reqUrl.protocol === 'http:' || c.req.header('cf-connecting-ip') === '::1' || c.req.header('cf-connecting-ip') === '127.0.0.1'
+  const forceHttps = c.req.query('forceHttps') === 'true'
+  const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const originParam = c.req.query('origin')
+
+  if (forceHttps) return prodOrigin
+  if (originParam) return originParam.replace(/\/$/, '')
+  if (isLocalHost || isDevelopment(c)) {
+    if (reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1') {
+      return reqUrl.origin
+    }
+    return 'http://localhost:8787'
+  }
+  return prodOrigin
+}
+
 export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
   // Development-only interactive workbench to inspect rendered game and HTML
   app.get('/dev', async (c) => {
@@ -32,11 +50,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
     const dateParam = c.req.query('date')
     const target = puzzleParam || dateParam
-    const reqUrl = new URL(c.req.url)
-    const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
-    const forceHttps = c.req.query('forceHttps') === 'true'
-    const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
-    const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
+    const currentOrigin = getDevOrigin(c)
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
     const content = await buildPuzzleEmailContent(c.env, userEmail, target, currentOrigin, authSecret)
@@ -70,11 +84,7 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
     const dateParam = c.req.query('date')
     const target = puzzleParam || dateParam
-    const reqUrl = new URL(c.req.url)
-    const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
-    const forceHttps = c.req.query('forceHttps') === 'true'
-    const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
-    const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
+    const currentOrigin = getDevOrigin(c)
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
     const content = await buildPuzzleEmailContent(c.env, userEmail, target, currentOrigin, authSecret)
@@ -92,11 +102,8 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
     const dateParam = c.req.query('date')
     const target = puzzleParam || dateParam
-    const reqUrl = new URL(c.req.url)
-    const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
-    const forceHttps = c.req.query('forceHttps') === 'true'
+    const currentOrigin = getDevOrigin(c)
     const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
-    const currentOrigin = (isLocalHost && !forceHttps) ? reqUrl.origin : prodOrigin
     const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
 
     let html = ''
@@ -122,7 +129,6 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     } else if (page === 'updates') {
       html = getUpdatesHtml()
     } else if (page === 'subscribers') {
-      const prodOrigin = (c.env?.PUBLIC_HTTPS_URL || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
       const sourceParam = c.req.query('source') || 'prod'
       let subscribers: SubscriberEntry[] = []
       let dataSource: 'prod' | 'local' = sourceParam === 'local' ? 'local' : 'prod'

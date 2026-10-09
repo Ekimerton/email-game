@@ -1,5 +1,7 @@
 import { extractEmailDomain, kvGet, kvPut, withKeyLock, type StorageBackend } from '../core'
 import type { SubscriberEntry } from '../core'
+import { isSubscriberInactive } from './userService'
+import { sendInactivityUnsubscribeEmail } from '../email/emailService'
 
 const SUBSCRIBERS_KEY = 'subscribers:list'
 
@@ -98,5 +100,45 @@ export async function ensureSubscribedOnOpen(kv: StorageBackend, email: string):
     }
     return existing.status === 'active'
   })
+}
+
+export async function processInactiveSubscribers(
+  kv: StorageBackend,
+  currentPuzzleId: string | number,
+  options?: {
+    isDryRun?: boolean
+    origin?: string
+    mailgunApiKey?: string
+    mailgunDomain?: string
+    senderEmail?: string
+  }
+): Promise<{ unsubscribedCount: number; unsubscribedEmails: string[] }> {
+  const subscribers = await getSubscribers(kv)
+  const activeSubscribers = subscribers.filter(s => s.status === 'active')
+  const unsubscribedEmails: string[] = []
+
+  for (const subscriber of activeSubscribers) {
+    const inactive = await isSubscriberInactive(kv, subscriber.email, currentPuzzleId, subscriber)
+    if (inactive) {
+      unsubscribedEmails.push(subscriber.email)
+      if (options?.isDryRun) {
+        console.log(`[Inactive Check] [DRY RUN] Would unsubscribe ${subscriber.email} due to 7 consecutive games without submission`)
+      } else {
+        await unsubscribeUser(kv, subscriber.email)
+        await sendInactivityUnsubscribeEmail({
+          apiKey: options?.mailgunApiKey,
+          domain: options?.mailgunDomain,
+          from: options?.senderEmail,
+          to: subscriber.email,
+          origin: options?.origin,
+        })
+      }
+    }
+  }
+
+  return {
+    unsubscribedCount: unsubscribedEmails.length,
+    unsubscribedEmails,
+  }
 }
 

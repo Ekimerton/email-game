@@ -30,6 +30,7 @@ export interface UserSettings {
   daysPlayed?: number
   playedDates?: string[]
   playedPuzzles?: string[]
+  submittedPuzzles?: string[]
   theme?: EmailTheme
   colorCombo?: string
   primaryColor?: string
@@ -86,5 +87,6 @@ export interface DailyEmailDispatchResult {
   errors: Record<string, string>
   puzzleDate?: string
   puzzleId?: string
+  unsubscribedDueToInactivity?: string[]
 }
 

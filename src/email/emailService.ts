@@ -175,3 +175,107 @@ ${confirmUrl}
 
 If you did not request this, you can safely ignore this email.`
 }
+
+export interface InactivityEmailOptions {
+  origin?: string
+  playUrl?: string
+  logoUrl?: string
+}
+
+export function renderInactivityUnsubscribeEmailHtml(
+  options?: InactivityEmailOptions
+): string {
+  const origin = (options?.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const playUrl = options?.playUrl || origin
+  const logoUrl = options?.logoUrl || `${origin}/logo.png`
+
+  const safePlayUrl = escapeHtml(playUrl)
+  const safeLogoUrl = escapeHtml(logoUrl)
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You've been unsubscribed from Inboxed</title>
+  <style>
+    .btn-resubscribe:hover {
+      background-color: #fbbf24 !important;
+    }
+  </style>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 32px 16px; color: #18181b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width: 480px; background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 32px 24px; text-align: center;" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="center">
+              <div style="text-align: center; margin: 0 0 20px;">
+                <a href="${safePlayUrl}" style="text-decoration: none; display: inline-block;">
+                  <img src="${safeLogoUrl}" alt="INBOXED" width="160" height="38" style="display: block; margin: 0 auto; width: 160px; height: 38px; border: 0; outline: none; text-decoration: none; font-size: 22px; font-weight: 900; color: #14532d; letter-spacing: 2px;">
+                </a>
+              </div>
+              <h1 style="font-size: 20px; font-weight: 800; color: #18181b; margin: 0 0 12px 0;">
+                You've been unsubscribed
+              </h1>
+              <p style="font-size: 14px; color: #52525b; line-height: 1.5; margin: 0 0 24px 0;">
+                We noticed you haven't played Inboxed for the last 7 days in a row, so we've automatically unsubscribed you so we don't clutter your inbox.
+              </p>
+              <div style="margin: 28px 0;">
+                <a href="${safePlayUrl}" class="btn-resubscribe" style="background-color: #fcd34d; color: #000000; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; padding: 11px 24px; display: inline-block; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); -webkit-text-size-adjust: none;">
+                  Play Again & Resubscribe
+                </a>
+              </div>
+              <p style="font-size: 12px; color: #71717a; line-height: 1.5; margin: 20px 0 0 0;">
+                Want to play again? Jump back in anytime at:<br>
+                <a href="${safePlayUrl}" style="color: #18181b; word-break: break-all;">${safePlayUrl}</a>
+              </p>
+              <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0 16px 0;">
+              <p style="font-size: 11px; color: #a1a1aa; margin: 0;">
+                You won't receive daily puzzle emails anymore unless you choose to resubscribe.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+export function renderInactivityUnsubscribeEmailText(options?: InactivityEmailOptions): string {
+  const origin = (options?.playUrl || options?.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  return `You've been unsubscribed from Inboxed
+
+We noticed you haven't played Inboxed for the last 7 days in a row, so we've automatically unsubscribed you so we don't clutter your inbox.
+
+If you ever want to play again or resubscribe, visit:
+${origin}
+
+Best,
+The Inboxed Team`
+}
+
+export async function sendInactivityUnsubscribeEmail(options: {
+  apiKey?: string
+  domain?: string
+  from?: string
+  to: string
+  origin?: string
+}): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const origin = (options.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const html = renderInactivityUnsubscribeEmailHtml({ origin })
+  const text = renderInactivityUnsubscribeEmailText({ origin })
+
+  return sendMailgunEmail({
+    apiKey: options.apiKey,
+    domain: options.domain,
+    from: options.from || 'Inboxed <game@inboxed.fun>',
+    to: options.to,
+    subject: "You've been unsubscribed from Inboxed",
+    text,
+    html,
+  })
+}
