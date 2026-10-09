@@ -1,7 +1,7 @@
 import { OAuth2Client } from 'google-auth-library'
 import { extractEmailDomain, getLeaderboardDomain, kvGet, kvPut, withKeyLock, type StorageBackend } from '../core'
 import type { UserSettings, SubscriberEntry } from '../core'
-import { getDailyPuzzle, getPuzzleById } from '../game'
+import { getDailyPuzzle, getPuzzleById, getDateForPuzzleId } from '../game'
 import { getSubscribers } from './subscribers'
 import { getDomainLeaderboard } from './leaderboard'
 
@@ -197,23 +197,21 @@ export async function getUserStreak(
     currentTargetNum = parseInt(today.id, 10)
   }
 
-  if (isNaN(currentTargetNum)) return 0
+  if (isNaN(currentTargetNum) || currentTargetNum < 1) return 0
 
   // Check if currentTargetNum was played/won in storage if not already in set
   if (!playedNumbers.has(currentTargetNum)) {
-    const targetPuzzle = getDailyPuzzle(currentTargetNum) || getPuzzleById(currentTargetNum)
-    if (targetPuzzle) {
-      const stateKey = `game:${targetPuzzle.date}:${cleanEmail}`
+    const staticPuzzle = getPuzzleById(currentTargetNum)
+    if (staticPuzzle) {
+      const targetDate = getDateForPuzzleId(String(currentTargetNum)) || staticPuzzle.date
+      const stateKey = `game:${targetDate}:${cleanEmail}`
       const st = await kvGet(kv, stateKey)
       if (st && (st.hasWon || st.guessCount > 0)) {
         playedNumbers.add(currentTargetNum)
-      } else {
-        const staticPuzzle = getPuzzleById(currentTargetNum)
-        if (staticPuzzle && staticPuzzle.date !== targetPuzzle.date) {
-          const legacySt = await kvGet(kv, `game:${staticPuzzle.date}:${cleanEmail}`)
-          if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0)) {
-            playedNumbers.add(currentTargetNum)
-          }
+      } else if (staticPuzzle.date !== targetDate) {
+        const legacySt = await kvGet(kv, `game:${staticPuzzle.date}:${cleanEmail}`)
+        if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0)) {
+          playedNumbers.add(currentTargetNum)
         }
       }
     }
@@ -231,19 +229,20 @@ export async function getUserStreak(
     return 0
   }
 
-  // Count backwards consecutive games
+  // Count backwards consecutive games down to game 1
   let streak = 0
   let checkNum = currentTargetNum
-  while (true) {
+  while (checkNum >= 1) {
     if (playedNumbers.has(checkNum)) {
       streak++
       checkNum--
     } else {
       // Fallback check in KV for checkNum
-      const puzzle = getDailyPuzzle(checkNum) || getPuzzleById(checkNum)
+      const staticPuzzle = getPuzzleById(checkNum)
       let found = false
-      if (puzzle) {
-        const stateKey = `game:${puzzle.date}:${cleanEmail}`
+      if (staticPuzzle) {
+        const targetDate = getDateForPuzzleId(String(checkNum)) || staticPuzzle.date
+        const stateKey = `game:${targetDate}:${cleanEmail}`
         const st = await kvGet(kv, stateKey)
         if (st && (st.hasWon || st.guessCount > 0)) {
           playedNumbers.add(checkNum)
@@ -251,17 +250,14 @@ export async function getUserStreak(
           checkNum--
           found = true
           continue
-        } else {
-          const staticPuzzle = getPuzzleById(checkNum)
-          if (staticPuzzle && staticPuzzle.date !== puzzle.date) {
-            const legacySt = await kvGet(kv, `game:${staticPuzzle.date}:${cleanEmail}`)
-            if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0)) {
-              playedNumbers.add(checkNum)
-              streak++
-              checkNum--
-              found = true
-              continue
-            }
+        } else if (staticPuzzle.date !== targetDate) {
+          const legacySt = await kvGet(kv, `game:${staticPuzzle.date}:${cleanEmail}`)
+          if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0)) {
+            playedNumbers.add(checkNum)
+            streak++
+            checkNum--
+            found = true
+            continue
           }
         }
       }
