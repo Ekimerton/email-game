@@ -291,7 +291,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
               const userStreak = await getUserStreak(c.env, userEmail, puzzle.id)
               if (userStreak >= 3) {
                 streak = userStreak
-                streakBadge = `🔥 ${userStreak} days`
+                streakBadge = `🔥 ${userStreak}`
                 hasStreak = true
               }
             }

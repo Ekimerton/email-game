@@ -105,7 +105,7 @@ describe('Streaks Feature', () => {
     expect(itemA_viewedByA).toBeDefined()
     expect(itemA_viewedByA.isCurrentPlayer).toBe(true)
     expect(itemA_viewedByA.streak).toBe(3)
-    expect(itemA_viewedByA.streakBadge).toBe('🔥 3 days')
+    expect(itemA_viewedByA.streakBadge).toBe('🔥 3')
     expect(itemA_viewedByA.score).toMatch(/^\d+ points$/)
     expect(itemA_viewedByA.score).not.toContain('guess')
 
@@ -330,6 +330,7 @@ describe('Inactivity Unsubscribe Feature (7 Days in a Row)', () => {
   it('should render streak and score Mustache binding in compiled email HTML', async () => {
     const { EMAIL_HTML } = await import('../src/email/emailHtml')
     expect(EMAIL_HTML).toContain('.streak-text')
-    expect(EMAIL_HTML).toContain('{{#hasStreak}}<span class="streak-text">{{streakBadge}}</span> {{/hasStreak}}{{score}}')
+    expect(EMAIL_HTML).toContain('.streak-fire')
+    expect(EMAIL_HTML).toContain('{{#hasStreak}}<span class="streak-text"><span class="streak-fire">🔥</span>{{streak}}</span> {{/hasStreak}}{{score}}')
   })
 })
