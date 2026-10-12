@@ -260,8 +260,8 @@ export const COLOR_COMBINATIONS: ColorCombination[] = [
     primary: 'amber',
     secondary: 'blue',
     preview: {
-      primary: '#f59e0b',
-      secondary: '#3b82f6',
+      primary: '#fcd34d',
+      secondary: '#bfdbfe',
     },
   },
   {
@@ -270,8 +270,8 @@ export const COLOR_COMBINATIONS: ColorCombination[] = [
     primary: 'purple',
     secondary: 'blue',
     preview: {
-      primary: '#a855f7',
-      secondary: '#3b82f6',
+      primary: '#d8b4fe',
+      secondary: '#bfdbfe',
     },
   },
   {
@@ -280,8 +280,8 @@ export const COLOR_COMBINATIONS: ColorCombination[] = [
     primary: 'yellow',
     secondary: 'lime',
     preview: {
-      primary: '#eab308',
-      secondary: '#84cc16',
+      primary: '#fde047',
+      secondary: '#d9f99d',
     },
   },
   {
@@ -290,8 +290,8 @@ export const COLOR_COMBINATIONS: ColorCombination[] = [
     primary: 'red',
     secondary: 'indigo',
     preview: {
-      primary: '#ef4444',
-      secondary: '#6366f1',
+      primary: '#fca5a5',
+      secondary: '#c7d2fe',
     },
   },
 ]

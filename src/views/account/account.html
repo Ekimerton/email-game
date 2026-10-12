@@ -28,6 +28,7 @@
       // Dark mode commented out until it's in a better state - default everyone to light mode
       // const [updatingTheme, setUpdatingTheme] = useState(false);
       const [updatingColor, setUpdatingColor] = useState(false);
+      const [hoveredCombo, setHoveredCombo] = useState(null);
       const [updatingLeaderboard, setUpdatingLeaderboard] = useState(false);
       const [selectedTab, setSelectedTab] = useState('');
       const [customId, setCustomId] = useState('');
@@ -522,9 +523,12 @@
           {/* Display Section */}
           <div className="setting-section">
             <div className="section-subtitle">Display</div>
-            <div className="setting-row" style={{ marginBottom: '8px' }}>
+            <div className="setting-row" style={{ marginBottom: '4px' }}>
               <span className="setting-name">Color Palette</span>
             </div>
+            <p className="setting-desc" style={{ fontSize: '13px', color: '#52525b', marginBottom: '10px', lineHeight: 1.45 }}>
+              Pick a color theme for your game accents and highlights. Changes take effect in your next daily email.
+            </p>
             <div className="color-combo-grid">
               {(user.colorCombos || []).map(combo => {
                 const isSelected = (user.colorCombo || 'amber-blue') === combo.id;
@@ -534,6 +538,8 @@
                     type="button"
                     className={`color-combo-card ${isSelected ? 'selected' : ''}`}
                     onClick={() => handleSelectColorCombo(combo.id)}
+                    onMouseEnter={() => setHoveredCombo(combo.id)}
+                    onMouseLeave={() => setHoveredCombo(null)}
                     disabled={updatingColor}
                   >
                     <div className="color-swatches">
@@ -546,6 +552,60 @@
                 );
               })}
             </div>
+
+            {(() => {
+              const combos = user.colorCombos || [];
+              const previewId = hoveredCombo || user.colorCombo || 'amber-blue';
+              const activeCombo = combos.find(c => c.id === previewId) || combos[0] || {
+                id: 'amber-blue',
+                name: 'Amber & Blue',
+                preview: { primary: '#fcd34d', secondary: '#bfdbfe' }
+              };
+              return (
+                <div className="palette-preview-card" aria-label="Email color palette preview">
+                  <div className="palette-preview-header" aria-hidden="true">
+                    <span className="window-dot dot-close"></span>
+                    <span className="window-dot dot-minimize"></span>
+                    <span className="window-dot dot-maximize"></span>
+                  </div>
+                  <div className="palette-preview-body">
+                    <div className="preview-news-bar" style={{ backgroundColor: activeCombo.preview.secondary }}>
+                      <span className="preview-news-text">Custom leaderboards are here!</span>
+                      <span className="preview-news-btn">Read more</span>
+                    </div>
+
+                    <div className="preview-clue-card">
+                      <div className="preview-clue-text">A daily word game played inside your inbox</div>
+                      <div className="preview-clue-tabs">
+                        <span className="preview-clue-tab active" style={{ backgroundColor: activeCombo.preview.primary }}>1</span>
+                        <span className="preview-clue-tab">2</span>
+                        <span className="preview-clue-tab">3</span>
+                      </div>
+                    </div>
+
+                    <div className="preview-action-row">
+                      <span className="preview-btn preview-btn-hint">Letter Hint</span>
+                      <span className="preview-btn preview-btn-primary" style={{ backgroundColor: activeCombo.preview.primary }}>Submit Guess</span>
+                    </div>
+
+                    <hr className="preview-divider" />
+
+                    <div className="preview-lb-list">
+                      <div className="preview-lb-item current" style={{ backgroundColor: activeCombo.preview.secondary }}>
+                        <span className="preview-lb-rank">#1</span>
+                        <span className="preview-lb-email">{user.email}</span>
+                        <span className="preview-lb-score"><span className="preview-lb-streak">🔥 3</span> 950 points</span>
+                      </div>
+                      <div className="preview-lb-item">
+                        <span className="preview-lb-rank">#2</span>
+                        <span className="preview-lb-email">alex@{user.domain || 'company.com'}</span>
+                        <span className="preview-lb-score">850 points</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Dark Mode Theme Switch - commented out until it's in a better state
             <div className="setting-row" style={{ marginTop: '14px' }}>

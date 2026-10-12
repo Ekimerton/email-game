@@ -496,6 +496,8 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(html).toContain('/api/account/toggle-color-combo')
     expect(html).toContain('color-combo-grid')
     expect(html).toContain('color-combo-card')
+    expect(html).toContain('palette-preview-card')
+    expect(html).toContain('window-dot')
   })
 
   it('should return isCustomDomain flag in GET /api/account for custom vs public domains', async () => {

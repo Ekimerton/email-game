@@ -289,6 +289,183 @@ input:checked + .slider:before {
   color: #18181b;
 }
 
+/* Live Email Color Palette Preview Card */
+.palette-preview-card {
+  margin-top: 12px;
+  background-color: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  padding: 10px 12px 12px 12px;
+}
+.palette-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.window-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+.window-dot.dot-close {
+  background-color: #ff5f57;
+}
+.window-dot.dot-minimize {
+  background-color: #febc2e;
+}
+.window-dot.dot-maximize {
+  background-color: #28c840;
+}
+.palette-preview-body {
+  background-color: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.preview-news-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  transition: background-color 0.18s ease;
+}
+.preview-news-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #000000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.preview-news-btn {
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.preview-clue-card {
+  border: 3px double #d4d4d8;
+  border-radius: 10px;
+  background-color: #ffffff;
+  padding: 12px 12px 0 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.preview-clue-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #09090b;
+  line-height: 1.35;
+  margin-bottom: 2px;
+}
+.preview-clue-tabs {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background-color: #ffffff;
+  padding: 0 8px;
+  border-radius: 10px;
+  position: relative;
+  top: 9px;
+}
+.preview-clue-tab {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background-color: #f4f4f5;
+  color: #71717a;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #ffffff;
+  transition: background-color 0.18s ease;
+}
+.preview-clue-tab.active {
+  color: #000000;
+}
+.preview-action-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.preview-btn {
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  display: inline-block;
+  transition: background-color 0.18s ease;
+}
+.preview-btn-hint {
+  background-color: #e4e4e7;
+  color: #27272a;
+}
+.preview-btn-primary {
+  color: #000000;
+}
+.preview-divider {
+  border: none;
+  border-top: 1px solid #e4e4e7;
+  margin: 10px 0 8px 0;
+}
+.preview-lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.preview-lb-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  transition: background-color 0.18s ease;
+}
+.preview-lb-rank {
+  font-weight: 700;
+  width: 22px;
+  color: #71717a;
+}
+.preview-lb-email {
+  flex: 1;
+  font-weight: 600;
+  color: #27272a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.preview-lb-score {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #71717a;
+  flex-shrink: 0;
+}
+.preview-lb-streak {
+  background-color: #ffffff;
+  color: #ea580c;
+  padding: 1px 4px;
+  margin-right: 2px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
 /* Leaderboard Switcher Group */
 .leaderboard-switch-group {
   display: flex;
@@ -838,6 +1015,183 @@ input:checked + .slider:before {
   color: #18181b;
 }
 
+/* Live Email Color Palette Preview Card */
+.palette-preview-card {
+  margin-top: 12px;
+  background-color: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  padding: 10px 12px 12px 12px;
+}
+.palette-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.window-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+.window-dot.dot-close {
+  background-color: #ff5f57;
+}
+.window-dot.dot-minimize {
+  background-color: #febc2e;
+}
+.window-dot.dot-maximize {
+  background-color: #28c840;
+}
+.palette-preview-body {
+  background-color: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.preview-news-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  transition: background-color 0.18s ease;
+}
+.preview-news-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: #000000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.preview-news-btn {
+  background-color: #ffffff;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.preview-clue-card {
+  border: 3px double #d4d4d8;
+  border-radius: 10px;
+  background-color: #ffffff;
+  padding: 12px 12px 0 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.preview-clue-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #09090b;
+  line-height: 1.35;
+  margin-bottom: 2px;
+}
+.preview-clue-tabs {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background-color: #ffffff;
+  padding: 0 8px;
+  border-radius: 10px;
+  position: relative;
+  top: 9px;
+}
+.preview-clue-tab {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background-color: #f4f4f5;
+  color: #71717a;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #ffffff;
+  transition: background-color 0.18s ease;
+}
+.preview-clue-tab.active {
+  color: #000000;
+}
+.preview-action-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.preview-btn {
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  display: inline-block;
+  transition: background-color 0.18s ease;
+}
+.preview-btn-hint {
+  background-color: #e4e4e7;
+  color: #27272a;
+}
+.preview-btn-primary {
+  color: #000000;
+}
+.preview-divider {
+  border: none;
+  border-top: 1px solid #e4e4e7;
+  margin: 10px 0 8px 0;
+}
+.preview-lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.preview-lb-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  transition: background-color 0.18s ease;
+}
+.preview-lb-rank {
+  font-weight: 700;
+  width: 22px;
+  color: #71717a;
+}
+.preview-lb-email {
+  flex: 1;
+  font-weight: 600;
+  color: #27272a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.preview-lb-score {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #71717a;
+  flex-shrink: 0;
+}
+.preview-lb-streak {
+  background-color: #ffffff;
+  color: #ea580c;
+  padding: 1px 4px;
+  margin-right: 2px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
 /* Leaderboard Switcher Group */
 .leaderboard-switch-group {
   display: flex;
@@ -1099,6 +1453,7 @@ body.dark-theme .footer-text a {
       // Dark mode commented out until it's in a better state - default everyone to light mode
       // const [updatingTheme, setUpdatingTheme] = useState(false);
       const [updatingColor, setUpdatingColor] = useState(false);
+      const [hoveredCombo, setHoveredCombo] = useState(null);
       const [updatingLeaderboard, setUpdatingLeaderboard] = useState(false);
       const [selectedTab, setSelectedTab] = useState('');
       const [customId, setCustomId] = useState('');
@@ -1593,9 +1948,12 @@ body.dark-theme .footer-text a {
           {/* Display Section */}
           <div className="setting-section">
             <div className="section-subtitle">Display</div>
-            <div className="setting-row" style={{ marginBottom: '8px' }}>
+            <div className="setting-row" style={{ marginBottom: '4px' }}>
               <span className="setting-name">Color Palette</span>
             </div>
+            <p className="setting-desc" style={{ fontSize: '13px', color: '#52525b', marginBottom: '10px', lineHeight: 1.45 }}>
+              Pick a color theme for your game accents and highlights. Changes take effect in your next daily email.
+            </p>
             <div className="color-combo-grid">
               {(user.colorCombos || []).map(combo => {
                 const isSelected = (user.colorCombo || 'amber-blue') === combo.id;
@@ -1605,6 +1963,8 @@ body.dark-theme .footer-text a {
                     type="button"
                     className={\`color-combo-card \${isSelected ? 'selected' : ''}\`}
                     onClick={() => handleSelectColorCombo(combo.id)}
+                    onMouseEnter={() => setHoveredCombo(combo.id)}
+                    onMouseLeave={() => setHoveredCombo(null)}
                     disabled={updatingColor}
                   >
                     <div className="color-swatches">
@@ -1617,6 +1977,60 @@ body.dark-theme .footer-text a {
                 );
               })}
             </div>
+
+            {(() => {
+              const combos = user.colorCombos || [];
+              const previewId = hoveredCombo || user.colorCombo || 'amber-blue';
+              const activeCombo = combos.find(c => c.id === previewId) || combos[0] || {
+                id: 'amber-blue',
+                name: 'Amber & Blue',
+                preview: { primary: '#fcd34d', secondary: '#bfdbfe' }
+              };
+              return (
+                <div className="palette-preview-card" aria-label="Email color palette preview">
+                  <div className="palette-preview-header" aria-hidden="true">
+                    <span className="window-dot dot-close"></span>
+                    <span className="window-dot dot-minimize"></span>
+                    <span className="window-dot dot-maximize"></span>
+                  </div>
+                  <div className="palette-preview-body">
+                    <div className="preview-news-bar" style={{ backgroundColor: activeCombo.preview.secondary }}>
+                      <span className="preview-news-text">Custom leaderboards are here!</span>
+                      <span className="preview-news-btn">Read more</span>
+                    </div>
+
+                    <div className="preview-clue-card">
+                      <div className="preview-clue-text">A daily word game played inside your inbox</div>
+                      <div className="preview-clue-tabs">
+                        <span className="preview-clue-tab active" style={{ backgroundColor: activeCombo.preview.primary }}>1</span>
+                        <span className="preview-clue-tab">2</span>
+                        <span className="preview-clue-tab">3</span>
+                      </div>
+                    </div>
+
+                    <div className="preview-action-row">
+                      <span className="preview-btn preview-btn-hint">Letter Hint</span>
+                      <span className="preview-btn preview-btn-primary" style={{ backgroundColor: activeCombo.preview.primary }}>Submit Guess</span>
+                    </div>
+
+                    <hr className="preview-divider" />
+
+                    <div className="preview-lb-list">
+                      <div className="preview-lb-item current" style={{ backgroundColor: activeCombo.preview.secondary }}>
+                        <span className="preview-lb-rank">#1</span>
+                        <span className="preview-lb-email">{user.email}</span>
+                        <span className="preview-lb-score"><span className="preview-lb-streak">🔥 3</span> 950 points</span>
+                      </div>
+                      <div className="preview-lb-item">
+                        <span className="preview-lb-rank">#2</span>
+                        <span className="preview-lb-email">alex@{user.domain || 'company.com'}</span>
+                        <span className="preview-lb-score">850 points</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Dark Mode Theme Switch - commented out until it's in a better state
             <div className="setting-row" style={{ marginTop: '14px' }}>
