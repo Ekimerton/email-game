@@ -3,12 +3,13 @@ import { app } from '../src/index'
 import { UPDATES, LATEST_UPDATE, getUpdatesHtml } from '../src/views'
 
 describe('Updates & Patch Notes Feature (/updates)', () => {
-  it('should have valid updates data structure with October 6 update and First update', () => {
+  it('should have valid updates data structure with October 12 update, October 6 update, and First update', () => {
     expect(UPDATES).toBeDefined()
     expect(Array.isArray(UPDATES)).toBe(true)
-    expect(UPDATES.length).toBeGreaterThanOrEqual(2)
-    expect(LATEST_UPDATE.title).toBe('New styles & customizable colors in user preferences!')
-    expect(LATEST_UPDATE.id).toBe('october-6-2026')
+    expect(UPDATES.length).toBeGreaterThanOrEqual(3)
+    expect(LATEST_UPDATE.title).toBe('Custom leaderboards are here! Create, join, and play with friends')
+    expect(LATEST_UPDATE.id).toBe('october-12-2026')
+    expect(UPDATES.some(u => u.id === 'october-6-2026')).toBe(true)
     expect(UPDATES.some(u => u.id === 'first-update')).toBe(true)
   })
 
@@ -19,6 +20,7 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
 
     const html = await res.text()
     expect(html).toContain('Updates &amp; Patch Notes')
+    expect(html).toContain('Custom leaderboards are here! Create, join, and play with friends')
     expect(html).toContain('New styles &amp; customizable colors in user preferences!')
     expect(html).toContain('actively working on a mascot')
     expect(html).toContain('pick your own color combinations')
@@ -34,12 +36,14 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
   it('getUpdatesHtml function should produce complete HTML with accordion', () => {
     const html = getUpdatesHtml()
     expect(html).toContain('<!doctype html>')
+    expect(html).toContain('Custom leaderboards are here! Create, join, and play with friends')
     expect(html).toContain('New styles &amp; customizable colors in user preferences!')
     expect(html).toContain('First update &amp; where Inboxed is headed')
     expect(html).toContain('class="update-accordion"')
     expect(html).toContain('class="update-header"')
     expect(html).toContain('class="update-date"')
     expect(html).toContain('class="update-title"')
+    expect(html).toContain('October 12, 2026')
     expect(html).toContain('October 6, 2026')
     expect(html).toContain('September 2026')
     expect(html).not.toContain('class="update-tag"')
@@ -47,7 +51,9 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
 
   it('should only expand the latest update accordion by default', () => {
     const html = getUpdatesHtml()
-    expect(html).toContain('id="october-6-2026" open')
+    expect(html).toContain('id="october-12-2026" open')
+    expect(html).toContain('id="october-6-2026"')
+    expect(html).not.toContain('id="october-6-2026" open')
     expect(html).toContain('id="first-update"')
     expect(html).not.toContain('id="first-update" open')
   })
@@ -64,7 +70,7 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
     expect(html).toContain('class="news-ticker-content"')
     expect(html).toContain('class="news-ticker-text"')
     expect(html).not.toContain('Update October 6th:')
-    expect(html).toContain('New styles & customizable colors in user preferences!')
+    expect(html).toContain('Custom leaderboards are here! Create, join, and play with friends')
     expect(html).toContain('color: #000000')
     expect(html).toContain('class="news-ticker-btn"')
     expect(html).toContain('.news-ticker-btn:hover')

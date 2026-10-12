@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { app, getFallbackHtml } from '../src/index'
 import { generateAccountToken, verifyAccountToken } from '../src/core'
+import { getDailyPuzzle } from '../src/game'
+import { getTomorrowDateString, getDomainLeaderboard } from '../src/services'
 
 describe('Spoof-Proof Account & Preferences API', () => {
   const testEmail = 'alice@example.com'
@@ -207,12 +209,30 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(html).toContain('Manage')
     expect(html).toContain('Account & Preferences')
     expect(html).toContain('/account?token=')
+    expect(html).toContain("🔒 Solve today's puzzle to reveal the leaderboard!")
+    expect(html).toContain(
+      'Currently playing in the <strong>example.com</strong> leaderboard. You can switch between leaderboards in Manage Account & Preferences.'
+    )
+    expect(html).not.toContain('<a class="leaderboard-lock-link"')
 
     const match = html.match(/\/account\?token=([^"'\s&]+)/)
     expect(match).not.toBeNull()
     const extractedToken = decodeURIComponent(match![1])
     const verified = verifyAccountToken(extractedToken)
     expect(verified?.email).toBe(testEmail)
+  })
+
+  it('should render correct lock banner for public/general domain email (gmail)', async () => {
+    const gmailUser = 'player@gmail.com'
+    const res = await app.request(`/?email=${encodeURIComponent(gmailUser)}`)
+    expect(res.status).toBe(200)
+    const html = await res.text()
+
+    expect(html).toContain("🔒 Solve today's puzzle to reveal the leaderboard!")
+    expect(html).toContain(
+      'Currently playing in the <strong>Global</strong> leaderboard. You can switch between leaderboards in Manage Account & Preferences.'
+    )
+    expect(html).not.toContain('<a class="leaderboard-lock-link"')
   })
 
   it('should completely hide users from the leaderboard when showOnLeaderboard is false', async () => {
@@ -261,6 +281,9 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(html).toContain('Account &amp; Preferences')
     expect(html).toContain('background-color: #ffffff')
     expect(html).toContain('section-divider')
+    expect(html).toContain('General')
+    expect(html).toContain('Leaderboards')
+    expect(html).toContain('Display')
     expect(html).toContain('#14532d')
     expect(html).toContain('Game made with ❤️ by')
     expect(html).toContain('https://ekimerton.github.io')
@@ -350,7 +373,7 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(html).toContain('color: #f4f4f5')
   })
 
-  it('should render the Dark Mode switch in the account preferences page', async () => {
+  it('should keep the Dark Mode switch commented out in the account preferences page for now', async () => {
     const res = await app.request('/account?token=' + encodeURIComponent(validToken))
     expect(res.status).toBe(200)
     const html = await res.text()
@@ -358,6 +381,8 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(html).toContain('Dark Mode')
     expect(html).toContain('/api/account/toggle-theme')
     expect(html).toContain('body.dark-theme')
+    expect(html).toContain("{/* Dark Mode Theme Switch - commented out until it's in a better state")
+    expect(html).toContain("/* Dark Mode Theme Overrides for Account Preferences SPA - commented out until it's in a better state")
   })
 
   it('should return exactly four color combinations in GET /api/account', async () => {
@@ -471,5 +496,219 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(html).toContain('/api/account/toggle-color-combo')
     expect(html).toContain('color-combo-grid')
     expect(html).toContain('color-combo-card')
+  })
+
+  it('should return isCustomDomain flag in GET /api/account for custom vs public domains', async () => {
+    // Custom domain: alice@example.com
+    const resCustom = await app.request(`/api/account?token=${encodeURIComponent(validToken)}`)
+    expect(resCustom.status).toBe(200)
+    const dataCustom = (await resCustom.json()) as any
+    expect(dataCustom.isCustomDomain).toBe(true)
+
+    // Public domain: player@gmail.com
+    const gmailToken = generateAccountToken('player@gmail.com')
+    const resPublic = await app.request(`/api/account?token=${encodeURIComponent(gmailToken)}`)
+    expect(resPublic.status).toBe(200)
+    const dataPublic = (await resPublic.json()) as any
+    expect(dataPublic.isCustomDomain).toBe(false)
+  })
+
+  it('should render the leaderboard switcher and custom leaderboard UI in the account page', async () => {
+    const res = await app.request('/account?token=' + encodeURIComponent(validToken))
+    expect(res.status).toBe(200)
+    const html = await res.text()
+
+    expect(html).toContain('Leaderboards')
+    expect(html).toContain('leaderboard-switch-group')
+    expect(html).toContain('leaderboard-tab-btn')
+    expect(html).toContain('General')
+    expect(html).toContain('Custom')
+    expect(html).toContain('custom-lb-card')
+    expect(html).toContain('custom-lb-actions-grid')
+    expect(html).toContain('Create Leaderboard')
+    expect(html).toContain('CUSTOM-')
+    expect(html).toContain('Show my score on the leaderboard')
+    expect(html).not.toContain('Domain Leaderboard')
+  })
+
+  it('should update custom leaderboard preference via POST /api/account/toggle-leaderboard', async () => {
+    const customId = 'CUSTOM-TEST99'
+
+    const res = await app.request('/api/account/toggle-leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: validToken,
+        leaderboardType: 'custom',
+        customLeaderboardId: customId,
+      })
+    })
+    expect(res.status).toBe(200)
+    const data = (await res.json()) as any
+    expect(data.success).toBe(true)
+    expect(data.leaderboardType).toBe('custom')
+    expect(data.customLeaderboardId).toBe(customId)
+    expect(data.activeLeaderboardType).toBe('custom')
+    expect(data.activeLeaderboardName).toBe(customId)
+    expect(data.message).toContain('will take effect starting tomorrow')
+
+    // GET /api/account should reflect updated leaderboard preference
+    const checkRes = await app.request(`/api/account?token=${encodeURIComponent(validToken)}`)
+    const checkData = (await checkRes.json()) as any
+    expect(checkData.leaderboardType).toBe('custom')
+    expect(checkData.customLeaderboardId).toBe(customId)
+    expect(checkData.activeLeaderboardType).toBe('custom')
+    expect(checkData.activeLeaderboardName).toBe(customId)
+  })
+
+  it('should reject switching to domain leaderboard for public domain users', async () => {
+    const gmailToken = generateAccountToken('someone@gmail.com')
+    const res = await app.request('/api/account/toggle-leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: gmailToken,
+        leaderboardType: 'domain',
+      })
+    })
+    expect(res.status).toBe(400)
+    const data = (await res.json()) as any
+    expect(data.success).toBe(false)
+    expect(data.message).toContain('only available for organization email domains')
+  })
+
+  it('should reject switching to custom without customLeaderboardId', async () => {
+    const res = await app.request('/api/account/toggle-leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: validToken,
+        leaderboardType: 'custom',
+      })
+    })
+    expect(res.status).toBe(400)
+    const data = (await res.json()) as any
+    expect(data.success).toBe(false)
+    expect(data.message).toContain('Missing customLeaderboardId')
+  })
+
+  it('should return Kept on message when selecting already-active leaderboard', async () => {
+    // Switch back to domain first
+    const res1 = await app.request('/api/account/toggle-leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: validToken,
+        leaderboardType: 'domain',
+      })
+    })
+    expect(res1.status).toBe(200)
+
+    // Selecting domain again when already on domain
+    const res2 = await app.request('/api/account/toggle-leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: validToken,
+        leaderboardType: 'domain',
+      })
+    })
+    expect(res2.status).toBe(200)
+    const data = (await res2.json()) as any
+    expect(data.success).toBe(true)
+    expect(data.message).toContain('Kept on example.com leaderboard')
+  })
+
+  it('should keep an email bound to the constant leaderboard it was sent with, and use the new leaderboard when the next email is sent', async () => {
+    const testPlayer = 'lb_switcher@corp.example.com'
+    const playerToken = generateAccountToken(testPlayer)
+    const customCode = 'CUSTOM-CORP1'
+    const todayPuzzle = getDailyPuzzle()
+
+    // 1. Morning email is sent while player is on corp.example.com (domain leaderboard)
+    const morningEmailRes = await app.request(`/?email=${encodeURIComponent(testPlayer)}`)
+    expect(morningEmailRes.status).toBe(200)
+    const morningEmailHtml = await morningEmailRes.text()
+    // Verify the email bakes domain=corp.example.com as a constant into both #guess-form and #leaderboardList
+    expect(morningEmailHtml).toContain(`domain=corp.example.com`)
+    expect(morningEmailHtml).toContain(`<input type="hidden" name="domain" value="corp.example.com">`)
+
+    // 2. Player switches preference to custom leaderboard in Manage Account & Preferences
+    const toggleRes = await app.request('/api/account/toggle-leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: playerToken,
+        leaderboardType: 'custom',
+        customLeaderboardId: customCode,
+      })
+    })
+    expect(toggleRes.status).toBe(200)
+
+    // 3. Player solves today's puzzle from their morning email (which sends its constant domain=corp.example.com)
+    const guessTodayRes = await app.request(
+      `/api/guess?email=${encodeURIComponent(testPlayer)}&puzzle=${todayPuzzle.id}&domain=corp.example.com`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          'user-guess': todayPuzzle.word,
+          domain: 'corp.example.com',
+        }).toString()
+      }
+    )
+    expect(guessTodayRes.status).toBe(200)
+    const guessTodayData = (await guessTodayRes.json()) as any
+    expect(guessTodayData.hasWon).toBe(true)
+    expect(guessTodayData.shareText).toContain('(corp.example.com)')
+    expect(guessTodayData.shareText).not.toContain(customCode)
+
+    // 4. Reloading today's email calls /api/leaderboard with the email's constant domain=corp.example.com
+    const lbReloadRes = await app.request(
+      `/api/leaderboard?domain=corp.example.com&email=${encodeURIComponent(testPlayer)}&puzzleId=${todayPuzzle.id}&date=${todayPuzzle.date}`
+    )
+    expect(lbReloadRes.status).toBe(200)
+    const lbReloadData = (await lbReloadRes.json()) as any
+    expect(lbReloadData.items[0].domain).toBe('corp.example.com')
+    expect(lbReloadData.items[0].players.some((p: any) => p.isCurrentPlayer)).toBe(true)
+
+    // Verify today's score is on domain leaderboard, NOT custom leaderboard
+    const domainLbToday = await getDomainLeaderboard(undefined, 'corp.example.com', todayPuzzle.id)
+    expect(domainLbToday.some(e => e.email.toLowerCase() === testPlayer.toLowerCase())).toBe(true)
+    const customLbToday = await getDomainLeaderboard(undefined, `custom:${customCode.toLowerCase()}`, todayPuzzle.id)
+    expect(customLbToday.some(e => e.email.toLowerCase() === testPlayer.toLowerCase())).toBe(false)
+
+    // 5. Next day's email is sent -> it bakes the new custom leaderboard constant into the email
+    const tomorrowDate = getTomorrowDateString(todayPuzzle.date)
+    const tomorrowPuzzle = getDailyPuzzle(tomorrowDate)
+
+    const tomEmailRes = await app.request(`/?email=${encodeURIComponent(testPlayer)}&date=${tomorrowDate}`)
+    expect(tomEmailRes.status).toBe(200)
+    const tomEmailHtml = await tomEmailRes.text()
+    expect(tomEmailHtml).toContain(
+      'Currently playing in the <strong>Custom</strong> leaderboard. You can switch between leaderboards in Manage Account & Preferences.'
+    )
+    expect(tomEmailHtml).toContain(`domain=${customCode}`)
+    expect(tomEmailHtml).toContain(`<input type="hidden" name="domain" value="${customCode}">`)
+
+    const guessTomRes = await app.request(
+      `/api/guess?email=${encodeURIComponent(testPlayer)}&date=${tomorrowDate}&puzzle=${tomorrowPuzzle.id}&domain=${customCode}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          'user-guess': tomorrowPuzzle.word,
+          domain: customCode,
+        }).toString()
+      }
+    )
+    expect(guessTomRes.status).toBe(200)
+    const guessTomData = (await guessTomRes.json()) as any
+    expect(guessTomData.hasWon).toBe(true)
+    expect(guessTomData.shareText).toContain(customCode)
+
+    // Verify tomorrow's score is on the custom leaderboard!
+    const customLbTom = await getDomainLeaderboard(undefined, `custom:${customCode.toLowerCase()}`, tomorrowPuzzle.id)
+    expect(customLbTom.some(e => e.email.toLowerCase() === testPlayer.toLowerCase())).toBe(true)
   })
 })

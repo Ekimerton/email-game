@@ -1,9 +1,9 @@
 import { getDailyPuzzle, getPuzzleDateForSendCron, formatPrettyDate, getRedactedText, getOrCreateGameState, buildStatePayload, GAME_MESSAGES, type DailyPuzzle } from '../game'
 import { EMAIL_HTML } from './emailHtml'
-import { generateAccountToken, getAccountUrl, extractEmailDomain, getLeaderboardDomain, type Bindings, type DailyEmailDispatchResult, type StorageBackend } from '../core'
+import { generateAccountToken, getAccountUrl, extractEmailDomain, getLeaderboardDomain, isGeneralLeaderboardDomain, type Bindings, type DailyEmailDispatchResult, type StorageBackend } from '../core'
 import { sendMailgunEmail } from './emailService'
 import { applyEmailTheme, type EmailTheme } from './emailThemes'
-import { recordUserActivity, getUserSettings, getCoworkerCount, getPlayerCount, getUserEmail, getSubscribers, processInactiveSubscribers, isDevTester, getDevTesters } from '../services'
+import { recordUserActivity, getUserSettings, getCoworkerCount, getPlayerCount, getUserEmail, getSubscribers, processInactiveSubscribers, isDevTester, getDevTesters, getEffectiveLeaderboard } from '../services'
 import { getFallbackHtml } from '../views'
 
 // Helper to build full AMP + Fallback HTML content for daily puzzle emails
@@ -14,27 +14,40 @@ export async function buildPuzzleEmailContent(
   currentOrigin?: string,
   authSecret?: string,
   themeOverride?: EmailTheme,
-  options?: { isDev?: boolean; colorComboOverride?: string }
+  options?: { isDev?: boolean; colorComboOverride?: string; domainOverride?: string }
 ): Promise<{ ampHtml: string; fallbackHtml: string; subject: string; text: string; puzzle: DailyPuzzle; theme: EmailTheme; colorCombo: string }> {
   const isDev = options?.isDev !== undefined ? options.isDev : await isDevTester(kv, userEmail)
   const { state, puzzle } = await getOrCreateGameState(kv, userEmail, dateOrPuzzleParam, { isDev })
   const domain = extractEmailDomain(userEmail)
-  const leaderboardDomain = getLeaderboardDomain(userEmail)
+  const profile = await getUserSettings(kv, userEmail)
+  const activeLb = getEffectiveLeaderboard(profile, options?.domainOverride)
+  const isGeneral = isGeneralLeaderboardDomain(userEmail)
+  const companyDomain = isGeneral ? 'company domain' : domain
   const secret = authSecret || process.env.AUTH_SECRET
   const userToken = generateAccountToken(userEmail, secret)
   const origin = (currentOrigin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
 
   const encodedEmail = encodeURIComponent(userEmail)
-  const encodedDomain = encodeURIComponent(leaderboardDomain)
 
-  const profile = await getUserSettings(kv, userEmail)
   const theme: EmailTheme = themeOverride || profile.theme || 'light'
   const colorCombo: string = options?.colorComboOverride || profile.colorCombo || 'amber-blue'
+
+  const leaderboardPillLabel =
+    activeLb.type === 'custom'
+      ? 'Custom'
+      : activeLb.type === 'general'
+      ? 'Global'
+      : activeLb.name
 
   let ampHtml = EMAIL_HTML
     .replaceAll('https://inboxed.fun', origin)
     .replaceAll('USER_EMAIL_PLACEHOLDER', encodedEmail)
-    .replaceAll('USER_DOMAIN_PLACEHOLDER', encodedDomain)
+    .replaceAll(
+      '<strong>USER_DOMAIN_PLACEHOLDER</strong>',
+      `<strong>${leaderboardPillLabel}</strong>`
+    )
+    .replaceAll('USER_DOMAIN_PLACEHOLDER', activeLb.name)
+    .replaceAll('USER_COMPANY_DOMAIN_PLACEHOLDER', companyDomain)
     .replaceAll('USER_DATE_PLACEHOLDER', puzzle.date)
     .replaceAll('USER_PUZZLE_ID_PLACEHOLDER', puzzle.id)
     .replaceAll('default-dev-token', userToken)
@@ -127,6 +140,7 @@ export async function renderAmpGame(c: any) {
   const target = puzzleParam || dateParam || getPuzzleDateForSendCron(new Date(), cronStr)
   const themeParam = c.req.query('theme') as EmailTheme | undefined
   const colorComboParam = c.req.query('colorCombo') || c.req.query('combo') || c.req.query('colors')
+  const domainParam = c.req.query('domain')
   const reqUrl = new URL(c.req.url)
   const isLocalHost = reqUrl.hostname === 'localhost' || reqUrl.hostname === '127.0.0.1'
   const forceHttps = c.req.query('forceHttps') === 'true'
@@ -141,7 +155,7 @@ export async function renderAmpGame(c: any) {
     currentOrigin,
     authSecret,
     themeParam,
-    { colorComboOverride: colorComboParam }
+    { colorComboOverride: colorComboParam, domainOverride: domainParam }
   )
   return c.html(content.ampHtml)
 }

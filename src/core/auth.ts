@@ -42,11 +42,17 @@ export function isGeneralLeaderboardDomain(domainOrEmail: string): boolean {
  * For corporate/custom domain users, returns their email domain.
  */
 export function getLeaderboardDomain(domainOrEmail: string): string {
-  if (isGeneralLeaderboardDomain(domainOrEmail)) {
-    return 'general'
-  }
   if (!domainOrEmail) return 'general'
   const clean = domainOrEmail.toLowerCase().trim()
+  if (clean.startsWith('custom:')) {
+    return clean
+  }
+  if (clean.startsWith('custom-')) {
+    return `custom:${clean}`
+  }
+  if (isGeneralLeaderboardDomain(clean)) {
+    return 'general'
+  }
   return clean.includes('@') ? extractEmailDomain(clean) : clean
 }
 

@@ -1,11 +1,21 @@
 import type { Hono } from 'hono'
-import { verifyAccountToken, COLOR_COMBINATIONS, parseColorCombo, getColorComboLabel, type Bindings, type EmailTheme } from '../core'
+import {
+  verifyAccountToken,
+  isGeneralLeaderboardDomain,
+  COLOR_COMBINATIONS,
+  parseColorCombo,
+  getColorComboLabel,
+  type Bindings,
+  type EmailTheme,
+  type LeaderboardType
+} from '../core'
 import {
   getUserSettings,
   updateUserSettings,
   getSubscribers,
   addSubscriber,
-  removeSubscriber
+  removeSubscriber,
+  getEffectiveLeaderboard,
 } from '../services'
 
 export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
@@ -24,11 +34,14 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
     const theme = userProfile.theme || 'light'
 
     const colorCombo = userProfile.colorCombo || 'amber-blue'
+    const isCustomDomain = !isGeneralLeaderboardDomain(userProfile.domain)
+    const currentEffective = getEffectiveLeaderboard(userProfile)
 
     return c.json({
       success: true,
       email: userProfile.email,
       domain: userProfile.domain,
+      isCustomDomain,
       token,
       isSubscribed,
       showOnLeaderboard: userProfile.showOnLeaderboard,
@@ -38,6 +51,10 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       primaryColor: userProfile.primaryColor,
       secondaryColor: userProfile.secondaryColor,
       colorCombos: COLOR_COMBINATIONS,
+      leaderboardType: userProfile.leaderboardType || currentEffective.type,
+      customLeaderboardId: userProfile.customLeaderboardId,
+      activeLeaderboardName: currentEffective.name,
+      activeLeaderboardType: currentEffective.type,
     })
   })
 
@@ -91,8 +108,8 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         success: true,
         showOnLeaderboard,
         message: showOnLeaderboard
-          ? `🏆 Your email is now visible on the ${userProfile.domain} leaderboard!`
-          : `🔒 You are now hidden from the ${userProfile.domain} leaderboard.`
+          ? '🏆 Your score is now visible on the leaderboard!'
+          : '🔒 Your score is now hidden from the leaderboard.'
       })
     } catch (error: any) {
       return c.json({ success: false, message: 'Failed to update privacy preference.' }, 500)
@@ -171,6 +188,70 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       })
     } catch (error: any) {
       return c.json({ success: false, message: 'Failed to update color preference.' }, 500)
+    }
+  })
+
+  // React API Endpoint: Toggle Leaderboard (General, Domain, Custom)
+  app.post('/api/account/toggle-leaderboard', async (c) => {
+    try {
+      const body = await c.req.json()
+      const token = body?.token
+      const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+      const verified = verifyAccountToken(token, authSecret)
+
+      if (!verified) {
+        return c.json({ success: false, message: 'Invalid authentication token.' }, 401)
+      }
+
+      const userProfile = await getUserSettings(c.env, verified.email)
+      const requestedType = body?.leaderboardType as LeaderboardType
+      const requestedCustomId = typeof body?.customLeaderboardId === 'string' ? body.customLeaderboardId.trim().toUpperCase() : undefined
+
+      if (!['general', 'domain', 'custom'].includes(requestedType)) {
+        return c.json({ success: false, message: 'Invalid leaderboardType. Must be general, domain, or custom.' }, 400)
+      }
+
+      if (requestedType === 'custom' && !requestedCustomId) {
+        return c.json({ success: false, message: 'Missing customLeaderboardId for custom leaderboard.' }, 400)
+      }
+
+      // If user is on a public email provider, they cannot select 'domain'
+      if (requestedType === 'domain' && isGeneralLeaderboardDomain(userProfile.domain)) {
+        return c.json({ success: false, message: 'Domain leaderboards are only available for organization email domains.' }, 400)
+      }
+
+      const prevType = userProfile.leaderboardType || (!isGeneralLeaderboardDomain(userProfile.domain) ? 'domain' : 'general')
+      const prevCustomId = userProfile.customLeaderboardId
+
+      const isUnchanged =
+        requestedType === prevType &&
+        (requestedType !== 'custom' || requestedCustomId === prevCustomId)
+
+      userProfile.leaderboardType = requestedType
+      if (requestedCustomId) {
+        userProfile.customLeaderboardId = requestedCustomId
+      }
+
+      await updateUserSettings(c.env, userProfile)
+
+      const targetLabel = requestedType === 'custom'
+        ? `Custom (${requestedCustomId})`
+        : (requestedType === 'domain' ? `${userProfile.domain}` : 'General')
+
+      const currentEffective = getEffectiveLeaderboard(userProfile)
+
+      return c.json({
+        success: true,
+        leaderboardType: userProfile.leaderboardType,
+        customLeaderboardId: userProfile.customLeaderboardId,
+        activeLeaderboardName: currentEffective.name,
+        activeLeaderboardType: currentEffective.type,
+        message: isUnchanged
+          ? `Kept on ${targetLabel} leaderboard.`
+          : `Leaderboard updated to ${targetLabel}! Changes will take effect starting tomorrow.`
+      })
+    } catch (error: any) {
+      return c.json({ success: false, message: 'Failed to update leaderboard preference.' }, 500)
     }
   })
 }

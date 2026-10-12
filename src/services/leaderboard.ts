@@ -1,5 +1,93 @@
-import { kvGet, kvPut, withKeyLock, getLeaderboardDomain, type StorageBackend } from '../core'
-import type { LeaderboardEntry } from '../core'
+import {
+  kvGet,
+  kvPut,
+  withKeyLock,
+  getLeaderboardDomain,
+  isGeneralLeaderboardDomain,
+  type StorageBackend,
+  type LeaderboardEntry,
+  type UserSettings,
+  type LeaderboardType
+} from '../core'
+import { getDailyPuzzle } from '../game'
+
+export function getTomorrowDateString(dateStr?: string): string {
+  const base = dateStr ? new Date(`${dateStr}T12:00:00Z`) : new Date()
+  base.setUTCDate(base.getUTCDate() + 1)
+  return base.toISOString().slice(0, 10)
+}
+
+export interface EffectiveLeaderboard {
+  type: LeaderboardType
+  key: string
+  name: string
+  customId?: string
+}
+
+export function getEffectiveLeaderboard(
+  settings: UserSettings,
+  requestedDomain?: string
+): EffectiveLeaderboard {
+  if (
+    requestedDomain &&
+    requestedDomain !== 'USER_DOMAIN_PLACEHOLDER' &&
+    !/^\d{4}-\d{2}-\d{2}$/.test(requestedDomain.trim())
+  ) {
+    const raw = requestedDomain.trim()
+    const lower = raw.toLowerCase()
+    if (lower.startsWith('custom:') || lower.startsWith('custom-')) {
+      const cleanId = raw.replace(/^custom:/i, '').trim().toUpperCase()
+      return {
+        type: 'custom',
+        key: `custom:${cleanId.toLowerCase()}`,
+        name: cleanId,
+        customId: cleanId,
+      }
+    }
+    if (lower === 'general' || isGeneralLeaderboardDomain(lower)) {
+      return {
+        type: 'general',
+        key: 'general',
+        name: 'general',
+      }
+    }
+    const cleanDomain = getLeaderboardDomain(lower)
+    return {
+      type: 'domain',
+      key: cleanDomain,
+      name: cleanDomain,
+    }
+  }
+
+  const activeType: LeaderboardType =
+    settings.leaderboardType || (!isGeneralLeaderboardDomain(settings.domain) ? 'domain' : 'general')
+  const activeCustomId = settings.customLeaderboardId
+
+  if (activeType === 'custom' && activeCustomId) {
+    const cleanId = activeCustomId.trim().toUpperCase()
+    return {
+      type: 'custom',
+      key: `custom:${cleanId.toLowerCase()}`,
+      name: cleanId,
+      customId: cleanId,
+    }
+  }
+
+  if (activeType === 'domain' && !isGeneralLeaderboardDomain(settings.domain)) {
+    const cleanDomain = settings.domain.toLowerCase().trim()
+    return {
+      type: 'domain',
+      key: cleanDomain,
+      name: cleanDomain,
+    }
+  }
+
+  return {
+    type: 'general',
+    key: 'general',
+    name: 'general',
+  }
+}
 
 export async function getDomainLeaderboard(
   kv: StorageBackend,

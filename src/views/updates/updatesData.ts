@@ -17,6 +17,17 @@ export interface PatchNote {
 
 export const UPDATES: PatchNote[] = [
   {
+    id: 'october-12-2026',
+    title: 'Custom leaderboards are here! Create, join, and play with friends',
+    date: 'October 12, 2026',
+    paragraphs: [
+      'Hey everyone! When I first built leaderboards for Inboxed, grouping people by email domain felt like a fun way to spark some friendly office competition. The catch is that if you use a personal email, or just want to play against friends who don’t work at your company, you didn’t really have a way to group up.',
+      'To fix that, custom leaderboards are now live! From your account preferences, you can switch between the Global leaderboard, your company domain leaderboard, or a Custom leaderboard for your own group.',
+      'You can create or join a leaderboard anytime through the <strong>Manage Account & Preferences</strong> link at the bottom of today’s email.',
+      'If you run into any issues or have ideas for what to build next, feel free to drop them in the <a href="https://forms.gle/o3rAMb56i7cL1T1n8" target="_blank" rel="noopener noreferrer">feedback form</a>. You can also email me directly if you find my email on the leaderboard! :-)<br><br>Hope you have fun with it,<br><br>Ekim'
+    ]
+  },
+  {
     id: 'october-6-2026',
     title: 'New styles & customizable colors in user preferences!',
     date: 'October 6, 2026',

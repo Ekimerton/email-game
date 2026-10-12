@@ -23,6 +23,8 @@ export interface SubscriberEntry {
   status: 'active' | 'unsubscribed'
 }
 
+export type LeaderboardType = 'general' | 'domain' | 'custom'
+
 export interface UserSettings {
   email: string
   domain: string
@@ -35,6 +37,8 @@ export interface UserSettings {
   colorCombo?: string
   primaryColor?: string
   secondaryColor?: string
+  leaderboardType?: LeaderboardType
+  customLeaderboardId?: string
 }
 
 export interface GameState {

@@ -626,12 +626,64 @@
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid #71717a;
             border-radius: 8px;
-            padding: 6px 12px;
+            padding: 8px 12px;
             color: #18181b;
-            font-size: 11px;
-            font-weight: 700;
             text-align: center;
             z-index: 10;
+        }
+
+        .leaderboard-lock-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #18181b;
+            line-height: 1.35;
+            margin-bottom: 6px;
+        }
+
+        .leaderboard-lock-sub {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #71717a;
+            line-height: 1.45;
+        }
+
+        .leaderboard-lock-sub strong {
+            font-weight: 700;
+            color: #18181b;
+        }
+
+        .leaderboard-domain-tag,
+        .leaderboard-pill {
+            display: inline;
+            background: #ffffff;
+            border: 1px solid #d4d4d8;
+            border-radius: 3px;
+            padding: 0 4px 1px 4px;
+            font-size: inherit;
+            font-weight: 700;
+            color: #18181b;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+            white-space: nowrap;
+        }
+
+        .leaderboard-pill-primary {
+            background-color: #bfdbfe;
+            border-color: #93c5fd;
+            color: #000000;
+        }
+
+        .leaderboard-lock-hint {
+            font-size: 10px;
+            font-weight: 500;
+            color: #71717a;
+            margin-top: 5px;
+            line-height: 1.45;
+        }
+
+        .leaderboard-lock-link {
+            color: #18181b;
+            text-decoration: underline;
+            font-weight: 600;
         }
 
         .leaderboard-item {
@@ -843,9 +895,9 @@
         <div class="news-ticker-container">
             <div class="news-ticker-box">
                 <span class="news-ticker-content">
-                    <span class="news-ticker-text">New styles & customizable colors in user preferences!</span>
+                    <span class="news-ticker-text">Custom leaderboards are here! Create, join, and play with friends</span>
                 </span>
-                <a href="https://inboxed.fun/updates" class="news-ticker-btn" target="_blank" aria-label="Updates: New styles & customizable colors in user preferences!">
+                <a href="https://inboxed.fun/updates" class="news-ticker-btn" target="_blank" aria-label="Updates: Custom leaderboards are here! Create, join, and play with friends">
                     Read more
                 </a>
             </div>
@@ -978,13 +1030,14 @@
                 <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
                 <div class="form-container">
                     <form id="guess-form" method="POST"
-                        action-xhr="https://inboxed.fun/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER"
+                        action-xhr="https://inboxed.fun/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER&domain=USER_DOMAIN_PLACEHOLDER"
                         on="submit:AMP.setState({ uiState: { submitting: true } });
                             submit-success:AMP.setState({ gameState: (!gameState.version || (event.response.version && event.response.version >= gameState.version)) ? event.response : gameState, clueView: { activeClue: event.response.hasWon ? (clueView.activeClue || 1) : event.response.revealedCount }, typed: { word: '' }, uiState: { submitting: false } }),guess-form.clear,stateList.refresh,leaderboardList.refresh;
                             submit-error:AMP.setState({ gameState: { lastMessage: (event.response && (event.response.lastMessage || event.response.error)) ? (event.response.lastMessage || event.response.error) : 'Connection issue — tap Submit Guess to try again.' }, uiState: { submitting: false } })">
 
                         <input type="hidden" name="email" value="USER_EMAIL_PLACEHOLDER">
                         <input type="hidden" name="date" value="USER_DATE_PLACEHOLDER">
+                        <input type="hidden" name="domain" value="USER_DOMAIN_PLACEHOLDER">
 
                         <div class="wordle-input-wrapper">
                             <input type="text" id="guess-input" name="user-guess" class="hidden-guess-input"
@@ -1039,7 +1092,8 @@
                     <div class="leaderboard-container">
                         {{^hasWon}}
                         <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon">
-                            Solve today's puzzle to reveal the leaderboard!
+                            <div class="leaderboard-lock-title">🔒 Solve today's puzzle to reveal the leaderboard!</div>
+                            <div class="leaderboard-lock-sub">Currently playing in the <strong>USER_DOMAIN_PLACEHOLDER</strong> leaderboard. You can switch between leaderboards in Manage Account & Preferences.</div>
                         </div>
                         {{/hasWon}}
 
@@ -1061,7 +1115,8 @@
                 <div placeholder>
                     <div class="leaderboard-container">
                         <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon">
-                            Solve today's puzzle to reveal the leaderboard!
+                            <div class="leaderboard-lock-title">🔒 Solve today's puzzle to reveal the leaderboard!</div>
+                            <div class="leaderboard-lock-sub">Currently playing in the <strong>USER_DOMAIN_PLACEHOLDER</strong> leaderboard. You can switch between leaderboards in Manage Account & Preferences.</div>
                         </div>
                         <div class="leaderboard-blur-content" [class]="gameState.hasWon ? 'leaderboard-items' : 'leaderboard-blur-content'">
                             <div class="leaderboard-item">

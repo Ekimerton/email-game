@@ -747,12 +747,64 @@ export const SHARED_GAME_CSS = `
             background: var(--color-overlay-bg);
             border: 1px solid var(--color-zinc-500);
             border-radius: 8px;
-            padding: 6px 12px;
+            padding: 8px 12px;
             color: var(--color-zinc-900);
-            font-size: 11px;
-            font-weight: 700;
             text-align: center;
             z-index: 10;
+        }
+
+        .leaderboard-lock-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--color-zinc-900);
+            line-height: 1.35;
+            margin-bottom: 6px;
+        }
+
+        .leaderboard-lock-sub {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: var(--color-zinc-500);
+            line-height: 1.45;
+        }
+
+        .leaderboard-lock-sub strong {
+            font-weight: 700;
+            color: var(--color-zinc-900);
+        }
+
+        .leaderboard-domain-tag,
+        .leaderboard-pill {
+            display: inline;
+            background: var(--color-white);
+            border: 1px solid var(--color-zinc-300);
+            border-radius: 3px;
+            padding: 0 4px 1px 4px;
+            font-size: inherit;
+            font-weight: 700;
+            color: var(--color-zinc-900);
+            box-shadow: 0 1px 1px var(--color-shadow-sm);
+            white-space: nowrap;
+        }
+
+        .leaderboard-pill-primary {
+            background-color: var(--color-blue-200);
+            border-color: var(--color-blue-300);
+            color: var(--color-black);
+        }
+
+        .leaderboard-lock-hint {
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--color-zinc-500);
+            margin-top: 5px;
+            line-height: 1.45;
+        }
+
+        .leaderboard-lock-link {
+            color: var(--color-zinc-900);
+            text-decoration: underline;
+            font-weight: 600;
         }
 
         .leaderboard-item {

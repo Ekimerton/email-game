@@ -81,6 +81,8 @@ export async function getUserSettings(kv: StorageBackend, email: string): Promis
       colorCombo: existing.colorCombo || 'amber-blue',
       primaryColor: existing.primaryColor,
       secondaryColor: existing.secondaryColor,
+      leaderboardType: existing.leaderboardType,
+      customLeaderboardId: existing.customLeaderboardId,
     }
   }
 

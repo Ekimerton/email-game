@@ -8,12 +8,12 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
 }
 .container {
   width: 100%;
-  max-width: 480px;
+  max-width: 600px;
   margin: 0 auto;
   box-sizing: border-box;
   position: relative;
@@ -66,11 +66,11 @@ body {
 .user-badge {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 0 24px 0;
+  justify-content: center;
+  padding: 2px 0 16px 0;
   font-size: 13.5px;
   font-weight: 600;
-  color: #18181b;
+  color: #71717a;
 }
 .domain-pill {
   background: #C4F7CA;
@@ -88,17 +88,36 @@ body {
   border-top: 1px solid #e4e4e7;
   margin: 0;
 }
+.section-subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #71717a;
+  margin-bottom: 10px;
+}
 .setting-section {
-  padding: 18px 0;
+  padding: 16px 0;
   text-align: left;
 }
-.setting-header {
+.setting-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
-.setting-title { font-size: 14.5px; font-weight: 700; color: #18181b; }
-.setting-desc { font-size: 13px; color: #71717a; line-height: 1.45; margin-top: 4px; }
+.setting-name, .setting-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #18181b;
+}
+.setting-name-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .btn {
   width: auto;
   display: inline-flex;
@@ -131,10 +150,9 @@ body {
 .switch-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
+  gap: 10px;
 }
-.switch-label { font-size: 12.5px; font-weight: 700; }
+.switch-label { font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 .switch {
   position: relative;
   display: inline-block;
@@ -167,7 +185,6 @@ body {
 input:checked + .slider {
   background-color: #C4F7CA;
   border-color: #7ecc84;
-  box-shadow: inset 0 1px 0 0 #e8ffea;
 }
 input:checked + .slider:before {
   transform: translateX(20px);
@@ -218,7 +235,7 @@ input:checked + .slider:before {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 8px;
 }
 .color-combo-card {
   display: flex;
@@ -272,7 +289,198 @@ input:checked + .slider:before {
   color: #18181b;
 }
 
-/* Dark Mode Theme Overrides for Account Preferences SPA */
+/* Leaderboard Switcher Group */
+.leaderboard-switch-group {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 14px 0;
+  flex-wrap: wrap;
+}
+.leaderboard-tab-btn {
+  flex: 1;
+  min-width: 90px;
+  padding: 10px 14px;
+  background-color: #f4f4f5;
+  border: 1.5px solid #e4e4e7;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181b;
+  text-align: center;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.leaderboard-tab-btn:hover {
+  border-color: #d4d4d8;
+  background-color: #ececee;
+}
+.leaderboard-tab-btn.active {
+  border-color: #18181b;
+  background-color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 0 0 1px #18181b, 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Pending Switch Notice Banner */
+.pending-switch-banner {
+  background-color: #fefce8;
+  border: 1.5px solid #fef08a;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  color: #713f12;
+  line-height: 1.45;
+}
+.pending-switch-title {
+  font-weight: 700;
+  color: #854d0e;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pending-switch-desc {
+  color: #713f12;
+}
+
+/* Leaderboard Status Info Card */
+.leaderboard-info-card {
+  background-color: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  color: #52525b;
+  line-height: 1.45;
+}
+.leaderboard-info-title {
+  font-weight: 700;
+  color: #18181b;
+  margin-bottom: 2px;
+}
+
+/* Custom Leaderboard Card */
+.custom-lb-card {
+  background-color: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.custom-lb-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #18181b;
+  margin-bottom: 2px;
+}
+.custom-lb-desc {
+  font-size: 12.5px;
+  color: #52525b;
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+.custom-lb-active-box {
+  background-color: #ffffff;
+  border: 1.5px solid #C4F7CA;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.custom-lb-active-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #52525b;
+}
+.custom-lb-id-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #14532d;
+  background-color: #e8ffea;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #7ecc84;
+}
+.custom-lb-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+@media (max-width: 520px) {
+  .custom-lb-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.custom-lb-action-box {
+  background-color: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.action-box-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #18181b;
+  margin-bottom: 4px;
+}
+.action-box-desc {
+  font-size: 11.5px;
+  color: #71717a;
+  line-height: 1.4;
+  margin-bottom: 12px;
+  flex: 1;
+}
+.custom-lb-join-form {
+  display: flex;
+  gap: 6px;
+}
+.custom-lb-input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1.5px solid #d4d4d8;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #18181b;
+  background-color: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.custom-lb-input:focus {
+  border-color: #18181b;
+}
+.btn-sm {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 6px;
+}
+.btn-outline {
+  background-color: #ffffff;
+  color: #18181b;
+  border: 1.5px solid #d4d4d8;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.btn-outline:hover {
+  background-color: #f4f4f5;
+  border-color: #a1a1aa;
+}
+
+/* Dark Mode Theme Overrides for Account Preferences SPA - commented out until it's in a better state
 body.dark-theme {
   background-color: #121212;
   color: #f4f4f5;
@@ -325,6 +533,7 @@ body.dark-theme .footer-text {
 body.dark-theme .footer-text a {
   color: #C4F7CA;
 }
+*/
 `;
 
 export const ACCOUNT_HTML = `<!doctype html>
@@ -348,12 +557,12 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
 }
 .container {
   width: 100%;
-  max-width: 480px;
+  max-width: 600px;
   margin: 0 auto;
   box-sizing: border-box;
   position: relative;
@@ -406,11 +615,11 @@ body {
 .user-badge {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 0 24px 0;
+  justify-content: center;
+  padding: 2px 0 16px 0;
   font-size: 13.5px;
   font-weight: 600;
-  color: #18181b;
+  color: #71717a;
 }
 .domain-pill {
   background: #C4F7CA;
@@ -428,17 +637,36 @@ body {
   border-top: 1px solid #e4e4e7;
   margin: 0;
 }
+.section-subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #71717a;
+  margin-bottom: 10px;
+}
 .setting-section {
-  padding: 18px 0;
+  padding: 16px 0;
   text-align: left;
 }
-.setting-header {
+.setting-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
-.setting-title { font-size: 14.5px; font-weight: 700; color: #18181b; }
-.setting-desc { font-size: 13px; color: #71717a; line-height: 1.45; margin-top: 4px; }
+.setting-name, .setting-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #18181b;
+}
+.setting-name-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .btn {
   width: auto;
   display: inline-flex;
@@ -471,10 +699,9 @@ body {
 .switch-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
+  gap: 10px;
 }
-.switch-label { font-size: 12.5px; font-weight: 700; }
+.switch-label { font-size: 12.5px; font-weight: 700; white-space: nowrap; }
 .switch {
   position: relative;
   display: inline-block;
@@ -507,7 +734,6 @@ body {
 input:checked + .slider {
   background-color: #C4F7CA;
   border-color: #7ecc84;
-  box-shadow: inset 0 1px 0 0 #e8ffea;
 }
 input:checked + .slider:before {
   transform: translateX(20px);
@@ -558,7 +784,7 @@ input:checked + .slider:before {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 8px;
 }
 .color-combo-card {
   display: flex;
@@ -612,7 +838,198 @@ input:checked + .slider:before {
   color: #18181b;
 }
 
-/* Dark Mode Theme Overrides for Account Preferences SPA */
+/* Leaderboard Switcher Group */
+.leaderboard-switch-group {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 14px 0;
+  flex-wrap: wrap;
+}
+.leaderboard-tab-btn {
+  flex: 1;
+  min-width: 90px;
+  padding: 10px 14px;
+  background-color: #f4f4f5;
+  border: 1.5px solid #e4e4e7;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181b;
+  text-align: center;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.leaderboard-tab-btn:hover {
+  border-color: #d4d4d8;
+  background-color: #ececee;
+}
+.leaderboard-tab-btn.active {
+  border-color: #18181b;
+  background-color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 0 0 1px #18181b, 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Pending Switch Notice Banner */
+.pending-switch-banner {
+  background-color: #fefce8;
+  border: 1.5px solid #fef08a;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  color: #713f12;
+  line-height: 1.45;
+}
+.pending-switch-title {
+  font-weight: 700;
+  color: #854d0e;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pending-switch-desc {
+  color: #713f12;
+}
+
+/* Leaderboard Status Info Card */
+.leaderboard-info-card {
+  background-color: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  color: #52525b;
+  line-height: 1.45;
+}
+.leaderboard-info-title {
+  font-weight: 700;
+  color: #18181b;
+  margin-bottom: 2px;
+}
+
+/* Custom Leaderboard Card */
+.custom-lb-card {
+  background-color: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.custom-lb-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #18181b;
+  margin-bottom: 2px;
+}
+.custom-lb-desc {
+  font-size: 12.5px;
+  color: #52525b;
+  line-height: 1.45;
+  margin-bottom: 12px;
+}
+.custom-lb-active-box {
+  background-color: #ffffff;
+  border: 1.5px solid #C4F7CA;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.custom-lb-active-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #52525b;
+}
+.custom-lb-id-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #14532d;
+  background-color: #e8ffea;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #7ecc84;
+}
+.custom-lb-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+@media (max-width: 520px) {
+  .custom-lb-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.custom-lb-action-box {
+  background-color: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.action-box-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #18181b;
+  margin-bottom: 4px;
+}
+.action-box-desc {
+  font-size: 11.5px;
+  color: #71717a;
+  line-height: 1.4;
+  margin-bottom: 12px;
+  flex: 1;
+}
+.custom-lb-join-form {
+  display: flex;
+  gap: 6px;
+}
+.custom-lb-input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1.5px solid #d4d4d8;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #18181b;
+  background-color: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.custom-lb-input:focus {
+  border-color: #18181b;
+}
+.btn-sm {
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 6px;
+}
+.btn-outline {
+  background-color: #ffffff;
+  color: #18181b;
+  border: 1.5px solid #d4d4d8;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.btn-outline:hover {
+  background-color: #f4f4f5;
+  border-color: #a1a1aa;
+}
+
+/* Dark Mode Theme Overrides for Account Preferences SPA - commented out until it's in a better state
 body.dark-theme {
   background-color: #121212;
   color: #f4f4f5;
@@ -664,7 +1081,8 @@ body.dark-theme .footer-text {
 }
 body.dark-theme .footer-text a {
   color: #C4F7CA;
-}</style>
+}
+*/</style>
 </head>
 <body>
   <div id="root"></div>
@@ -678,8 +1096,13 @@ body.dark-theme .footer-text a {
       const [toast, setToast] = useState('');
       const [updatingSub, setUpdatingSub] = useState(false);
       const [updatingPriv, setUpdatingPriv] = useState(false);
-      const [updatingTheme, setUpdatingTheme] = useState(false);
+      // Dark mode commented out until it's in a better state - default everyone to light mode
+      // const [updatingTheme, setUpdatingTheme] = useState(false);
       const [updatingColor, setUpdatingColor] = useState(false);
+      const [updatingLeaderboard, setUpdatingLeaderboard] = useState(false);
+      const [selectedTab, setSelectedTab] = useState('');
+      const [customId, setCustomId] = useState('');
+      const [joinInput, setJoinInput] = useState('');
 
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token') || '';
@@ -698,6 +1121,9 @@ body.dark-theme .footer-text a {
           .then(data => {
             if (data.success) {
               setUser(data);
+              const initialTab = data.leaderboardType || (data.isCustomDomain ? 'domain' : 'general');
+              setSelectedTab(initialTab);
+              setCustomId(data.customLeaderboardId || '');
             } else {
               setUser(null);
             }
@@ -709,6 +1135,8 @@ body.dark-theme .footer-text a {
           });
       }, []);
 
+      // Dark mode disabled / commented out until in a better state - default everyone to light mode
+      /*
       useEffect(() => {
         if (user && user.theme === 'dark') {
           document.body.classList.add('dark-theme');
@@ -716,6 +1144,10 @@ body.dark-theme .footer-text a {
           document.body.classList.remove('dark-theme');
         }
       }, [user?.theme]);
+      */
+      useEffect(() => {
+        document.body.classList.remove('dark-theme');
+      }, []);
 
       const showToast = (msg) => {
         setToast(msg);
@@ -766,6 +1198,8 @@ body.dark-theme .footer-text a {
         setUpdatingPriv(false);
       };
 
+      // Dark mode toggle handler commented out until it's in a better state
+      /*
       const handleToggleTheme = async (e) => {
         const nextDark = e.target.checked;
         const nextTheme = nextDark ? 'dark' : 'light';
@@ -788,6 +1222,7 @@ body.dark-theme .footer-text a {
         }
         setUpdatingTheme(false);
       };
+      */
 
       const handleSelectColorCombo = async (comboId) => {
         if (user.colorCombo === comboId) return;
@@ -814,6 +1249,112 @@ body.dark-theme .footer-text a {
           showToast('Failed to update color preference');
         }
         setUpdatingColor(false);
+      };
+
+      const isPublicDomain = (domain) => {
+        if (!domain) return true;
+        const d = domain.toLowerCase().trim();
+        if (d === 'general' || d === 'public') return true;
+        if (d === 'gmail.com' || d === 'googlemail.com') return true;
+        if (d === 'yahoo.com' || d.startsWith('yahoo.') || d.endsWith('.yahoo.com') || d === 'ymail.com') return true;
+        if (
+          d === 'hotmail.com' ||
+          d === 'outlook.com' ||
+          d === 'live.com' ||
+          d === 'msn.com' ||
+          d === 'icloud.com' ||
+          d === 'me.com' ||
+          d === 'mac.com' ||
+          d === 'aol.com' ||
+          d === 'proton.me' ||
+          d === 'protonmail.com'
+        ) return true;
+        return false;
+      };
+
+      const hasCustomDomain = user ? (user.isCustomDomain ?? !isPublicDomain(user.domain)) : false;
+      const activeTab = selectedTab || user?.leaderboardType || (hasCustomDomain ? 'domain' : 'general');
+
+      const updateLeaderboardPreference = async (nextType, nextCustomId) => {
+        if (!user || !user.token) return;
+        setUpdatingLeaderboard(true);
+        try {
+          const res = await fetch('/api/account/toggle-leaderboard', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: user.token,
+              leaderboardType: nextType,
+              customLeaderboardId: nextCustomId || undefined
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setUser(prev => ({
+              ...prev,
+              leaderboardType: data.leaderboardType,
+              customLeaderboardId: data.customLeaderboardId,
+              activeLeaderboardName: data.activeLeaderboardName,
+              activeLeaderboardType: data.activeLeaderboardType,
+            }));
+            const effectiveTab = data.leaderboardType || nextType;
+            setSelectedTab(effectiveTab);
+            if (data.customLeaderboardId || nextCustomId) {
+              setCustomId(data.customLeaderboardId || nextCustomId);
+            }
+            showToast(data.message);
+          } else {
+            showToast(data.message || 'Failed to update leaderboard');
+          }
+        } catch (_) {
+          showToast('Failed to update leaderboard');
+        }
+        setUpdatingLeaderboard(false);
+      };
+
+      const handleSelectLeaderboard = (type) => {
+        setSelectedTab(type);
+        if (type === 'custom') {
+          if (customId) {
+            updateLeaderboardPreference('custom', customId);
+          }
+          return;
+        }
+        updateLeaderboardPreference(type, undefined);
+      };
+
+      const handleCreateCustomLeaderboard = () => {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        const newId = \`CUSTOM-\${code}\`;
+        setCustomId(newId);
+        setSelectedTab('custom');
+        updateLeaderboardPreference('custom', newId);
+      };
+
+      const handleJoinCustomLeaderboard = () => {
+        const clean = joinInput.trim().toUpperCase();
+        if (!clean) {
+          showToast('Please enter a leaderboard identifier');
+          return;
+        }
+        setCustomId(clean);
+        setJoinInput('');
+        setSelectedTab('custom');
+        updateLeaderboardPreference('custom', clean);
+      };
+
+      const handleCopyId = (id) => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(id)
+            .then(() => showToast('Identifier copied to clipboard!'))
+            .catch(() => showToast(\`Identifier: \${id}\`));
+        } else {
+          showToast(\`Identifier: \${id}\`);
+        }
       };
 
       if (loading) {
@@ -872,95 +1413,188 @@ body.dark-theme .footer-text a {
             <h1 className="title">Account &amp; Preferences</h1>
             <div className="user-badge">
               <span>{user.email}</span>
-              <span className="domain-pill">{user.domain}</span>
             </div>
           </div>
 
-          {/* Daily Morning Subscription Switch */}
+          {/* General Section */}
           <div className="setting-section">
-            <div className="setting-header">
-              <span className="setting-title">📬 Daily Morning Email</span>
-            </div>
-            <div className="setting-desc">
-              Receive today's multi-definition word puzzle in your inbox each morning.
-            </div>
-            <div className="switch-container">
-              <span className="switch-label" style={{ color: user.isSubscribed ? '#14532d' : '#71717a' }}>
-                {user.isSubscribed ? 'Subscribed' : 'Unsubscribed'}
-              </span>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={user.isSubscribed}
-                  onChange={handleToggleSub}
-                  disabled={updatingSub}
-                />
-                <span className="slider"></span>
-              </label>
+            <div className="section-subtitle">General</div>
+            <div className="setting-row">
+              <span className="setting-name">Daily Email</span>
+              <div className="switch-container">
+                <span className="switch-label" style={{ color: user.isSubscribed ? '#14532d' : '#71717a' }}>
+                  {user.isSubscribed ? 'Subscribed' : 'Unsubscribed'}
+                </span>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={user.isSubscribed}
+                    onChange={handleToggleSub}
+                    disabled={updatingSub}
+                  />
+                  <span className="slider"></span>
+                </label>
+              </div>
             </div>
           </div>
 
           <hr className="section-divider" />
 
-          {/* Leaderboard Privacy Switch */}
+          {/* Leaderboards Section */}
           <div className="setting-section">
-            <div className="setting-header">
-              <span className="setting-title">🏆 Domain Leaderboard Visibility</span>
+            <div className="section-subtitle">Leaderboards</div>
+            <p className="setting-desc" style={{ fontSize: '13px', color: '#52525b', marginBottom: '12px', lineHeight: 1.45 }}>
+              Choose which leaderboard you participate in. You can switch between General, your domain leaderboard, or a custom leaderboard. Changes take effect in your next daily email.
+            </p>
+
+            {/* Leaderboard Selection Buttons */}
+            <div className="leaderboard-switch-group">
+              <button
+                type="button"
+                className={\`leaderboard-tab-btn \${activeTab === 'general' ? 'active' : ''}\`}
+                onClick={() => handleSelectLeaderboard('general')}
+                disabled={updatingLeaderboard}
+              >
+                General
+              </button>
+              {hasCustomDomain && (
+                <button
+                  type="button"
+                  className={\`leaderboard-tab-btn \${activeTab === 'domain' ? 'active' : ''}\`}
+                  onClick={() => handleSelectLeaderboard('domain')}
+                  disabled={updatingLeaderboard}
+                >
+                  {user.domain}
+                </button>
+              )}
+              <button
+                type="button"
+                className={\`leaderboard-tab-btn \${activeTab === 'custom' ? 'active' : ''}\`}
+                onClick={() => handleSelectLeaderboard('custom')}
+                disabled={updatingLeaderboard}
+              >
+                Custom
+              </button>
             </div>
-            <div className="setting-desc">
-              Show your score on the <strong>{user.domain}</strong> leaderboard when you solve the puzzle.
-            </div>
-            <div className="switch-container">
-              <span className="switch-label" style={{ color: user.showOnLeaderboard ? '#14532d' : '#71717a' }}>
-                {user.showOnLeaderboard ? 'Visible on Leaderboard' : 'Hidden from Leaderboard'}
-              </span>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={user.showOnLeaderboard}
-                  onChange={handleTogglePrivacy}
-                  disabled={updatingPriv}
-                />
-                <span className="slider"></span>
-              </label>
+
+            {/* Active Leaderboard Details */}
+            {activeTab === 'general' && (
+              <div className="leaderboard-info-card">
+                <div className="leaderboard-info-title">Global General Leaderboard</div>
+                <div>You are currently playing in the global leaderboard with players across all domains.</div>
+              </div>
+            )}
+
+            {activeTab === 'domain' && hasCustomDomain && (
+              <div className="leaderboard-info-card">
+                <div className="leaderboard-info-title">{user.domain} Leaderboard</div>
+                <div>You are currently competing on your company leaderboard with colleagues from <strong>@{user.domain}</strong>.</div>
+              </div>
+            )}
+
+            {activeTab === 'custom' && (
+              <div className="custom-lb-card">
+                <div className="custom-lb-title">Custom Leaderboard</div>
+                <div className="custom-lb-desc">
+                  Play with friends or a private group. Create your own leaderboard or join an existing one using an identifier.
+                </div>
+
+                {customId ? (
+                  <div className="custom-lb-active-box">
+                    <div>
+                      <div className="custom-lb-active-label">Active Custom Leaderboard</div>
+                      <div style={{ marginTop: '3px' }}>
+                        <span className="custom-lb-id-badge">{customId}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline"
+                      onClick={() => handleCopyId(customId)}
+                    >
+                      Copy Code
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '12px', color: '#71717a', padding: '10px 14px', background: '#f4f4f5', borderRadius: '6px', marginBottom: '12px' }}>
+                    No custom leaderboard identifier set yet. Create a new one or join with an existing code below.
+                  </div>
+                )}
+
+                <div className="custom-lb-actions-grid">
+                  {/* Create New */}
+                  <div className="custom-lb-action-box">
+                    <div className="action-box-title">Create New</div>
+                    <div className="action-box-desc">
+                      Generate a random identifier for a new leaderboard.
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={handleCreateCustomLeaderboard}
+                      disabled={updatingLeaderboard}
+                    >
+                      Create Leaderboard
+                    </button>
+                  </div>
+
+                  {/* Join Existing */}
+                  <div className="custom-lb-action-box">
+                    <div className="action-box-title">Join Existing</div>
+                    <div className="action-box-desc">
+                      Enter a leaderboard identifier to join.
+                    </div>
+                    <div className="custom-lb-join-form">
+                      <input
+                        type="text"
+                        className="custom-lb-input"
+                        placeholder="e.g. CUSTOM-7K9P"
+                        value={joinInput}
+                        onChange={(e) => setJoinInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleJoinCustomLeaderboard()}
+                        disabled={updatingLeaderboard}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        onClick={handleJoinCustomLeaderboard}
+                        disabled={updatingLeaderboard}
+                      >
+                        Join
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Privacy Toggle Row */}
+            <div className="setting-row" style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #f4f4f5' }}>
+              <span className="setting-name">Show my score on the leaderboard</span>
+              <div className="switch-container">
+                <span className="switch-label" style={{ color: user.showOnLeaderboard ? '#14532d' : '#71717a' }}>
+                  {user.showOnLeaderboard ? 'Visible' : 'Hidden'}
+                </span>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={user.showOnLeaderboard}
+                    onChange={handleTogglePrivacy}
+                    disabled={updatingPriv}
+                  />
+                  <span className="slider"></span>
+                </label>
+              </div>
             </div>
           </div>
 
           <hr className="section-divider" />
 
-          {/* Dark Mode Theme Switch */}
+          {/* Display Section */}
           <div className="setting-section">
-            <div className="setting-header">
-              <span className="setting-title">🌙 Dark Mode</span>
-            </div>
-            <div className="setting-desc">
-              Receive your daily puzzle email in dark mode instead of light mode.
-            </div>
-            <div className="switch-container">
-              <span className="switch-label" style={{ color: user.theme === 'dark' ? (user.theme === 'dark' ? '#C4F7CA' : '#14532d') : '#71717a' }}>
-                {user.theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
-              </span>
-              <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={user.theme === 'dark'}
-                  onChange={handleToggleTheme}
-                  disabled={updatingTheme}
-                />
-                <span className="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <hr className="section-divider" />
-
-          {/* Color Palette Theme Setting */}
-          <div className="setting-section">
-            <div className="setting-header">
-              <span className="setting-title">🎨 Color Palette</span>
-            </div>
-            <div className="setting-desc">
-              Choose the accent color combination for your daily puzzle emails.
+            <div className="section-subtitle">Display</div>
+            <div className="setting-row" style={{ marginBottom: '8px' }}>
+              <span className="setting-name">Color Palette</span>
             </div>
             <div className="color-combo-grid">
               {(user.colorCombos || []).map(combo => {
@@ -983,6 +1617,26 @@ body.dark-theme .footer-text a {
                 );
               })}
             </div>
+
+            {/* Dark Mode Theme Switch - commented out until it's in a better state
+            <div className="setting-row" style={{ marginTop: '14px' }}>
+              <span className="setting-name">Dark Mode</span>
+              <div className="switch-container">
+                <span className="switch-label" style={{ color: user.theme === 'dark' ? (user.theme === 'dark' ? '#C4F7CA' : '#14532d') : '#71717a' }}>
+                  {user.theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                </span>
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={user.theme === 'dark'}
+                    onChange={handleToggleTheme}
+                    disabled={updatingTheme}
+                  />
+                  <span className="slider"></span>
+                </label>
+              </div>
+            </div>
+            */}
           </div>
 
           <hr className="section-divider" />

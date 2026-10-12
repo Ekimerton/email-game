@@ -22,6 +22,7 @@ import {
   isDevTester,
   recordUserSubmission,
   getUserStreak,
+  getEffectiveLeaderboard,
 } from '../services'
 
 export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
@@ -56,6 +57,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const guess = (body['user-guess'] as string || '').toUpperCase().trim()
       const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id') || (body['puzzle'] as string) || (body['puzzleId'] as string) || (body['id'] as string)
       const dateParam = c.req.query('date') || (body['date'] as string)
+      const requestedDomain = c.req.query('domain') || (body['domain'] as string)
       const target = puzzleParam || dateParam
       const domain = extractDomain(userEmail)
       const isDev = await isDevTester(c.env, userEmail)
@@ -134,7 +136,8 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
           state.letterMask = puzzle.word.split('')
           state.lastMessage = GAME_MESSAGES.puzzleSolved(puzzle.word, state.guessCount, state.score)
 
-          const leaderboardDomain = getLeaderboardDomain(userEmail)
+          const userSettings = await getUserSettings(c.env, userEmail)
+          const activeLb = getEffectiveLeaderboard(userSettings, requestedDomain)
 
           const leaderboardEntry: LeaderboardEntry = {
             email: userEmail,
@@ -147,15 +150,19 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
 
           const updatedLeaderboard = await updateDomainLeaderboard(
             c.env,
-            leaderboardDomain,
+            activeLb.key,
             puzzle.id,
             leaderboardEntry
           )
 
           const rank = updatedLeaderboard.findIndex((e) => e.email === userEmail) + 1
 
+          const rankLabel = activeLb.type === 'domain'
+            ? `Org Rank: #${rank} (${activeLb.name})`
+            : `Rank: #${rank} (${activeLb.name})`
+
           state.shareText = `Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)})\nSolved in ${state.guessCount} guess${state.guessCount > 1 ? 'es' : ''
-            }!\nScore: ${state.score} pts | Org Rank: #${rank} (${leaderboardDomain})\n\nPlay at: https://inboxed.fun`
+            }!\nScore: ${state.score} pts | ${rankLabel}\n\nPlay at: https://inboxed.fun`
         } else {
           if (state.revealedCount < puzzle.definitions.length) {
             state.revealedCount += 1
@@ -256,7 +263,6 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
     try {
       const userEmail = await getUserEmail(c)
       const requestedDomain = c.req.query('domain')
-      const domain = getLeaderboardDomain(requestedDomain || userEmail)
       const isDev = await isDevTester(c.env, userEmail)
       const puzzleIdParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
       const dateParam = c.req.query('date')
@@ -267,6 +273,11 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       } else {
         puzzle = getDailyPuzzle(dateParam, { isDev })
       }
+
+      const userSettings = await getUserSettings(c.env, userEmail)
+      const activeLb = getEffectiveLeaderboard(userSettings, requestedDomain)
+      const domain = activeLb.key
+      const displayDomain = activeLb.name
 
       const leaderboard = await getDomainLeaderboard(c.env, domain, puzzle.id, puzzle.date)
 
@@ -321,7 +332,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const hasWon = Boolean(userState.hasWon || currentPlayerItem)
 
       const payload = {
-        domain,
+        domain: displayDomain,
         date: puzzle.date,
         puzzleId: puzzle.id,
         hasWon,
