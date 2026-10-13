@@ -5,6 +5,7 @@
  * Works natively in Cloudflare Workers and Node.js using standard fetch.
  */
 
+import { getAccountUrl } from '../core'
 import { escapeHtml } from '../game'
 
 export interface SendEmailOptions {
@@ -178,6 +179,9 @@ If you did not request this, you can safely ignore this email.`
 
 export interface InactivityEmailOptions {
   origin?: string
+  email?: string
+  accountUrl?: string
+  authSecret?: string
   playUrl?: string
   logoUrl?: string
 }
@@ -188,9 +192,12 @@ export function renderInactivityUnsubscribeEmailHtml(
   const origin = (options?.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
   const playUrl = options?.playUrl || origin
   const logoUrl = options?.logoUrl || `${origin}/logo.png`
+  const accountUrl = options?.accountUrl
+    || (options?.email ? getAccountUrl(options.email, origin, options.authSecret) : `${origin}/account`)
 
   const safePlayUrl = escapeHtml(playUrl)
   const safeLogoUrl = escapeHtml(logoUrl)
+  const safeAccountUrl = escapeHtml(accountUrl)
 
   return `<!doctype html>
 <html lang="en">
@@ -199,8 +206,10 @@ export function renderInactivityUnsubscribeEmailHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>You've been unsubscribed from Inboxed</title>
   <style>
-    .btn-resubscribe:hover {
-      background-color: #fbbf24 !important;
+    .btn-confirm:hover {
+      background-color: #bbf4c3 !important;
+      border-color: #76c87c !important;
+      box-shadow: inset 0 2px 0 0 #ddf9df, 0 2px 5px rgba(0, 0, 0, 0.08) !important;
     }
   </style>
 </head>
@@ -220,16 +229,16 @@ export function renderInactivityUnsubscribeEmailHtml(
                 You've been unsubscribed
               </h1>
               <p style="font-size: 14px; color: #52525b; line-height: 1.5; margin: 0 0 24px 0;">
-                We noticed you haven't played Inboxed for the last 7 days in a row, so we've automatically unsubscribed you so we don't clutter your inbox.
+                We noticed you haven't played Inboxed for the last 7 days in a row, so we've automatically unsubscribed you from daily puzzle emails so we don't clutter your inbox. You can re-subscribe anytime in your user preferences.
               </p>
               <div style="margin: 28px 0;">
-                <a href="${safePlayUrl}" class="btn-resubscribe" style="background-color: #fcd34d; color: #000000; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; padding: 11px 24px; display: inline-block; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); -webkit-text-size-adjust: none;">
-                  Play Again & Resubscribe
+                <a href="${safeAccountUrl}" class="btn-confirm" style="background-color: #C4F7CA; color: #000000; border: 1.5px solid #7ecc84; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; padding: 11px 24px; display: inline-block; box-shadow: inset 0 2px 0 0 #e8ffea, 0 2px 4px rgba(0, 0, 0, 0.06); -webkit-text-size-adjust: none;">
+                  Resubscribe
                 </a>
               </div>
               <p style="font-size: 12px; color: #71717a; line-height: 1.5; margin: 20px 0 0 0;">
-                Want to play again? Jump back in anytime at:<br>
-                <a href="${safePlayUrl}" style="color: #18181b; word-break: break-all;">${safePlayUrl}</a>
+                Button not working? Copy and paste this link into your browser:<br>
+                <a href="${safeAccountUrl}" style="color: #14532d; word-break: break-all;">${safeAccountUrl}</a>
               </p>
               <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 24px 0 16px 0;">
               <p style="font-size: 11px; color: #a1a1aa; margin: 0;">
@@ -246,13 +255,15 @@ export function renderInactivityUnsubscribeEmailHtml(
 }
 
 export function renderInactivityUnsubscribeEmailText(options?: InactivityEmailOptions): string {
-  const origin = (options?.playUrl || options?.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const origin = (options?.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const accountUrl = options?.accountUrl
+    || (options?.email ? getAccountUrl(options.email, origin, options.authSecret) : `${origin}/account`)
   return `You've been unsubscribed from Inboxed
 
-We noticed you haven't played Inboxed for the last 7 days in a row, so we've automatically unsubscribed you so we don't clutter your inbox.
+We noticed you haven't played Inboxed for the last 7 days in a row, so we've automatically unsubscribed you from daily puzzle emails so we don't clutter your inbox.
 
-If you ever want to play again or resubscribe, visit:
-${origin}
+If you ever want to subscribe again, go to your user preferences here:
+${accountUrl}
 
 Best,
 The Inboxed Team`
@@ -264,10 +275,23 @@ export async function sendInactivityUnsubscribeEmail(options: {
   from?: string
   to: string
   origin?: string
+  authSecret?: string
+  accountUrl?: string
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const origin = (options.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
-  const html = renderInactivityUnsubscribeEmailHtml({ origin })
-  const text = renderInactivityUnsubscribeEmailText({ origin })
+  const accountUrl = options.accountUrl || getAccountUrl(options.to, origin, options.authSecret)
+  const html = renderInactivityUnsubscribeEmailHtml({
+    origin,
+    email: options.to,
+    accountUrl,
+    authSecret: options.authSecret,
+  })
+  const text = renderInactivityUnsubscribeEmailText({
+    origin,
+    email: options.to,
+    accountUrl,
+    authSecret: options.authSecret,
+  })
 
   return sendMailgunEmail({
     apiKey: options.apiKey,

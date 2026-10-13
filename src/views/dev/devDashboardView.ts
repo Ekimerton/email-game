@@ -1,5 +1,5 @@
 import { escapeHtml } from '../../game'
-import type { DashboardStats, PlayerScoreRecord, DomainStats } from '../../services'
+import { computeDailyActiveUsers, type DashboardStats, type PlayerScoreRecord, type DomainStats, type DailyActiveUsersPoint } from '../../services'
 import type { SubscriberEntry } from '../../core'
 import { DEV_DASHBOARD_CSS } from './devDashboardTemplate'
 
@@ -9,6 +9,15 @@ export interface DevDashboardViewParams {
   prodOrigin?: string
   fetchError?: string
   activeTab?: 'gameplay' | 'subscribers' | 'settings'
+}
+
+function formatShortChartDate(dateStr: string): string {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr || '—'
+  const parts = dateStr.split('-')
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const m = parseInt(parts[1], 10)
+  const d = parseInt(parts[2], 10)
+  return `${months[m - 1] || parts[1]} ${d}`
 }
 
 export function getDevDashboardPageHtml(params: DevDashboardViewParams): string {
@@ -21,6 +30,205 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
 
   const devSet = new Set((stats.devTesters || []).map(e => e.toLowerCase().trim()))
   const uniqueAllTimePlayersCount = new Set(stats.allPlays.map(p => p.email.toLowerCase().trim())).size
+
+  const dailyActiveSeries: DailyActiveUsersPoint[] = Array.isArray(stats.dailyActiveUsers) && stats.dailyActiveUsers.length > 0 && typeof stats.dailyActiveUsers[0].unopenedUsers === 'number'
+    ? stats.dailyActiveUsers
+    : computeDailyActiveUsers(stats.allPlays || [], stats.todayPuzzle?.date, stats.userProfiles, stats.subscribers?.list)
+  stats.dailyActiveUsers = dailyActiveSeries
+
+  // Compute DAU chart summary stats and initial SSR bars
+  const todayPoint = dailyActiveSeries.find(p => p.date === stats.todayPuzzle?.date) || dailyActiveSeries[dailyActiveSeries.length - 1]
+  const todayActiveTotal = todayPoint ? todayPoint.totalActive : 0
+  const todayNewCount = todayPoint ? todayPoint.newUsers : 0
+  const todayReturningCount = todayPoint ? todayPoint.returningUsers : 0
+  const todayFinishedCount = todayPoint ? todayPoint.finishedUsers : 0
+  const todayUnfinishedCount = todayPoint ? todayPoint.unfinishedUsers : 0
+  const todayOpenedOnlyCount = todayPoint ? (todayPoint.openedOnlyUsers || 0) : 0
+  const todayUnopenedCount = todayPoint ? (todayPoint.unopenedUsers || 0) : 0
+  const todayOpensTotal = todayPoint ? (todayPoint.totalOpens ?? (todayActiveTotal + todayOpenedOnlyCount)) : 0
+  const todayAudienceTotal = todayPoint ? (todayPoint.totalAudience ?? (todayOpensTotal + todayUnopenedCount)) : 0
+  const todayCompletionRate = todayPoint ? todayPoint.completionRate : 0
+
+  const peakPoint = dailyActiveSeries.reduce<DailyActiveUsersPoint | null>((best, cur) => {
+    if (!best || cur.totalActive >= best.totalActive) return cur
+    return best
+  }, null)
+  const peakActiveTotal = peakPoint ? peakPoint.totalActive : 0
+  const peakActiveSub = peakPoint && peakPoint.totalActive > 0
+    ? `${formatShortChartDate(peakPoint.date)}${peakPoint.puzzleId ? ` (Puzzle #${peakPoint.puzzleId})` : ''}`
+    : 'No plays recorded yet'
+
+  const activeDaysList = dailyActiveSeries.filter(p => p.totalActive > 0)
+  const openDaysList = dailyActiveSeries.filter(p => (p.totalOpens ?? p.totalActive) > 0)
+  const audienceDaysList = dailyActiveSeries.filter(p => (p.totalAudience ?? p.totalOpens ?? p.totalActive) > 0)
+  const totalActiveSessions = dailyActiveSeries.reduce((acc, p) => acc + p.totalActive, 0)
+  const totalNewSessions = dailyActiveSeries.reduce((acc, p) => acc + p.newUsers, 0)
+  const totalReturningSessions = dailyActiveSeries.reduce((acc, p) => acc + p.returningUsers, 0)
+  const totalFinishedSessions = dailyActiveSeries.reduce((acc, p) => acc + (p.finishedUsers || 0), 0)
+  const totalUnfinishedSessions = dailyActiveSeries.reduce((acc, p) => acc + (p.unfinishedUsers || 0), 0)
+  const totalOpenedOnlySessions = dailyActiveSeries.reduce((acc, p) => acc + (p.openedOnlyUsers || 0), 0)
+  const totalUnopenedSessions = dailyActiveSeries.reduce((acc, p) => acc + (p.unopenedUsers || 0), 0)
+  const totalOpensSessions = totalFinishedSessions + totalUnfinishedSessions + totalOpenedOnlySessions
+  const totalAudienceSessions = totalOpensSessions + totalUnopenedSessions
+  const avgActivePerDay = activeDaysList.length > 0
+    ? (totalActiveSessions / activeDaysList.length).toFixed(1)
+    : '0.0'
+  const funnelDayDenom = audienceDaysList.length > 0 ? audienceDaysList.length : (openDaysList.length > 0 ? openDaysList.length : activeDaysList.length)
+  const avgFinishedPerDay = funnelDayDenom > 0
+    ? (totalFinishedSessions / funnelDayDenom).toFixed(1)
+    : '0.0'
+  const avgUnfinishedPerDay = funnelDayDenom > 0
+    ? (totalUnfinishedSessions / funnelDayDenom).toFixed(1)
+    : '0.0'
+  const avgOpenedOnlyPerDay = funnelDayDenom > 0
+    ? (totalOpenedOnlySessions / funnelDayDenom).toFixed(1)
+    : '0.0'
+  const avgUnopenedPerDay = funnelDayDenom > 0
+    ? (totalUnopenedSessions / funnelDayDenom).toFixed(1)
+    : '0.0'
+  const returningSharePct = totalActiveSessions > 0
+    ? Math.round((totalReturningSessions / totalActiveSessions) * 100)
+    : 0
+  const overallCompletionPct = totalActiveSessions > 0
+    ? Math.round((totalFinishedSessions / totalActiveSessions) * 100)
+    : 0
+  const overallAttemptRatePct = totalOpensSessions > 0
+    ? Math.round((totalActiveSessions / totalOpensSessions) * 100)
+    : 0
+  const overallOpenRatePct = totalAudienceSessions > 0
+    ? Math.round((totalOpensSessions / totalAudienceSessions) * 100)
+    : 0
+
+  const rawMaxDau = Math.max(4, ...dailyActiveSeries.map(p => p.totalActive))
+  const maxScaleDau = Math.max(4, Math.ceil(rawMaxDau / 4) * 4)
+  const yTicks = [
+    maxScaleDau,
+    Math.round(maxScaleDau * 0.75),
+    Math.round(maxScaleDau * 0.5),
+    Math.round(maxScaleDau * 0.25),
+    0
+  ]
+
+  const rawMaxCompletion = Math.max(4, ...dailyActiveSeries.map(p => p.totalAudience ?? p.totalOpens ?? p.totalActive))
+  const maxScaleCompletion = Math.max(4, Math.ceil(rawMaxCompletion / 4) * 4)
+  const yTicksCompletion = [
+    maxScaleCompletion,
+    Math.round(maxScaleCompletion * 0.75),
+    Math.round(maxScaleCompletion * 0.5),
+    Math.round(maxScaleCompletion * 0.25),
+    0
+  ]
+
+  const defaultSelectedPoint: DailyActiveUsersPoint = [...dailyActiveSeries].reverse().find(p => (p.totalAudience ?? p.totalOpens ?? p.totalActive) > 0) || todayPoint || {
+    date: stats.todayPuzzle?.date || '',
+    puzzleId: stats.todayPuzzle?.id || '1',
+    totalActive: 0,
+    newUsers: 0,
+    returningUsers: 0,
+    newUserEmails: [],
+    returningUserEmails: [],
+    finishedUsers: 0,
+    unfinishedUsers: 0,
+    completionRate: 0,
+    finishedUserEmails: [],
+    unfinishedUserEmails: [],
+    totalOpens: 0,
+    openedOnlyUsers: 0,
+    openedOnlyUserEmails: [],
+    unopenedUsers: 0,
+    unopenedUserEmails: [],
+    totalAudience: 0
+  }
+
+  const dauBarsHtml = dailyActiveSeries.map((pt) => {
+    const isSelected = pt.date === defaultSelectedPoint.date
+    const totalPct = pt.totalActive > 0
+      ? Math.max(6, Math.round((pt.totalActive / maxScaleDau) * 100))
+      : 0
+    const newPct = pt.totalActive > 0 ? Math.round((pt.newUsers / pt.totalActive) * 100) : 0
+    const retPct = pt.totalActive > 0 ? (100 - newPct) : 0
+    const shortDate = escapeHtml(formatShortChartDate(pt.date))
+    const puzLabel = pt.puzzleId ? `#${escapeHtml(String(pt.puzzleId))}` : ''
+    const tooltip = `${pt.date}${pt.puzzleId ? ` (Puzzle #${pt.puzzleId})` : ''}: ${pt.totalActive} active (${pt.newUsers} new, ${pt.returningUsers} returning)`
+
+    return `
+      <div class="dau-bar-col ${isSelected ? 'selected' : ''}" data-date="${escapeHtml(pt.date)}" data-total="${pt.totalActive}" data-new="${pt.newUsers}" data-returning="${pt.returningUsers}" onclick="selectDauDay('${escapeHtml(pt.date)}')" onmouseenter="selectDauDay('${escapeHtml(pt.date)}')" title="${escapeHtml(tooltip)}">
+        <div class="dau-bar-track-wrap">
+          <span class="dau-bar-total ${pt.totalActive === 0 ? 'dau-bar-total-zero' : ''}">${pt.totalActive}</span>
+          <div class="dau-bar-stack" style="height: ${totalPct}%;">
+            <div class="dau-bar-segment dau-bar-new" style="height: ${newPct}%;" title="New users: ${pt.newUsers}">${pt.newUsers > 0 && totalPct >= 22 ? pt.newUsers : ''}</div>
+            <div class="dau-bar-segment dau-bar-returning" style="height: ${retPct}%;" title="Returning users: ${pt.returningUsers}">${pt.returningUsers > 0 && totalPct >= 22 ? pt.returningUsers : ''}</div>
+          </div>
+        </div>
+        <div class="dau-bar-x-axis">
+          <span class="dau-bar-date-label">${shortDate}</span>
+          <span class="dau-bar-puzzle-label">${puzLabel}</span>
+        </div>
+      </div>
+    `
+  }).join('\n')
+
+  const completionBarsHtml = dailyActiveSeries.map((pt) => {
+    const isSelected = pt.date === defaultSelectedPoint.date
+    const fin = pt.finishedUsers || 0
+    const unfin = pt.unfinishedUsers || 0
+    const openedOnly = pt.openedOnlyUsers || 0
+    const unopened = pt.unopenedUsers || 0
+    const totalOpens = pt.totalOpens ?? (fin + unfin + openedOnly)
+    const totalFunnel = pt.totalAudience ?? (totalOpens + unopened)
+    const totalPct = totalFunnel > 0
+      ? Math.max(6, Math.round((totalFunnel / maxScaleCompletion) * 100))
+      : 0
+    const unopenedPct = totalFunnel > 0 ? Math.round((unopened / totalFunnel) * 100) : 0
+    const openedOnlyPct = totalFunnel > 0 ? Math.round((openedOnly / totalFunnel) * 100) : 0
+    const unfinPct = totalFunnel > 0 ? Math.round((unfin / totalFunnel) * 100) : 0
+    const finPct = totalFunnel > 0 && fin > 0 ? Math.max(1, 100 - unopenedPct - openedOnlyPct - unfinPct) : 0
+    const shortDate = escapeHtml(formatShortChartDate(pt.date))
+    const puzLabel = pt.puzzleId ? `#${escapeHtml(String(pt.puzzleId))}` : ''
+    const tooltip = `${pt.date}${pt.puzzleId ? ` (Puzzle #${pt.puzzleId})` : ''}: ${totalFunnel} total (${fin} finished, ${unfin} didn't finish, ${openedOnly} opened only, ${unopened} subscribed not opened)`
+
+    return `
+      <div class="dau-bar-col completion-bar-col ${isSelected ? 'selected' : ''}" data-date="${escapeHtml(pt.date)}" data-total="${pt.totalActive}" data-opens="${totalOpens}" data-audience="${totalFunnel}" data-finished="${fin}" data-unfinished="${unfin}" data-opened-only="${openedOnly}" data-unopened="${unopened}" onclick="selectCompletionDay('${escapeHtml(pt.date)}')" onmouseenter="selectCompletionDay('${escapeHtml(pt.date)}')" title="${escapeHtml(tooltip)}">
+        <div class="dau-bar-track-wrap">
+          <span class="dau-bar-total ${totalFunnel === 0 ? 'dau-bar-total-zero' : ''}">${totalFunnel}</span>
+          <div class="dau-bar-stack" style="height: ${totalPct}%;">
+            <div class="dau-bar-segment dau-bar-unopened" style="height: ${unopenedPct}%;" title="Subscribed (not opened): ${unopened}">${unopened > 0 && totalPct >= 22 ? unopened : ''}</div>
+            <div class="dau-bar-segment dau-bar-opened" style="height: ${openedOnlyPct}%;" title="Opened (no guess): ${openedOnly}">${openedOnly > 0 && totalPct >= 22 ? openedOnly : ''}</div>
+            <div class="dau-bar-segment dau-bar-unfinished" style="height: ${unfinPct}%;" title="Attempted & didn't finish: ${unfin}">${unfin > 0 && totalPct >= 22 ? unfin : ''}</div>
+            <div class="dau-bar-segment dau-bar-finished" style="height: ${finPct}%;" title="Finished (Solved): ${fin}">${fin > 0 && totalPct >= 22 ? fin : ''}</div>
+          </div>
+        </div>
+        <div class="dau-bar-x-axis">
+          <span class="dau-bar-date-label">${shortDate}</span>
+          <span class="dau-bar-puzzle-label">${puzLabel}</span>
+        </div>
+      </div>
+    `
+  }).join('\n')
+
+  const defaultNewChipsHtml = defaultSelectedPoint.newUserEmails.length === 0
+    ? `<span style="color: #64748b; font-size: 11.5px;">None</span>`
+    : defaultSelectedPoint.newUserEmails.map(e => `<span class="dau-user-chip dau-chip-new" onclick="openUserSettings('${escapeHtml(e)}')" title="Inspect ${escapeHtml(e)}">${escapeHtml(e)}</span>`).join(' ')
+
+  const defaultReturningChipsHtml = defaultSelectedPoint.returningUserEmails.length === 0
+    ? `<span style="color: #64748b; font-size: 11.5px;">None</span>`
+    : defaultSelectedPoint.returningUserEmails.map(e => `<span class="dau-user-chip dau-chip-returning" onclick="openUserSettings('${escapeHtml(e)}')" title="Inspect ${escapeHtml(e)}">${escapeHtml(e)}</span>`).join(' ')
+
+  const defaultFinishedChipsHtml = (defaultSelectedPoint.finishedUserEmails || []).length === 0
+    ? `<span style="color: #64748b; font-size: 11.5px;">None</span>`
+    : (defaultSelectedPoint.finishedUserEmails || []).map(e => `<span class="dau-user-chip dau-chip-finished" onclick="openUserSettings('${escapeHtml(e)}')" title="Inspect ${escapeHtml(e)}">${escapeHtml(e)}</span>`).join(' ')
+
+  const defaultUnfinishedChipsHtml = (defaultSelectedPoint.unfinishedUserEmails || []).length === 0
+    ? `<span style="color: #64748b; font-size: 11.5px;">None</span>`
+    : (defaultSelectedPoint.unfinishedUserEmails || []).map(e => `<span class="dau-user-chip dau-chip-unfinished" onclick="openUserSettings('${escapeHtml(e)}')" title="Inspect ${escapeHtml(e)}">${escapeHtml(e)}</span>`).join(' ')
+
+  const defaultOpenedOnlyChipsHtml = (defaultSelectedPoint.openedOnlyUserEmails || []).length === 0
+    ? `<span style="color: #64748b; font-size: 11.5px;">None</span>`
+    : (defaultSelectedPoint.openedOnlyUserEmails || []).map(e => `<span class="dau-user-chip dau-chip-opened" onclick="openUserSettings('${escapeHtml(e)}')" title="Inspect ${escapeHtml(e)}">${escapeHtml(e)}</span>`).join(' ')
+
+  const defaultUnopenedChipsHtml = (defaultSelectedPoint.unopenedUserEmails || []).length === 0
+    ? `<span style="color: #64748b; font-size: 11.5px;">None</span>`
+    : (defaultSelectedPoint.unopenedUserEmails || []).map(e => `<span class="dau-user-chip dau-chip-unopened" onclick="openUserSettings('${escapeHtml(e)}')" title="Inspect ${escapeHtml(e)}">${escapeHtml(e)}</span>`).join(' ')
 
   // Puzzle dropdown options
   const puzzleOptionsHtml = stats.availablePuzzles.map((p) => {
@@ -342,6 +550,216 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
 
     <!-- TAB 1: GAMEPLAY & SCORES SECTION -->
     <div id="section-gameplay" style="display: ${initialTab === 'gameplay' ? 'block' : 'none'};">
+      <!-- Daily Active Users (New vs. Returning) Chart -->
+      <section class="dau-chart-card" id="dau-chart-section">
+        <div class="dau-chart-header">
+          <div class="dau-header-left">
+            <div class="panel-title">
+              <span>📊 Daily Active Users — New vs. Returning</span>
+              <span class="panel-count" id="dau-days-count">${dailyActiveSeries.length} day${dailyActiveSeries.length === 1 ? '' : 's'}</span>
+            </div>
+          </div>
+          <div class="dau-header-right">
+            <div class="dau-legend">
+              <span class="dau-legend-item">
+                <span class="dau-legend-dot dau-dot-new"></span>
+                <span>New Users (<strong id="dau-legend-new-total" style="color: #34d399;">${totalNewSessions}</strong>)</span>
+              </span>
+              <span class="dau-legend-item">
+                <span class="dau-legend-dot dau-dot-returning"></span>
+                <span>Returning Users (<strong id="dau-legend-returning-total" style="color: #38bdf8;">${totalReturningSessions}</strong>)</span>
+              </span>
+            </div>
+            <div class="segmented-toggle" id="dau-range-toggle">
+              <button type="button" class="seg-btn dau-range-btn" id="dau-range-7d" onclick="setDauRange(7, this)">7D</button>
+              <button type="button" class="seg-btn dau-range-btn" id="dau-range-14d" onclick="setDauRange(14, this)">14D</button>
+              <button type="button" class="seg-btn dau-range-btn active" id="dau-range-all" onclick="setDauRange(0, this)">All</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dau-summary-strip">
+          <div class="dau-summary-item">
+            <span class="dau-summary-label">Today's Active Users</span>
+            <div class="dau-summary-val-row">
+              <span class="dau-summary-val" id="dau-kpi-today">${todayActiveTotal}</span>
+              <span class="dau-summary-sub" id="dau-kpi-today-sub"><span style="color: #34d399; font-weight: 700;">${todayNewCount} new</span> &bull; <span style="color: #38bdf8; font-weight: 700;">${todayReturningCount} returning</span></span>
+            </div>
+          </div>
+          <div class="dau-summary-item">
+            <span class="dau-summary-label">Peak Daily Active</span>
+            <div class="dau-summary-val-row">
+              <span class="dau-summary-val" id="dau-kpi-peak">${peakActiveTotal}</span>
+              <span class="dau-summary-sub" id="dau-kpi-peak-sub">${escapeHtml(peakActiveSub)}</span>
+            </div>
+          </div>
+          <div class="dau-summary-item">
+            <span class="dau-summary-label">Avg Daily Active</span>
+            <div class="dau-summary-val-row">
+              <span class="dau-summary-val" id="dau-kpi-avg">${avgActivePerDay}</span>
+              <span class="dau-summary-sub" id="dau-kpi-avg-sub">across ${activeDaysList.length} active day${activeDaysList.length === 1 ? '' : 's'}</span>
+            </div>
+          </div>
+          <div class="dau-summary-item">
+            <span class="dau-summary-label">Returning Activity Share</span>
+            <div class="dau-summary-val-row">
+              <span class="dau-summary-val" id="dau-kpi-retention" style="color: #38bdf8;">${returningSharePct}%</span>
+              <span class="dau-summary-sub" id="dau-kpi-retention-sub">${totalReturningSessions} returning / ${totalActiveSessions} total daily active</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dau-chart-viewport">
+          <div class="dau-chart-area">
+            <div class="dau-y-axis" id="dau-y-axis">
+              ${yTicks.map(t => `<span>${t}</span>`).join('')}
+            </div>
+            <div class="dau-plot-wrap">
+              <div class="dau-grid-lines">
+                <div class="dau-grid-line"></div>
+                <div class="dau-grid-line"></div>
+                <div class="dau-grid-line"></div>
+                <div class="dau-grid-line"></div>
+                <div class="dau-grid-line"></div>
+              </div>
+              <div class="dau-bars-track" id="dau-bars-track">
+                ${dauBarsHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dau-day-detail-bar" id="dau-day-detail-bar">
+          <div class="dau-detail-title">
+            <span id="dau-detail-date">📅 ${escapeHtml(formatShortChartDate(defaultSelectedPoint.date))} (${escapeHtml(defaultSelectedPoint.date)})${defaultSelectedPoint.puzzleId ? ` &bull; Puzzle #${escapeHtml(String(defaultSelectedPoint.puzzleId))}` : ''}</span>
+            <span class="status-pill status-won" id="dau-detail-total">${defaultSelectedPoint.totalActive} Active User${defaultSelectedPoint.totalActive === 1 ? '' : 's'}</span>
+          </div>
+          <div class="dau-detail-groups">
+            <div class="dau-detail-group">
+              <span style="color: #34d399; font-weight: 700; font-size: 12px;">🟢 New (<span id="dau-detail-new-count">${defaultSelectedPoint.newUsers}</span>):</span>
+              <div class="dau-detail-group" id="dau-detail-new-chips">${defaultNewChipsHtml}</div>
+            </div>
+            <div class="dau-detail-group">
+              <span style="color: #38bdf8; font-weight: 700; font-size: 12px;">🔵 Returning (<span id="dau-detail-returning-count">${defaultSelectedPoint.returningUsers}</span>):</span>
+              <div class="dau-detail-group" id="dau-detail-returning-chips">${defaultReturningChipsHtml}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Daily Puzzle Completion & Opens Funnel Chart -->
+      <section class="dau-chart-card" id="completion-chart-section">
+        <div class="dau-chart-header">
+          <div class="dau-header-left">
+            <div class="panel-title">
+              <span>🎯 Daily Puzzle Completion — Finished vs. Attempted &amp; Didn't Finish vs. Opened vs. Subscribed</span>
+              <span class="panel-count" id="completion-days-count">${dailyActiveSeries.length} day${dailyActiveSeries.length === 1 ? '' : 's'}</span>
+            </div>
+          </div>
+          <div class="dau-header-right">
+            <div class="dau-legend">
+              <span class="dau-legend-item">
+                <span class="dau-legend-dot dau-dot-finished"></span>
+                <span>Finished (<strong id="completion-legend-finished-total" style="color: #34d399;">${totalFinishedSessions}</strong>)</span>
+              </span>
+              <span class="dau-legend-item">
+                <span class="dau-legend-dot dau-dot-unfinished"></span>
+                <span>Attempted &amp; Didn't Finish (<strong id="completion-legend-unfinished-total" style="color: #fbbf24;">${totalUnfinishedSessions}</strong>)</span>
+              </span>
+              <span class="dau-legend-item">
+                <span class="dau-legend-dot dau-dot-opened"></span>
+                <span>Opened — No Guess (<strong id="completion-legend-opened-total" style="color: #a78bfa;">${totalOpenedOnlySessions}</strong>)</span>
+              </span>
+              <span class="dau-legend-item">
+                <span class="dau-legend-dot dau-dot-unopened"></span>
+                <span>Subscribed — Not Opened (<strong id="completion-legend-unopened-total" style="color: #94a3b8;">${totalUnopenedSessions}</strong>)</span>
+              </span>
+            </div>
+            <div class="segmented-toggle" id="completion-range-toggle">
+              <button type="button" class="seg-btn completion-range-btn" id="completion-range-7d" onclick="setCompletionRange(7, this)">7D</button>
+              <button type="button" class="seg-btn completion-range-btn" id="completion-range-14d" onclick="setCompletionRange(14, this)">14D</button>
+              <button type="button" class="seg-btn completion-range-btn active" id="completion-range-all" onclick="setCompletionRange(0, this)">All</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dau-summary-strip">
+          <div class="dau-summary-item">
+            <span class="dau-summary-label">Today's Funnel</span>
+            <div class="dau-summary-val-row">
+              <span class="dau-summary-val" id="completion-kpi-today">${todayFinishedCount} / ${todayAudienceTotal}</span>
+              <span class="dau-summary-sub" id="completion-kpi-today-sub"><span style="color: #34d399; font-weight: 700;">${todayFinishedCount} finished</span> &bull; <span style="color: #fbbf24; font-weight: 700;">${todayUnfinishedCount} didn't finish</span> &bull; <span style="color: #a78bfa; font-weight: 700;">${todayOpenedOnlyCount} opened only</span> &bull; <span style="color: #94a3b8; font-weight: 700;">${todayUnopenedCount} not opened</span></span>
+            </div>
+          </div>
+          <div class="dau-summary-item">
+            <span class="dau-summary-label">Total Finished / Unfinished / Opened / Unopened</span>
+            <div class="dau-summary-val-row">
+              <span class="dau-summary-val" id="completion-kpi-totals"><span style="color: #34d399;">${totalFinishedSessions}</span> / <span style="color: #fbbf24;">${totalUnfinishedSessions}</span> / <span style="color: #a78bfa;">${totalOpenedOnlySessions}</span> / <span style="color: #94a3b8;">${totalUnopenedSessions}</span></span>
+              <span class="dau-summary-sub" id="completion-kpi-totals-sub">${totalOpensSessions} total opens (${totalActiveSessions} attempted, ${totalOpenedOnlySessions} opened only) &bull; ${totalUnopenedSessions} unopened</span>
+            </div>
+          </div>
+          <div class="dau-summary-item">
+            <span class="dau-summary-label">Avg Daily Funnel</span>
+            <div class="dau-summary-val-row">
+              <span class="dau-summary-val" id="completion-kpi-avg">${avgFinishedPerDay} / ${avgUnfinishedPerDay} / ${avgOpenedOnlyPerDay} / ${avgUnopenedPerDay}</span>
+              <span class="dau-summary-sub" id="completion-kpi-avg-sub">${avgFinishedPerDay} fin &bull; ${avgUnfinishedPerDay} unfin &bull; ${avgOpenedOnlyPerDay} open &bull; ${avgUnopenedPerDay} unopened/d</span>
+            </div>
+          </div>
+          <div class="dau-summary-item">
+            <span class="dau-summary-label">Open, Attempt &amp; Completion Rate</span>
+            <div class="dau-summary-val-row">
+              <span class="dau-summary-val" id="completion-kpi-rate" style="color: #34d399;">${overallCompletionPct}%</span>
+              <span class="dau-summary-sub" id="completion-kpi-rate-sub">${overallCompletionPct}% solved &bull; ${overallAttemptRatePct}% of opens attempted &bull; ${overallOpenRatePct}% opened</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dau-chart-viewport">
+          <div class="dau-chart-area">
+            <div class="dau-y-axis" id="completion-y-axis">
+              ${yTicksCompletion.map(t => `<span>${t}</span>`).join('')}
+            </div>
+            <div class="dau-plot-wrap">
+              <div class="dau-grid-lines">
+                <div class="dau-grid-line"></div>
+                <div class="dau-grid-line"></div>
+                <div class="dau-grid-line"></div>
+                <div class="dau-grid-line"></div>
+                <div class="dau-grid-line"></div>
+              </div>
+              <div class="dau-bars-track" id="completion-bars-track">
+                ${completionBarsHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dau-day-detail-bar" id="completion-day-detail-bar">
+          <div class="dau-detail-title">
+            <span id="completion-detail-date">📅 ${escapeHtml(formatShortChartDate(defaultSelectedPoint.date))} (${escapeHtml(defaultSelectedPoint.date)})${defaultSelectedPoint.puzzleId ? ` &bull; Puzzle #${escapeHtml(String(defaultSelectedPoint.puzzleId))}` : ''}</span>
+            <span class="status-pill status-won" id="completion-detail-total">${defaultSelectedPoint.finishedUsers || 0} Finished / ${defaultSelectedPoint.totalActive} Attempted / ${defaultSelectedPoint.totalOpens ?? defaultSelectedPoint.totalActive} Opened / ${defaultSelectedPoint.unopenedUsers || 0} Not Opened</span>
+          </div>
+          <div class="dau-detail-groups">
+            <div class="dau-detail-group">
+              <span style="color: #34d399; font-weight: 700; font-size: 12px;">🎉 Finished (<span id="completion-detail-finished-count">${defaultSelectedPoint.finishedUsers || 0}</span>):</span>
+              <div class="dau-detail-group" id="completion-detail-finished-chips">${defaultFinishedChipsHtml}</div>
+            </div>
+            <div class="dau-detail-group">
+              <span style="color: #fbbf24; font-weight: 700; font-size: 12px;">⏳ Attempted &amp; Didn't Finish (<span id="completion-detail-unfinished-count">${defaultSelectedPoint.unfinishedUsers || 0}</span>):</span>
+              <div class="dau-detail-group" id="completion-detail-unfinished-chips">${defaultUnfinishedChipsHtml}</div>
+            </div>
+            <div class="dau-detail-group">
+              <span style="color: #a78bfa; font-weight: 700; font-size: 12px;">📬 Opened — No Guess (<span id="completion-detail-opened-count">${defaultSelectedPoint.openedOnlyUsers || 0}</span>):</span>
+              <div class="dau-detail-group" id="completion-detail-opened-chips">${defaultOpenedOnlyChipsHtml}</div>
+            </div>
+            <div class="dau-detail-group">
+              <span style="color: #94a3b8; font-weight: 700; font-size: 12px;">📭 Subscribed — Not Opened (<span id="completion-detail-unopened-count">${defaultSelectedPoint.unopenedUsers || 0}</span>):</span>
+              <div class="dau-detail-group" id="completion-detail-unopened-chips">${defaultUnopenedChipsHtml}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Toolbar: Puzzle Switcher & Filter -->
       <section class="toolbar-card">
         <div class="toolbar-main-row">
@@ -823,9 +1241,408 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
 
     function setFilter(filter, btn) {
       activeFilter = filter;
-      document.querySelectorAll('#section-gameplay .tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.toolbar-card .tab-btn').forEach(function(b) { b.classList.remove('active'); });
       if (btn) btn.classList.add('active');
       applyFilters();
+    }
+
+    var dauRange = 0;
+    var selectedDauDate = '${escapeHtml(defaultSelectedPoint.date)}';
+
+    function formatShortDateJs(dateStr) {
+      if (!dateStr || !/^\\d{4}-\\d{2}-\\d{2}$/.test(dateStr)) return dateStr || '—';
+      var parts = dateStr.split('-');
+      var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      var m = parseInt(parts[1], 10);
+      var d = parseInt(parts[2], 10);
+      return (months[m - 1] || parts[1]) + ' ' + d;
+    }
+
+    function setDauRange(days, btn) {
+      dauRange = days || 0;
+      document.querySelectorAll('.dau-range-btn').forEach(function(b) { b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      renderDauChart(currentData.dailyActiveUsers || []);
+    }
+
+    function selectDauDay(dateStr) {
+      var series = (currentData && currentData.dailyActiveUsers) ? currentData.dailyActiveUsers : [];
+      var pt = series.find(function(p) { return p.date === dateStr; });
+      if (!pt) return;
+      selectedDauDate = dateStr;
+
+      document.querySelectorAll('#dau-bars-track .dau-bar-col').forEach(function(col) {
+        col.classList.toggle('selected', col.getAttribute('data-date') === dateStr);
+      });
+
+      var dateEl = document.getElementById('dau-detail-date');
+      if (dateEl) {
+        dateEl.innerHTML = '📅 ' + escapeHtmlStr(formatShortDateJs(pt.date)) + ' (' + escapeHtmlStr(pt.date) + ')' + (pt.puzzleId ? (' &bull; Puzzle #' + escapeHtmlStr(pt.puzzleId)) : '');
+      }
+      var totalEl = document.getElementById('dau-detail-total');
+      if (totalEl) {
+        totalEl.textContent = pt.totalActive + ' Active User' + (pt.totalActive === 1 ? '' : 's');
+      }
+      var newCountEl = document.getElementById('dau-detail-new-count');
+      if (newCountEl) newCountEl.textContent = pt.newUsers;
+      var retCountEl = document.getElementById('dau-detail-returning-count');
+      if (retCountEl) retCountEl.textContent = pt.returningUsers;
+
+      var newChipsEl = document.getElementById('dau-detail-new-chips');
+      if (newChipsEl) {
+        var newEmails = pt.newUserEmails || [];
+        newChipsEl.innerHTML = newEmails.length === 0
+          ? '<span style="color: #64748b; font-size: 11.5px;">None</span>'
+          : newEmails.map(function(e) {
+              var safe = escapeHtmlStr(e);
+              return '<span class="dau-user-chip dau-chip-new" onclick="openUserSettings(\\'' + safe + '\\')" title="Inspect ' + safe + '">' + safe + '</span>';
+            }).join(' ');
+      }
+
+      var retChipsEl = document.getElementById('dau-detail-returning-chips');
+      if (retChipsEl) {
+        var retEmails = pt.returningUserEmails || [];
+        retChipsEl.innerHTML = retEmails.length === 0
+          ? '<span style="color: #64748b; font-size: 11.5px;">None</span>'
+          : retEmails.map(function(e) {
+              var safe = escapeHtmlStr(e);
+              return '<span class="dau-user-chip dau-chip-returning" onclick="openUserSettings(\\'' + safe + '\\')" title="Inspect ' + safe + '">' + safe + '</span>';
+            }).join(' ');
+      }
+    }
+
+    function renderDauChart(fullSeries) {
+      if (!Array.isArray(fullSeries)) return;
+      var sliced = (dauRange > 0 && fullSeries.length > dauRange)
+        ? fullSeries.slice(fullSeries.length - dauRange)
+        : fullSeries;
+
+      var daysCountEl = document.getElementById('dau-days-count');
+      if (daysCountEl) {
+        daysCountEl.textContent = sliced.length + (sliced.length === 1 ? ' day' : ' days');
+      }
+
+      var sumActive = 0;
+      var sumNew = 0;
+      var sumRet = 0;
+      var activeDays = 0;
+      var peakPt = null;
+      var rawMax = 4;
+
+      sliced.forEach(function(p) {
+        sumActive += p.totalActive;
+        sumNew += p.newUsers;
+        sumRet += p.returningUsers;
+        if (p.totalActive > 0) activeDays++;
+        if (!peakPt || p.totalActive >= peakPt.totalActive) peakPt = p;
+        if (p.totalActive > rawMax) rawMax = p.totalActive;
+      });
+
+      var legNew = document.getElementById('dau-legend-new-total');
+      if (legNew) legNew.textContent = sumNew;
+      var legRet = document.getElementById('dau-legend-returning-total');
+      if (legRet) legRet.textContent = sumRet;
+
+      var todayDate = (currentData && currentData.todayPuzzle && currentData.todayPuzzle.date) ? currentData.todayPuzzle.date : '';
+      var todayPt = fullSeries.find(function(p) { return p.date === todayDate; }) || fullSeries[fullSeries.length - 1];
+      if (todayPt) {
+        var kpiToday = document.getElementById('dau-kpi-today');
+        if (kpiToday) kpiToday.textContent = todayPt.totalActive;
+        var kpiTodaySub = document.getElementById('dau-kpi-today-sub');
+        if (kpiTodaySub) {
+          kpiTodaySub.innerHTML = '<span style="color: #34d399; font-weight: 700;">' + todayPt.newUsers + ' new</span> &bull; <span style="color: #38bdf8; font-weight: 700;">' + todayPt.returningUsers + ' returning</span>';
+        }
+      }
+
+      var kpiPeak = document.getElementById('dau-kpi-peak');
+      if (kpiPeak) kpiPeak.textContent = peakPt ? peakPt.totalActive : 0;
+      var kpiPeakSub = document.getElementById('dau-kpi-peak-sub');
+      if (kpiPeakSub) {
+        kpiPeakSub.textContent = (peakPt && peakPt.totalActive > 0)
+          ? (formatShortDateJs(peakPt.date) + (peakPt.puzzleId ? (' (Puzzle #' + peakPt.puzzleId + ')') : ''))
+          : 'No plays recorded yet';
+      }
+
+      var kpiAvg = document.getElementById('dau-kpi-avg');
+      if (kpiAvg) kpiAvg.textContent = activeDays > 0 ? (sumActive / activeDays).toFixed(1) : '0.0';
+      var kpiAvgSub = document.getElementById('dau-kpi-avg-sub');
+      if (kpiAvgSub) kpiAvgSub.textContent = 'across ' + activeDays + ' active day' + (activeDays === 1 ? '' : 's');
+
+      var retPct = sumActive > 0 ? Math.round((sumRet / sumActive) * 100) : 0;
+      var kpiRet = document.getElementById('dau-kpi-retention');
+      if (kpiRet) kpiRet.textContent = retPct + '%';
+      var kpiRetSub = document.getElementById('dau-kpi-retention-sub');
+      if (kpiRetSub) kpiRetSub.textContent = sumRet + ' returning / ' + sumActive + ' total daily active';
+
+      var maxScale = Math.max(4, Math.ceil(rawMax / 4) * 4);
+      var yAxisEl = document.getElementById('dau-y-axis');
+      if (yAxisEl) {
+        var ticks = [maxScale, Math.round(maxScale * 0.75), Math.round(maxScale * 0.5), Math.round(maxScale * 0.25), 0];
+        yAxisEl.innerHTML = ticks.map(function(t) { return '<span>' + t + '</span>'; }).join('');
+      }
+
+      var trackEl = document.getElementById('dau-bars-track');
+      if (trackEl) {
+        trackEl.innerHTML = sliced.map(function(pt) {
+          var isSel = pt.date === selectedDauDate;
+          var totalPct = pt.totalActive > 0 ? Math.max(6, Math.round((pt.totalActive / maxScale) * 100)) : 0;
+          var newPct = pt.totalActive > 0 ? Math.round((pt.newUsers / pt.totalActive) * 100) : 0;
+          var rPct = pt.totalActive > 0 ? (100 - newPct) : 0;
+          var shortDate = escapeHtmlStr(formatShortDateJs(pt.date));
+          var puzLabel = pt.puzzleId ? ('#' + escapeHtmlStr(pt.puzzleId)) : '';
+          var safeDate = escapeHtmlStr(pt.date);
+          var tooltip = safeDate + (pt.puzzleId ? (' (Puzzle #' + escapeHtmlStr(pt.puzzleId) + ')') : '') + ': ' + pt.totalActive + ' active (' + pt.newUsers + ' new, ' + pt.returningUsers + ' returning)';
+
+          return '<div class="dau-bar-col ' + (isSel ? 'selected' : '') + '" data-date="' + safeDate + '" data-total="' + pt.totalActive + '" data-new="' + pt.newUsers + '" data-returning="' + pt.returningUsers + '" onclick="selectDauDay(\\'' + safeDate + '\\')" onmouseenter="selectDauDay(\\'' + safeDate + '\\')" title="' + tooltip + '">' +
+            '<div class="dau-bar-track-wrap">' +
+              '<span class="dau-bar-total ' + (pt.totalActive === 0 ? 'dau-bar-total-zero' : '') + '">' + pt.totalActive + '</span>' +
+              '<div class="dau-bar-stack" style="height: ' + totalPct + '%;">' +
+                '<div class="dau-bar-segment dau-bar-new" style="height: ' + newPct + '%;" title="New users: ' + pt.newUsers + '">' + (pt.newUsers > 0 && totalPct >= 22 ? pt.newUsers : '') + '</div>' +
+                '<div class="dau-bar-segment dau-bar-returning" style="height: ' + rPct + '%;" title="Returning users: ' + pt.returningUsers + '">' + (pt.returningUsers > 0 && totalPct >= 22 ? pt.returningUsers : '') + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="dau-bar-x-axis">' +
+              '<span class="dau-bar-date-label">' + shortDate + '</span>' +
+              '<span class="dau-bar-puzzle-label">' + puzLabel + '</span>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      if (selectedDauDate && sliced.some(function(p) { return p.date === selectedDauDate; })) {
+        selectDauDay(selectedDauDate);
+      } else if (sliced.length > 0) {
+        var lastActive = sliced.slice().reverse().find(function(p) { return p.totalActive > 0; }) || sliced[sliced.length - 1];
+        selectDauDay(lastActive.date);
+      }
+    }
+
+    var completionRange = 0;
+    var selectedCompletionDate = '${escapeHtml(defaultSelectedPoint.date)}';
+
+    function setCompletionRange(days, btn) {
+      completionRange = days || 0;
+      document.querySelectorAll('.completion-range-btn').forEach(function(b) { b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      renderCompletionChart(currentData.dailyActiveUsers || []);
+    }
+
+    function selectCompletionDay(dateStr) {
+      var series = (currentData && currentData.dailyActiveUsers) ? currentData.dailyActiveUsers : [];
+      var pt = series.find(function(p) { return p.date === dateStr; });
+      if (!pt) return;
+      selectedCompletionDate = dateStr;
+
+      document.querySelectorAll('#completion-bars-track .completion-bar-col').forEach(function(col) {
+        col.classList.toggle('selected', col.getAttribute('data-date') === dateStr);
+      });
+
+      var fin = pt.finishedUsers || 0;
+      var unfin = pt.unfinishedUsers || 0;
+      var openedOnly = pt.openedOnlyUsers || 0;
+      var unopened = pt.unopenedUsers || 0;
+      var totalOpens = (typeof pt.totalOpens === 'number') ? pt.totalOpens : (fin + unfin + openedOnly);
+
+      var dateEl = document.getElementById('completion-detail-date');
+      if (dateEl) {
+        dateEl.innerHTML = '📅 ' + escapeHtmlStr(formatShortDateJs(pt.date)) + ' (' + escapeHtmlStr(pt.date) + ')' + (pt.puzzleId ? (' &bull; Puzzle #' + escapeHtmlStr(pt.puzzleId)) : '');
+      }
+      var totalEl = document.getElementById('completion-detail-total');
+      if (totalEl) {
+        totalEl.textContent = fin + ' Finished / ' + pt.totalActive + ' Attempted / ' + totalOpens + ' Opened / ' + unopened + ' Not Opened';
+      }
+      var finCountEl = document.getElementById('completion-detail-finished-count');
+      if (finCountEl) finCountEl.textContent = fin;
+      var unfinCountEl = document.getElementById('completion-detail-unfinished-count');
+      if (unfinCountEl) unfinCountEl.textContent = unfin;
+      var openCountEl = document.getElementById('completion-detail-opened-count');
+      if (openCountEl) openCountEl.textContent = openedOnly;
+      var unopenCountEl = document.getElementById('completion-detail-unopened-count');
+      if (unopenCountEl) unopenCountEl.textContent = unopened;
+
+      var finChipsEl = document.getElementById('completion-detail-finished-chips');
+      if (finChipsEl) {
+        var finEmails = pt.finishedUserEmails || [];
+        finChipsEl.innerHTML = finEmails.length === 0
+          ? '<span style="color: #64748b; font-size: 11.5px;">None</span>'
+          : finEmails.map(function(e) {
+              var safe = escapeHtmlStr(e);
+              return '<span class="dau-user-chip dau-chip-finished" onclick="openUserSettings(\\'' + safe + '\\')" title="Inspect ' + safe + '">' + safe + '</span>';
+            }).join(' ');
+      }
+
+      var unfinChipsEl = document.getElementById('completion-detail-unfinished-chips');
+      if (unfinChipsEl) {
+        var unfinEmails = pt.unfinishedUserEmails || [];
+        unfinChipsEl.innerHTML = unfinEmails.length === 0
+          ? '<span style="color: #64748b; font-size: 11.5px;">None</span>'
+          : unfinEmails.map(function(e) {
+              var safe = escapeHtmlStr(e);
+              return '<span class="dau-user-chip dau-chip-unfinished" onclick="openUserSettings(\\'' + safe + '\\')" title="Inspect ' + safe + '">' + safe + '</span>';
+            }).join(' ');
+      }
+
+      var openChipsEl = document.getElementById('completion-detail-opened-chips');
+      if (openChipsEl) {
+        var openEmails = pt.openedOnlyUserEmails || [];
+        openChipsEl.innerHTML = openEmails.length === 0
+          ? '<span style="color: #64748b; font-size: 11.5px;">None</span>'
+          : openEmails.map(function(e) {
+              var safe = escapeHtmlStr(e);
+              return '<span class="dau-user-chip dau-chip-opened" onclick="openUserSettings(\\'' + safe + '\\')" title="Inspect ' + safe + '">' + safe + '</span>';
+            }).join(' ');
+      }
+
+      var unopenChipsEl = document.getElementById('completion-detail-unopened-chips');
+      if (unopenChipsEl) {
+        var unopenEmails = pt.unopenedUserEmails || [];
+        unopenChipsEl.innerHTML = unopenEmails.length === 0
+          ? '<span style="color: #64748b; font-size: 11.5px;">None</span>'
+          : unopenEmails.map(function(e) {
+              var safe = escapeHtmlStr(e);
+              return '<span class="dau-user-chip dau-chip-unopened" onclick="openUserSettings(\\'' + safe + '\\')" title="Inspect ' + safe + '">' + safe + '</span>';
+            }).join(' ');
+      }
+    }
+
+    function renderCompletionChart(fullSeries) {
+      if (!Array.isArray(fullSeries)) return;
+      var sliced = (completionRange > 0 && fullSeries.length > completionRange)
+        ? fullSeries.slice(fullSeries.length - completionRange)
+        : fullSeries;
+
+      var daysCountEl = document.getElementById('completion-days-count');
+      if (daysCountEl) {
+        daysCountEl.textContent = sliced.length + (sliced.length === 1 ? ' day' : ' days');
+      }
+
+      var sumActive = 0;
+      var sumFin = 0;
+      var sumUnfin = 0;
+      var sumOpenedOnly = 0;
+      var sumUnopened = 0;
+      var sumOpens = 0;
+      var sumAudience = 0;
+      var funnelDays = 0;
+      var rawMax = 4;
+
+      sliced.forEach(function(p) {
+        var fin = p.finishedUsers || 0;
+        var unfin = p.unfinishedUsers || 0;
+        var openedOnly = p.openedOnlyUsers || 0;
+        var unopened = p.unopenedUsers || 0;
+        var totalOpens = (typeof p.totalOpens === 'number') ? p.totalOpens : (fin + unfin + openedOnly);
+        var totalFunnel = (typeof p.totalAudience === 'number') ? p.totalAudience : (totalOpens + unopened);
+        sumActive += p.totalActive;
+        sumFin += fin;
+        sumUnfin += unfin;
+        sumOpenedOnly += openedOnly;
+        sumUnopened += unopened;
+        sumOpens += totalOpens;
+        sumAudience += totalFunnel;
+        if (totalFunnel > 0) funnelDays++;
+        if (totalFunnel > rawMax) rawMax = totalFunnel;
+      });
+
+      var legFin = document.getElementById('completion-legend-finished-total');
+      if (legFin) legFin.textContent = sumFin;
+      var legUnfin = document.getElementById('completion-legend-unfinished-total');
+      if (legUnfin) legUnfin.textContent = sumUnfin;
+      var legOpen = document.getElementById('completion-legend-opened-total');
+      if (legOpen) legOpen.textContent = sumOpenedOnly;
+      var legUnopen = document.getElementById('completion-legend-unopened-total');
+      if (legUnopen) legUnopen.textContent = sumUnopened;
+
+      var todayDate = (currentData && currentData.todayPuzzle && currentData.todayPuzzle.date) ? currentData.todayPuzzle.date : '';
+      var todayPt = fullSeries.find(function(p) { return p.date === todayDate; }) || fullSeries[fullSeries.length - 1];
+      if (todayPt) {
+        var tFin = todayPt.finishedUsers || 0;
+        var tUnfin = todayPt.unfinishedUsers || 0;
+        var tOpenOnly = todayPt.openedOnlyUsers || 0;
+        var tUnopened = todayPt.unopenedUsers || 0;
+        var tOpens = (typeof todayPt.totalOpens === 'number') ? todayPt.totalOpens : (tFin + tUnfin + tOpenOnly);
+        var tAudience = (typeof todayPt.totalAudience === 'number') ? todayPt.totalAudience : (tOpens + tUnopened);
+        var kpiToday = document.getElementById('completion-kpi-today');
+        if (kpiToday) kpiToday.textContent = tFin + ' / ' + tAudience;
+        var kpiTodaySub = document.getElementById('completion-kpi-today-sub');
+        if (kpiTodaySub) {
+          kpiTodaySub.innerHTML = '<span style="color: #34d399; font-weight: 700;">' + tFin + ' finished</span> &bull; <span style="color: #fbbf24; font-weight: 700;">' + tUnfin + ' didn\\'t finish</span> &bull; <span style="color: #a78bfa; font-weight: 700;">' + tOpenOnly + ' opened only</span> &bull; <span style="color: #94a3b8; font-weight: 700;">' + tUnopened + ' not opened</span>';
+        }
+      }
+
+      var kpiTotals = document.getElementById('completion-kpi-totals');
+      if (kpiTotals) kpiTotals.innerHTML = '<span style="color: #34d399;">' + sumFin + '</span> / <span style="color: #fbbf24;">' + sumUnfin + '</span> / <span style="color: #a78bfa;">' + sumOpenedOnly + '</span> / <span style="color: #94a3b8;">' + sumUnopened + '</span>';
+      var kpiTotalsSub = document.getElementById('completion-kpi-totals-sub');
+      if (kpiTotalsSub) kpiTotalsSub.innerHTML = sumOpens + ' total opens (' + sumActive + ' attempted, ' + sumOpenedOnly + ' opened only) &bull; ' + sumUnopened + ' unopened';
+
+      var avgFin = funnelDays > 0 ? (sumFin / funnelDays).toFixed(1) : '0.0';
+      var avgUnfin = funnelDays > 0 ? (sumUnfin / funnelDays).toFixed(1) : '0.0';
+      var avgOpenOnly = funnelDays > 0 ? (sumOpenedOnly / funnelDays).toFixed(1) : '0.0';
+      var avgUnopen = funnelDays > 0 ? (sumUnopened / funnelDays).toFixed(1) : '0.0';
+      var kpiAvg = document.getElementById('completion-kpi-avg');
+      if (kpiAvg) kpiAvg.textContent = avgFin + ' / ' + avgUnfin + ' / ' + avgOpenOnly + ' / ' + avgUnopen;
+      var kpiAvgSub = document.getElementById('completion-kpi-avg-sub');
+      if (kpiAvgSub) kpiAvgSub.innerHTML = avgFin + ' fin &bull; ' + avgUnfin + ' unfin &bull; ' + avgOpenOnly + ' open &bull; ' + avgUnopen + ' unopened/d';
+
+      var ratePct = sumActive > 0 ? Math.round((sumFin / sumActive) * 100) : 0;
+      var attemptPct = sumOpens > 0 ? Math.round((sumActive / sumOpens) * 100) : 0;
+      var openPct = sumAudience > 0 ? Math.round((sumOpens / sumAudience) * 100) : 0;
+      var kpiRate = document.getElementById('completion-kpi-rate');
+      if (kpiRate) kpiRate.textContent = ratePct + '%';
+      var kpiRateSub = document.getElementById('completion-kpi-rate-sub');
+      if (kpiRateSub) kpiRateSub.innerHTML = ratePct + '% solved &bull; ' + attemptPct + '% of opens attempted &bull; ' + openPct + '% opened';
+
+      var maxScale = Math.max(4, Math.ceil(rawMax / 4) * 4);
+      var yAxisEl = document.getElementById('completion-y-axis');
+      if (yAxisEl) {
+        var ticks = [maxScale, Math.round(maxScale * 0.75), Math.round(maxScale * 0.5), Math.round(maxScale * 0.25), 0];
+        yAxisEl.innerHTML = ticks.map(function(t) { return '<span>' + t + '</span>'; }).join('');
+      }
+
+      var trackEl = document.getElementById('completion-bars-track');
+      if (trackEl) {
+        trackEl.innerHTML = sliced.map(function(pt) {
+          var isSel = pt.date === selectedCompletionDate;
+          var fin = pt.finishedUsers || 0;
+          var unfin = pt.unfinishedUsers || 0;
+          var openedOnly = pt.openedOnlyUsers || 0;
+          var unopened = pt.unopenedUsers || 0;
+          var totalOpens = (typeof pt.totalOpens === 'number') ? pt.totalOpens : (fin + unfin + openedOnly);
+          var totalFunnel = (typeof pt.totalAudience === 'number') ? pt.totalAudience : (totalOpens + unopened);
+          var totalPct = totalFunnel > 0 ? Math.max(6, Math.round((totalFunnel / maxScale) * 100)) : 0;
+          var unopenedPct = totalFunnel > 0 ? Math.round((unopened / totalFunnel) * 100) : 0;
+          var openedOnlyPct = totalFunnel > 0 ? Math.round((openedOnly / totalFunnel) * 100) : 0;
+          var unfinPct = totalFunnel > 0 ? Math.round((unfin / totalFunnel) * 100) : 0;
+          var finPct = (totalFunnel > 0 && fin > 0) ? Math.max(1, 100 - unopenedPct - openedOnlyPct - unfinPct) : 0;
+          var shortDate = escapeHtmlStr(formatShortDateJs(pt.date));
+          var puzLabel = pt.puzzleId ? ('#' + escapeHtmlStr(pt.puzzleId)) : '';
+          var safeDate = escapeHtmlStr(pt.date);
+          var tooltip = safeDate + (pt.puzzleId ? (' (Puzzle #' + escapeHtmlStr(pt.puzzleId) + ')') : '') + ': ' + totalFunnel + ' total (' + fin + ' finished, ' + unfin + ' didn\\'t finish, ' + openedOnly + ' opened only, ' + unopened + ' subscribed not opened)';
+
+          return '<div class="dau-bar-col completion-bar-col ' + (isSel ? 'selected' : '') + '" data-date="' + safeDate + '" data-total="' + pt.totalActive + '" data-opens="' + totalOpens + '" data-audience="' + totalFunnel + '" data-finished="' + fin + '" data-unfinished="' + unfin + '" data-opened-only="' + openedOnly + '" data-unopened="' + unopened + '" onclick="selectCompletionDay(\\'' + safeDate + '\\')" onmouseenter="selectCompletionDay(\\'' + safeDate + '\\')" title="' + tooltip + '">' +
+            '<div class="dau-bar-track-wrap">' +
+              '<span class="dau-bar-total ' + (totalFunnel === 0 ? 'dau-bar-total-zero' : '') + '">' + totalFunnel + '</span>' +
+              '<div class="dau-bar-stack" style="height: ' + totalPct + '%;">' +
+                '<div class="dau-bar-segment dau-bar-unopened" style="height: ' + unopenedPct + '%;" title="Subscribed (not opened): ' + unopened + '">' + (unopened > 0 && totalPct >= 22 ? unopened : '') + '</div>' +
+                '<div class="dau-bar-segment dau-bar-opened" style="height: ' + openedOnlyPct + '%;" title="Opened (no guess): ' + openedOnly + '">' + (openedOnly > 0 && totalPct >= 22 ? openedOnly : '') + '</div>' +
+                '<div class="dau-bar-segment dau-bar-unfinished" style="height: ' + unfinPct + '%;" title="Attempted & didn\\'t finish: ' + unfin + '">' + (unfin > 0 && totalPct >= 22 ? unfin : '') + '</div>' +
+                '<div class="dau-bar-segment dau-bar-finished" style="height: ' + finPct + '%;" title="Finished (Solved): ' + fin + '">' + (fin > 0 && totalPct >= 22 ? fin : '') + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="dau-bar-x-axis">' +
+              '<span class="dau-bar-date-label">' + shortDate + '</span>' +
+              '<span class="dau-bar-puzzle-label">' + puzLabel + '</span>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      if (selectedCompletionDate && sliced.some(function(p) { return p.date === selectedCompletionDate; })) {
+        selectCompletionDay(selectedCompletionDate);
+      } else if (sliced.length > 0) {
+        var lastActive = sliced.slice().reverse().find(function(p) { return (p.totalAudience || p.totalOpens || p.totalActive) > 0; }) || sliced[sliced.length - 1];
+        selectCompletionDay(lastActive.date);
+      }
     }
 
     function applyFilters() {
@@ -1032,6 +1849,12 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
       document.getElementById('count-all').textContent = data.selectedPlays.length;
       document.getElementById('count-won').textContent = data.selectedPuzzleStats.totalWon;
       document.getElementById('count-playing').textContent = data.selectedPuzzleStats.totalPlaying;
+
+      if (data.dailyActiveUsers) {
+        currentData.dailyActiveUsers = data.dailyActiveUsers;
+        renderDauChart(data.dailyActiveUsers);
+        renderCompletionChart(data.dailyActiveUsers);
+      }
 
       renderScoresTable(data.selectedPlays);
       applyFilters();

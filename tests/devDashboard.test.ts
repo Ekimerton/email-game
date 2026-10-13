@@ -528,4 +528,187 @@ describe('Live Production Analytics Dashboard (/dev/dashboard & /api/admin/dashb
       expect(pageHtml).toContain('section-user-settings')
     })
   })
+
+  describe('Daily Active Users Chart (New vs. Returning per Day)', () => {
+    it('should accurately compute dailyActiveUsers with new, returning, opened-only, and unopened subscribed users per day', async () => {
+      // Seed subscribers list:
+      // - alice & bob subscribed on Day 1 (2026-09-28)
+      // - evan subscribed on Day 2 (2026-09-29) and never opens
+      // - frank is unsubscribed and should not be counted in unopened active subscribers
+      const subscribers: SubscriberEntry[] = [
+        { email: 'alice@acme.com', domain: 'acme.com', subscribedAt: '2026-09-28T08:00:00.000Z', status: 'active' },
+        { email: 'bob@acme.com', domain: 'acme.com', subscribedAt: '2026-09-28T08:30:00.000Z', status: 'active' },
+        { email: 'evan@acme.com', domain: 'acme.com', subscribedAt: '2026-09-29T07:00:00.000Z', status: 'active' },
+        { email: 'frank@acme.com', domain: 'acme.com', subscribedAt: '2026-09-28T08:00:00.000Z', status: 'unsubscribed' }
+      ]
+      MEMORY_STORE.set('subscribers:list', subscribers)
+
+      // Day 1 (2026-09-28, Puzzle #1): Alice and Bob play for the first time -> 2 New, 0 Returning
+      MEMORY_STORE.set('game:2026-09-28:alice@acme.com', {
+        puzzleId: '1',
+        date: '2026-09-28',
+        guessCount: 2,
+        guessedWords: ['TEST', 'LOAD'],
+        score: 900,
+        hasWon: true,
+        updatedAt: '2026-09-28T09:10:00.000Z'
+      })
+      MEMORY_STORE.set('game:2026-09-28:bob@acme.com', {
+        puzzleId: '1',
+        date: '2026-09-28',
+        guessCount: 1,
+        guessedWords: ['LOAD'],
+        score: 1000,
+        hasWon: true,
+        updatedAt: '2026-09-28T10:15:00.000Z'
+      })
+
+      // Day 2 (2026-09-29, Puzzle #2): Alice returns, Charlie plays for the first time -> 1 New, 1 Returning
+      // Also Alice plays dev prescreen #44 on the same day -> must be deduplicated on 2026-09-29
+      MEMORY_STORE.set('game:2026-09-29:alice@acme.com', {
+        puzzleId: '2',
+        date: '2026-09-29',
+        guessCount: 1,
+        guessedWords: ['CONVERT'],
+        score: 1000,
+        hasWon: true,
+        updatedAt: '2026-09-29T09:05:00.000Z'
+      })
+      MEMORY_STORE.set('game:2026-09-29:dev:alice@acme.com', {
+        puzzleId: '44',
+        date: '2026-09-29',
+        guessCount: 2,
+        guessedWords: ['TEST', 'CODE'],
+        score: 900,
+        hasWon: true,
+        updatedAt: '2026-09-29T09:20:00.000Z'
+      })
+      MEMORY_STORE.set('game:2026-09-29:charlie@acme.com', {
+        puzzleId: '2',
+        date: '2026-09-29',
+        guessCount: 2,
+        guessedWords: ['XXXXXXX', 'YYYYYYY'],
+        score: 0,
+        hasWon: false,
+        updatedAt: '2026-09-29T11:00:00.000Z'
+      })
+
+      // Diana opens Day 2 (2026-09-29) via GET /api/state without submitting any guess
+      // Alice also loads GET /api/state on Day 2 (must not be counted as openedOnly since she finished)
+      const openDianaRes = await app.request('/api/state?email=diana@acme.com&date=2026-09-29')
+      expect(openDianaRes.status).toBe(200)
+      const openAliceRes = await app.request('/api/state?email=alice@acme.com&date=2026-09-29')
+      expect(openAliceRes.status).toBe(200)
+
+      // Day 3 (2026-09-30, Puzzle #3): Alice, Bob, and Charlie all play -> 0 New, 3 Returning (2 Finished, 1 Unfinished)
+      MEMORY_STORE.set('game:2026-09-30:alice@acme.com', {
+        puzzleId: '3',
+        date: '2026-09-30',
+        guessCount: 1,
+        guessedWords: ['ENTRANCE'],
+        score: 1000,
+        hasWon: true,
+        updatedAt: '2026-09-30T09:00:00.000Z'
+      })
+      MEMORY_STORE.set('game:2026-09-30:bob@acme.com', {
+        puzzleId: '3',
+        date: '2026-09-30',
+        guessCount: 2,
+        guessedWords: ['TESTINGS', 'BUILDING'],
+        score: 0,
+        hasWon: false,
+        updatedAt: '2026-09-30T10:00:00.000Z'
+      })
+      MEMORY_STORE.set('game:2026-09-30:charlie@acme.com', {
+        puzzleId: '3',
+        date: '2026-09-30',
+        guessCount: 1,
+        guessedWords: ['ENTRANCE'],
+        score: 1000,
+        hasWon: true,
+        updatedAt: '2026-09-30T11:00:00.000Z'
+      })
+
+      const res = await app.request('/api/admin/dashboard-data')
+      expect(res.status).toBe(200)
+      const data = await res.json() as any
+      expect(data.success).toBe(true)
+      expect(Array.isArray(data.dailyActiveUsers)).toBe(true)
+
+      const day1 = data.dailyActiveUsers.find((d: any) => d.date === '2026-09-28')
+      expect(day1).toBeDefined()
+      expect(day1.totalActive).toBe(2)
+      expect(day1.newUsers).toBe(2)
+      expect(day1.returningUsers).toBe(0)
+      expect(day1.newUserEmails).toEqual(['alice@acme.com', 'bob@acme.com'])
+      expect(day1.returningUserEmails).toEqual([])
+      expect(day1.finishedUsers).toBe(2)
+      expect(day1.unfinishedUsers).toBe(0)
+      expect(day1.openedOnlyUsers).toBe(0)
+      expect(day1.unopenedUsers).toBe(0)
+      expect(day1.totalOpens).toBe(2)
+      expect(day1.totalAudience).toBe(2)
+      expect(day1.completionRate).toBe(100)
+      expect(day1.finishedUserEmails).toEqual(['alice@acme.com', 'bob@acme.com'])
+      expect(day1.unfinishedUserEmails).toEqual([])
+      expect(day1.openedOnlyUserEmails).toEqual([])
+      expect(day1.unopenedUserEmails).toEqual([])
+
+      const day2 = data.dailyActiveUsers.find((d: any) => d.date === '2026-09-29')
+      expect(day2).toBeDefined()
+      expect(day2.totalActive).toBe(2)
+      expect(day2.newUsers).toBe(1)
+      expect(day2.returningUsers).toBe(1)
+      expect(day2.newUserEmails).toEqual(['charlie@acme.com'])
+      expect(day2.returningUserEmails).toEqual(['alice@acme.com'])
+      expect(day2.finishedUsers).toBe(1)
+      expect(day2.unfinishedUsers).toBe(1)
+      expect(day2.openedOnlyUsers).toBe(1)
+      expect(day2.unopenedUsers).toBe(2)
+      expect(day2.totalOpens).toBe(3)
+      expect(day2.totalAudience).toBe(5)
+      expect(day2.completionRate).toBe(50)
+      expect(day2.finishedUserEmails).toEqual(['alice@acme.com'])
+      expect(day2.unfinishedUserEmails).toEqual(['charlie@acme.com'])
+      expect(day2.openedOnlyUserEmails).toEqual(['diana@acme.com'])
+      expect(day2.unopenedUserEmails).toEqual(['bob@acme.com', 'evan@acme.com'])
+
+      const day3 = data.dailyActiveUsers.find((d: any) => d.date === '2026-09-30')
+      expect(day3).toBeDefined()
+      expect(day3.totalActive).toBe(3)
+      expect(day3.newUsers).toBe(0)
+      expect(day3.returningUsers).toBe(3)
+      expect(day3.newUserEmails).toEqual([])
+      expect(day3.returningUserEmails).toEqual(['alice@acme.com', 'bob@acme.com', 'charlie@acme.com'])
+      expect(day3.finishedUsers).toBe(2)
+      expect(day3.unfinishedUsers).toBe(1)
+      expect(day3.openedOnlyUsers).toBe(0)
+      expect(day3.unopenedUsers).toBe(1)
+      expect(day3.totalOpens).toBe(3)
+      expect(day3.totalAudience).toBe(4)
+      expect(day3.completionRate).toBe(67)
+      expect(day3.finishedUserEmails).toEqual(['alice@acme.com', 'charlie@acme.com'])
+      expect(day3.unfinishedUserEmails).toEqual(['bob@acme.com'])
+      expect(day3.openedOnlyUserEmails).toEqual([])
+      expect(day3.unopenedUserEmails).toEqual(['evan@acme.com'])
+
+      // Verify /dev/dashboard HTML renders both the Daily Active Users chart and Daily Puzzle Completion chart
+      const dashRes = await app.request('http://localhost:8787/dev/dashboard?source=local')
+      expect(dashRes.status).toBe(200)
+      const html = await dashRes.text()
+      expect(html).toContain('dau-chart-section')
+      expect(html).toContain('Daily Active Users — New vs. Returning')
+      expect(html).toContain('data-date="2026-09-28" data-total="2" data-new="2" data-returning="0"')
+      expect(html).toContain('data-date="2026-09-29" data-total="2" data-new="1" data-returning="1"')
+      expect(html).toContain('data-date="2026-09-30" data-total="3" data-new="0" data-returning="3"')
+
+      expect(html).toContain('completion-chart-section')
+      expect(html).toContain('Daily Puzzle Completion — Finished vs. Attempted &amp; Didn\'t Finish vs. Opened vs. Subscribed')
+      expect(html).toContain('Subscribed — Not Opened')
+      expect(html).toContain('data-date="2026-09-28" data-total="2" data-opens="2" data-audience="2" data-finished="2" data-unfinished="0" data-opened-only="0" data-unopened="0"')
+      expect(html).toContain('data-date="2026-09-29" data-total="2" data-opens="3" data-audience="5" data-finished="1" data-unfinished="1" data-opened-only="1" data-unopened="2"')
+      expect(html).toContain('data-date="2026-09-30" data-total="3" data-opens="3" data-audience="4" data-finished="2" data-unfinished="1" data-opened-only="0" data-unopened="1"')
+    })
+  })
 })
+

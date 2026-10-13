@@ -278,17 +278,96 @@ describe('Inactivity Unsubscribe Feature (7 Days in a Row)', () => {
     expect(dispatchResult.unsubscribedDueToInactivity).toContain(inactiveUser)
   })
 
-  it('should render clean notification email HTML and Text for inactivity unsubscription', () => {
-    const html = renderInactivityUnsubscribeEmailHtml({ origin: 'https://inboxed.fun' })
-    const text = renderInactivityUnsubscribeEmailText({ origin: 'https://inboxed.fun' })
+  it('should render clean notification email HTML and Text for inactivity unsubscription with User Preferences button', () => {
+    const email = 'inactive_reader@corp.com'
+    const html = renderInactivityUnsubscribeEmailHtml({
+      origin: 'https://inboxed.fun',
+      email,
+    })
+    const text = renderInactivityUnsubscribeEmailText({
+      origin: 'https://inboxed.fun',
+      email,
+    })
 
     expect(html).toContain("You've been unsubscribed")
     expect(html).toContain("haven't played Inboxed for the last 7 days")
-    expect(html).toContain('https://inboxed.fun')
+    expect(html).toContain('Resubscribe')
+    expect(html).toContain('https://inboxed.fun/account?token=')
 
     expect(text).toContain("You've been unsubscribed from Inboxed")
     expect(text).toContain("haven't played Inboxed for the last 7 days")
-    expect(text).toContain('https://inboxed.fun')
+    expect(text).toContain('https://inboxed.fun/account?token=')
+  })
+
+  it('should expose Confirm Email and Auto-Unsub Email preview tabs in /dev and render via /dev/email/auto-unsub', async () => {
+    const devRes = await app.request('http://localhost:8787/dev?email=player@corp.com')
+    expect(devRes.status).toBe(200)
+    const devHtml = await devRes.text()
+    expect(devHtml).toContain('data-page="confirm-email"')
+    expect(devHtml).toContain('✉️ Confirm Email')
+    expect(devHtml).toContain('data-page="auto-unsub"')
+    expect(devHtml).toContain('📭 Auto-Unsub Email')
+
+    const previewRes = await app.request('http://localhost:8787/dev/email/auto-unsub?email=player@corp.com')
+    expect(previewRes.status).toBe(200)
+    const previewHtml = await previewRes.text()
+    expect(previewHtml).toContain("You've been unsubscribed")
+    expect(previewHtml).toContain('Resubscribe')
+    expect(previewHtml).toContain('background-color: #C4F7CA')
+    expect(previewHtml).toContain('/account?token=')
+
+    const rawRes = await app.request('http://localhost:8787/dev/raw?page=auto-unsub&email=player@corp.com')
+    expect(rawRes.status).toBe(200)
+    const rawHtml = await rawRes.text()
+    expect(rawHtml).toContain("You've been unsubscribed")
+  })
+
+  it('should allow an auto-unsubscribed user to resubscribe via User Preferences without being immediately unsubscribed next day', async () => {
+    const inactiveEmail = `resub_after_inactivity_${Date.now()}@corp.com`
+
+    await addSubscriber(undefined, inactiveEmail)
+    const subs = await getSubscribers(undefined)
+    subs.find(s => s.email === inactiveEmail)!.subscribedAt = '2026-09-28T09:00:00Z'
+    await kvPut(undefined, 'subscribers:list', subs)
+
+    // Auto-unsubscribe on Game 10 (missed Games 3..9)
+    const result = await processInactiveSubscribers(undefined, 10, {
+      isDryRun: false,
+      origin: 'https://inboxed.fun',
+    })
+    expect(result.unsubscribedEmails).toContain(inactiveEmail)
+
+    // Extract the signed token from the generated inactivity email URL
+    const html = renderInactivityUnsubscribeEmailHtml({
+      origin: 'https://inboxed.fun',
+      email: inactiveEmail,
+    })
+    const tokenMatch = html.match(/\/account\?token=([^"&]+)/)
+    expect(tokenMatch).not.toBeNull()
+    const token = decodeURIComponent(tokenMatch![1])
+
+    // User opens User Preferences (/api/account?token=...) and sees isSubscribed: false
+    const acctRes = await app.request(`/api/account?token=${encodeURIComponent(token)}`)
+    expect(acctRes.status).toBe(200)
+    const acctData = await acctRes.json() as any
+    expect(acctData.isSubscribed).toBe(false)
+
+    // User toggles subscription ON in User Preferences
+    const toggleRes = await app.request('/api/account/toggle-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, subscribed: true }),
+    })
+    expect(toggleRes.status).toBe(200)
+    const toggleData = await toggleRes.json() as any
+    expect(toggleData.isSubscribed).toBe(true)
+
+    // Verify subscribedAt was refreshed so the next day's cron does NOT immediately unsubscribe them
+    const refreshedSubs = await getSubscribers(undefined)
+    const refreshedEntry = refreshedSubs.find(s => s.email === inactiveEmail)!
+    expect(refreshedEntry.status).toBe('active')
+    expect(refreshedEntry.subscribedAt).not.toBe('2026-09-28T09:00:00Z')
+    expect(await isSubscriberInactive(undefined, inactiveEmail, 11, refreshedEntry)).toBe(false)
   })
 
   it('should not unsubscribe inactive subscribers in dry run mode', async () => {
@@ -325,6 +404,34 @@ describe('Inactivity Unsubscribe Feature (7 Days in a Row)', () => {
 
     const settings = await getUserSettings(undefined, testEmail)
     expect(settings.submittedPuzzles).toContain('1')
+  })
+
+  it('should ignore legacy playedPuzzles and playedDates if the user has no actual submissions or game plays in the last 7 games', async () => {
+    const testEmail = `legacy_activity_${Date.now()}@corp.com`
+    const storage: any = {}
+
+    const subscriber = {
+      email: testEmail,
+      domain: 'corp.com',
+      subscribedAt: '2026-09-29T12:00:00Z',
+      status: 'active' as const,
+    }
+
+    // Simulate legacy email-send recordUserActivity populating playedPuzzles and playedDates up to Game 11
+    await updateUserSettings(storage, {
+      email: testEmail,
+      domain: 'corp.com',
+      showOnLeaderboard: true,
+      theme: 'light',
+      playedPuzzles: ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11'],
+      playedDates: [
+        '2026-09-29', '2026-09-30', '2026-10-01', '2026-10-02', '2026-10-03',
+        '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08',
+      ],
+    })
+
+    // User has no submittedPuzzles and no game:* records in games 8..14 -> should be inactive at Game 15
+    expect(await isSubscriberInactive(storage, testEmail, 15, subscriber)).toBe(true)
   })
 
   it('should render streak and score Mustache binding in compiled email HTML', async () => {

@@ -97,6 +97,8 @@ export function getDevWorkbenchHtml(params: {
       <button type="button" class="page-tab-btn" data-page="signup">📝 Landing / Signup</button>
       <button type="button" class="page-tab-btn" data-page="account">⚙️ Account Preferences</button>
       <button type="button" class="page-tab-btn" data-page="fallback">✉️ Fallback Email</button>
+      <button type="button" class="page-tab-btn" data-page="confirm-email">✉️ Confirm Email</button>
+      <button type="button" class="page-tab-btn" data-page="auto-unsub">📭 Auto-Unsub Email</button>
       <button type="button" class="page-tab-btn" data-page="invalid">⚠️ Invalid / Expired Token</button>
       <button type="button" class="page-tab-btn" data-page="privacy">🔒 Privacy Policy</button>
       <button type="button" class="page-tab-btn" data-page="updates">📢 Updates &amp; Patch Notes</button>
@@ -215,6 +217,18 @@ export function getDevWorkbenchHtml(params: {
         desc: 'Non-AMP fallback email invitation card for Apple Mail, Outlook, and desktop clients.',
         badge: 'Email Card',
         url: '/dev/fallback?puzzle=' + currentPuzzle + '&date=' + currentDate + '&email=' + currentEmail
+      },
+      'confirm-email': {
+        title: '✉️ Confirm Subscription Email',
+        desc: 'Transactional double opt-in email sent to new subscribers with confirmation link.',
+        badge: 'Email',
+        url: '/dev/email/confirm?email=' + currentEmail
+      },
+      'auto-unsub': {
+        title: '📭 Auto-Unsubscribe Email (7-Day Inactivity)',
+        desc: 'Notification email sent when a subscriber misses 7 consecutive puzzles, with a button linking to User Preferences to subscribe again.',
+        badge: 'Email',
+        url: '/dev/email/auto-unsub?email=' + currentEmail
       },
       invalid: {
         title: '⚠️ Invalid / Expired Token',

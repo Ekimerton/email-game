@@ -10,7 +10,7 @@ import {
   type LeaderboardEntry,
   type GameState
 } from '../core'
-import { getDailyPuzzle, getDateForPuzzleId, getPuzzleById, PUZZLES } from '../game'
+import { getDailyPuzzle, getDateForPuzzleId, getPuzzleById, LAUNCH_DATE, PUZZLES } from '../game'
 import { getSubscribers, addSubscriber, unsubscribeUser } from './subscribers'
 import { getDevTesters, getUserSettings, updateUserSettings, addDevTester, removeDevTester } from './userService'
 
@@ -44,7 +44,10 @@ export interface UserProfileSummary {
   daysPlayed: number
   playedDates: string[]
   playedPuzzles: string[]
+  openedDates?: string[]
+  openedPuzzles?: string[]
   isSubscribed: boolean
+  subscribedAt?: string
   isDev: boolean
   accountToken?: string
   lastPlayed?: string
@@ -56,6 +59,27 @@ export interface DomainStats {
   subscriberCount: number
   avgScore: number
   topScore: number
+}
+
+export interface DailyActiveUsersPoint {
+  date: string
+  puzzleId?: string
+  totalActive: number
+  newUsers: number
+  returningUsers: number
+  newUserEmails: string[]
+  returningUserEmails: string[]
+  finishedUsers: number
+  unfinishedUsers: number
+  completionRate: number
+  finishedUserEmails: string[]
+  unfinishedUserEmails: string[]
+  totalOpens: number
+  openedOnlyUsers: number
+  openedOnlyUserEmails: string[]
+  unopenedUsers: number
+  unopenedUserEmails: string[]
+  totalAudience: number
 }
 
 export interface DashboardStats {
@@ -102,6 +126,7 @@ export interface DashboardStats {
   domainRankings: DomainStats[]
   devTesters: string[]
   userProfiles: UserProfileSummary[]
+  dailyActiveUsers: DailyActiveUsersPoint[]
   generatedAt: string
 }
 
@@ -692,6 +717,14 @@ export async function getDashboardStats(
       ...(Array.isArray(saved.playedPuzzles) ? saved.playedPuzzles.map(String) : []),
       ...userPlays.map(p => String(p.puzzleId)).filter(p => !p.startsWith('legacy-'))
     ]))
+    const openedDates = Array.from(new Set([
+      ...(Array.isArray(saved.openedDates) ? saved.openedDates : []),
+      ...playedDates
+    ]))
+    const openedPuzzles = Array.from(new Set([
+      ...(Array.isArray(saved.openedPuzzles) ? saved.openedPuzzles.map(String) : []),
+      ...playedPuzzles
+    ]))
     const daysPlayed = Math.max(
       typeof saved.daysPlayed === 'number' ? saved.daysPlayed : 0,
       playedDates.length,
@@ -721,7 +754,10 @@ export async function getDashboardStats(
       daysPlayed,
       playedDates,
       playedPuzzles,
+      openedDates,
+      openedPuzzles,
       isSubscribed,
+      subscribedAt: subEntry?.subscribedAt,
       isDev,
       accountToken,
       lastPlayed
@@ -732,6 +768,8 @@ export async function getDashboardStats(
     if (b.daysPlayed !== a.daysPlayed) return b.daysPlayed - a.daysPlayed
     return a.email.localeCompare(b.email)
   })
+
+  const dailyActiveUsers = computeDailyActiveUsers(allPlays, todayPuzzle.date, userProfiles, subscribers)
 
   return {
     todayPuzzle: {
@@ -759,8 +797,224 @@ export async function getDashboardStats(
     domainRankings,
     devTesters,
     userProfiles,
+    dailyActiveUsers,
     generatedAt: new Date().toISOString()
   }
+}
+
+export function computeDailyActiveUsers(
+  allPlays: PlayerScoreRecord[],
+  todayDate?: string,
+  userProfiles?: UserProfileSummary[],
+  subscribers?: SubscriberEntry[]
+): DailyActiveUsersPoint[] {
+  const effectiveToday = todayDate && /^\d{4}-\d{2}-\d{2}$/.test(todayDate)
+    ? todayDate
+    : getDailyPuzzle().date
+
+  const dateToEmails = new Map<string, Set<string>>()
+  const dateToOpenedEmails = new Map<string, Set<string>>()
+  const dateToUserFinished = new Map<string, Map<string, boolean>>()
+  const usersWithPlays = new Set<string>()
+  const subscriberStartDate = new Map<string, string>()
+
+  const registerSubscriberStart = (rawEmail: string, subDateRaw?: string) => {
+    const cleanEmail = (rawEmail || '').toLowerCase().trim()
+    if (!cleanEmail || !cleanEmail.includes('@')) return
+    const parsedDate = (subDateRaw && /^\d{4}-\d{2}-\d{2}/.test(subDateRaw))
+      ? subDateRaw.slice(0, 10)
+      : LAUNCH_DATE
+    const prev = subscriberStartDate.get(cleanEmail)
+    if (!prev || parsedDate < prev) {
+      subscriberStartDate.set(cleanEmail, parsedDate)
+    }
+  }
+
+  if (Array.isArray(subscribers)) {
+    for (const sub of subscribers) {
+      if (sub && sub.email && sub.status === 'active') {
+        registerSubscriberStart(sub.email, sub.subscribedAt)
+      }
+    }
+  }
+
+  const recordOpenOnly = (dateStr: string, rawEmail: string) => {
+    const cleanEmail = (rawEmail || '').toLowerCase().trim()
+    if (!cleanEmail || !cleanEmail.includes('@') || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return
+    let openSet = dateToOpenedEmails.get(dateStr)
+    if (!openSet) {
+      openSet = new Set<string>()
+      dateToOpenedEmails.set(dateStr, openSet)
+    }
+    openSet.add(cleanEmail)
+  }
+
+  const recordActivity = (dateStr: string, rawEmail: string, hasWon: boolean) => {
+    const cleanEmail = (rawEmail || '').toLowerCase().trim()
+    if (!cleanEmail || !cleanEmail.includes('@') || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return
+    let set = dateToEmails.get(dateStr)
+    if (!set) {
+      set = new Set<string>()
+      dateToEmails.set(dateStr, set)
+    }
+    set.add(cleanEmail)
+    recordOpenOnly(dateStr, cleanEmail)
+
+    let statusMap = dateToUserFinished.get(dateStr)
+    if (!statusMap) {
+      statusMap = new Map<string, boolean>()
+      dateToUserFinished.set(dateStr, statusMap)
+    }
+    const prevWon = statusMap.get(cleanEmail) || false
+    statusMap.set(cleanEmail, prevWon || Boolean(hasWon))
+  }
+
+  for (const play of allPlays || []) {
+    if (!play || !play.email) continue
+    if (String(play.puzzleId).startsWith('legacy-')) continue
+
+    const cleanEmail = play.email.toLowerCase().trim()
+    usersWithPlays.add(cleanEmail)
+
+    let d = (play.date || '').trim()
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      const ts = play.wonAt || play.updatedAt || ''
+      if (/^\d{4}-\d{2}-\d{2}/.test(ts)) {
+        d = ts.slice(0, 10)
+      } else if (/^\d+$/.test(String(play.puzzleId))) {
+        d = getDateForPuzzleId(play.puzzleId, { isDev: Boolean(play.isDev) })
+      }
+    }
+
+    if (d > effectiveToday) {
+      const ts = play.wonAt || play.updatedAt || ''
+      if (/^\d{4}-\d{2}-\d{2}/.test(ts) && ts.slice(0, 10) <= effectiveToday) {
+        d = ts.slice(0, 10)
+      } else if (/^\d+$/.test(String(play.puzzleId)) && Number(play.puzzleId) > 42) {
+        const devDate = getDateForPuzzleId(play.puzzleId, { isDev: true })
+        if (devDate <= effectiveToday) {
+          d = devDate
+        }
+      }
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      recordActivity(d, cleanEmail, Boolean(play.hasWon))
+    }
+  }
+
+  if (Array.isArray(userProfiles)) {
+    for (const profile of userProfiles) {
+      if (!profile || !profile.email) continue
+      const cleanEmail = profile.email.toLowerCase().trim()
+      if (profile.isSubscribed) {
+        registerSubscriberStart(cleanEmail, profile.subscribedAt)
+      }
+      if (!usersWithPlays.has(cleanEmail)) {
+        for (const pd of profile.playedDates || []) {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(pd) && pd <= effectiveToday) {
+            recordActivity(pd, cleanEmail, true)
+          }
+        }
+      }
+      for (const od of profile.openedDates || []) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(od) && od <= effectiveToday) {
+          recordOpenOnly(od, cleanEmail)
+        }
+      }
+    }
+  }
+
+  const allDatesSet = new Set<string>([...dateToEmails.keys(), ...dateToOpenedEmails.keys()])
+  if (effectiveToday >= LAUNCH_DATE) {
+    const [sy, sm, sd] = LAUNCH_DATE.split('-').map(Number)
+    const [ey, em, ed] = effectiveToday.split('-').map(Number)
+    let curUtc = Date.UTC(sy, sm - 1, sd)
+    const endUtc = Date.UTC(ey, em - 1, ed)
+    while (curUtc <= endUtc) {
+      allDatesSet.add(new Date(curUtc).toISOString().slice(0, 10))
+      curUtc += 86400000
+    }
+  } else {
+    allDatesSet.add(effectiveToday)
+  }
+
+  const sortedDates = Array.from(allDatesSet).sort()
+  const seenUsers = new Set<string>()
+
+  return sortedDates.map((date) => {
+    const activeSet = dateToEmails.get(date) || new Set<string>()
+    const openedSet = dateToOpenedEmails.get(date) || new Set<string>()
+    const statusMap = dateToUserFinished.get(date) || new Map<string, boolean>()
+    const activeEmails = Array.from(activeSet).sort()
+    const newUserEmails: string[] = []
+    const returningUserEmails: string[] = []
+    const finishedUserEmails: string[] = []
+    const unfinishedUserEmails: string[] = []
+
+    for (const email of activeEmails) {
+      if (!seenUsers.has(email)) {
+        newUserEmails.push(email)
+        seenUsers.add(email)
+      } else {
+        returningUserEmails.push(email)
+      }
+
+      if (statusMap.get(email)) {
+        finishedUserEmails.push(email)
+      } else {
+        unfinishedUserEmails.push(email)
+      }
+    }
+
+    const openedOnlyUserEmails = Array.from(openedSet)
+      .filter(email => !activeSet.has(email))
+      .sort()
+
+    const unopenedUserEmails: string[] = []
+    for (const [subEmail, subStart] of subscriberStartDate.entries()) {
+      if (subStart <= date && !openedSet.has(subEmail) && !activeSet.has(subEmail)) {
+        unopenedUserEmails.push(subEmail)
+      }
+    }
+    unopenedUserEmails.sort()
+
+    let puzzleId: string | undefined = undefined
+    try {
+      const p = getDailyPuzzle(date)
+      if (p?.id) puzzleId = String(p.id)
+    } catch (_) {}
+
+    const totalActive = activeEmails.length
+    const finishedUsers = finishedUserEmails.length
+    const unfinishedUsers = unfinishedUserEmails.length
+    const openedOnlyUsers = openedOnlyUserEmails.length
+    const unopenedUsers = unopenedUserEmails.length
+    const totalOpens = finishedUsers + unfinishedUsers + openedOnlyUsers
+    const totalAudience = totalOpens + unopenedUsers
+    const completionRate = totalActive > 0 ? Math.round((finishedUsers / totalActive) * 100) : 0
+
+    return {
+      date,
+      puzzleId,
+      totalActive,
+      newUsers: newUserEmails.length,
+      returningUsers: returningUserEmails.length,
+      newUserEmails,
+      returningUserEmails,
+      finishedUsers,
+      unfinishedUsers,
+      completionRate,
+      finishedUserEmails,
+      unfinishedUserEmails,
+      totalOpens,
+      openedOnlyUsers,
+      openedOnlyUserEmails,
+      unopenedUsers,
+      unopenedUserEmails,
+      totalAudience
+    }
+  })
 }
 
 export async function updateUserProfileSettings(

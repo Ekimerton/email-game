@@ -1203,7 +1203,422 @@ tr:hover td {
   border-radius: 4px;
 }
 
+/* ==========================================================================
+   DAILY ACTIVE USERS (NEW VS RETURNING) CHART STYLES
+   ========================================================================== */
 
+.dau-chart-card {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.dau-chart-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #1f2937;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(17, 24, 39, 0.9);
+}
+
+.dau-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dau-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dau-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.dau-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dau-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.dau-dot-new {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.dau-dot-returning {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  box-shadow: 0 0 6px rgba(14, 165, 233, 0.4);
+}
+
+.dau-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 14px 20px;
+  background: #0f172a;
+  border-bottom: 1px solid #1f2937;
+}
+
+.dau-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 12px;
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+}
+
+.dau-summary-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dau-summary-val-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dau-summary-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.dau-summary-sub {
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.dau-chart-viewport {
+  padding: 20px 20px 14px 20px;
+  position: relative;
+}
+
+.dau-chart-area {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  height: 220px;
+}
+
+.dau-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 38px;
+  color: #64748b;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-align: right;
+  min-width: 26px;
+  user-select: none;
+}
+
+.dau-plot-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dau-grid-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 38px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dau-grid-line {
+  width: 100%;
+  border-bottom: 1px dashed rgba(51, 65, 85, 0.55);
+}
+
+.dau-grid-line:last-child {
+  border-bottom: 1px solid #334155;
+}
+
+.dau-bars-track {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.dau-bar-col {
+  flex: 1;
+  min-width: 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 3px 2px 3px;
+  transition: background 0.15s ease;
+}
+
+.dau-bar-col:hover,
+.dau-bar-col.selected {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.dau-bar-col.selected {
+  outline: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.dau-bar-track-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 18px;
+  position: relative;
+}
+
+.dau-bar-total {
+  font-size: 11px;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.dau-bar-total-zero {
+  color: #475569;
+  font-weight: 600;
+}
+
+.dau-bar-stack {
+  width: 100%;
+  max-width: 44px;
+  border-radius: 5px 5px 2px 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 2px;
+  background: rgba(30, 41, 59, 0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.dau-bar-col:hover .dau-bar-stack {
+  transform: scaleX(1.04);
+}
+
+.dau-bar-segment {
+  width: 100%;
+  transition: height 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.9);
+  overflow: hidden;
+}
+
+.dau-bar-new {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+}
+
+.dau-bar-returning {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  color: #ffffff;
+}
+
+.dau-bar-x-axis {
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.dau-bar-date-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
+.dau-bar-puzzle-label {
+  font-size: 10px;
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.dau-day-detail-bar {
+  padding: 12px 20px;
+  background: #0f172a;
+  border-top: 1px solid #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.dau-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.dau-detail-groups {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.dau-detail-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dau-user-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s ease;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.dau-user-chip:hover {
+  opacity: 0.85;
+}
+
+.dau-chip-new {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dau-chip-returning {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border-color: rgba(14, 165, 233, 0.35);
+}
+
+.dau-dot-finished {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.dau-dot-unfinished {
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+.dau-bar-finished {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+}
+
+.dau-bar-unfinished {
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+  color: rgba(15, 23, 42, 0.95);
+}
+
+.dau-chip-finished {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dau-chip-unfinished {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.dau-dot-opened {
+  background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%);
+  box-shadow: 0 0 6px rgba(139, 92, 246, 0.4);
+}
+
+.dau-bar-opened {
+  background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%);
+  color: #ffffff;
+}
+
+.dau-chip-opened {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+.dau-dot-unopened {
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+  box-shadow: 0 0 6px rgba(100, 116, 139, 0.35);
+}
+
+.dau-bar-unopened {
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+  color: #f1f5f9;
+}
+
+.dau-chip-unopened {
+  background: rgba(100, 116, 139, 0.18);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.35);
+}
 `;
 
 export const DEV_DASHBOARD_HTML = `<!doctype html>
@@ -2415,6 +2830,423 @@ tr:hover td {
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 4px;
+}
+
+/* ==========================================================================
+   DAILY ACTIVE USERS (NEW VS RETURNING) CHART STYLES
+   ========================================================================== */
+
+.dau-chart-card {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.dau-chart-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #1f2937;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(17, 24, 39, 0.9);
+}
+
+.dau-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dau-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dau-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.dau-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dau-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.dau-dot-new {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.dau-dot-returning {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  box-shadow: 0 0 6px rgba(14, 165, 233, 0.4);
+}
+
+.dau-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 14px 20px;
+  background: #0f172a;
+  border-bottom: 1px solid #1f2937;
+}
+
+.dau-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 12px;
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+}
+
+.dau-summary-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dau-summary-val-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dau-summary-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.dau-summary-sub {
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.dau-chart-viewport {
+  padding: 20px 20px 14px 20px;
+  position: relative;
+}
+
+.dau-chart-area {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  height: 220px;
+}
+
+.dau-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 38px;
+  color: #64748b;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-align: right;
+  min-width: 26px;
+  user-select: none;
+}
+
+.dau-plot-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dau-grid-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 38px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dau-grid-line {
+  width: 100%;
+  border-bottom: 1px dashed rgba(51, 65, 85, 0.55);
+}
+
+.dau-grid-line:last-child {
+  border-bottom: 1px solid #334155;
+}
+
+.dau-bars-track {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.dau-bar-col {
+  flex: 1;
+  min-width: 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px 3px 2px 3px;
+  transition: background 0.15s ease;
+}
+
+.dau-bar-col:hover,
+.dau-bar-col.selected {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.dau-bar-col.selected {
+  outline: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.dau-bar-track-wrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 18px;
+  position: relative;
+}
+
+.dau-bar-total {
+  font-size: 11px;
+  font-weight: 800;
+  color: #e2e8f0;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.dau-bar-total-zero {
+  color: #475569;
+  font-weight: 600;
+}
+
+.dau-bar-stack {
+  width: 100%;
+  max-width: 44px;
+  border-radius: 5px 5px 2px 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 2px;
+  background: rgba(30, 41, 59, 0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.dau-bar-col:hover .dau-bar-stack {
+  transform: scaleX(1.04);
+}
+
+.dau-bar-segment {
+  width: 100%;
+  transition: height 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(15, 23, 42, 0.9);
+  overflow: hidden;
+}
+
+.dau-bar-new {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+}
+
+.dau-bar-returning {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  color: #ffffff;
+}
+
+.dau-bar-x-axis {
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.dau-bar-date-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
+.dau-bar-puzzle-label {
+  font-size: 10px;
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.dau-day-detail-bar {
+  padding: 12px 20px;
+  background: #0f172a;
+  border-top: 1px solid #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.dau-detail-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.dau-detail-groups {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.dau-detail-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dau-user-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s ease;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.dau-user-chip:hover {
+  opacity: 0.85;
+}
+
+.dau-chip-new {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dau-chip-returning {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border-color: rgba(14, 165, 233, 0.35);
+}
+
+.dau-dot-finished {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+}
+
+.dau-dot-unfinished {
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+.dau-bar-finished {
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+}
+
+.dau-bar-unfinished {
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+  color: rgba(15, 23, 42, 0.95);
+}
+
+.dau-chip-finished {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dau-chip-unfinished {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.dau-dot-opened {
+  background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%);
+  box-shadow: 0 0 6px rgba(139, 92, 246, 0.4);
+}
+
+.dau-bar-opened {
+  background: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%);
+  color: #ffffff;
+}
+
+.dau-chip-opened {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+.dau-dot-unopened {
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+  box-shadow: 0 0 6px rgba(100, 116, 139, 0.35);
+}
+
+.dau-bar-unopened {
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+  color: #f1f5f9;
+}
+
+.dau-chip-unopened {
+  background: rgba(100, 116, 139, 0.18);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.35);
 }</style>
 </head>
 <body>
@@ -2527,6 +3359,97 @@ tr:hover td {
         </div>
         <div class="kpi-subtext">
           <span>Unique solvers: <strong class="kpi-highlight">\${uniqueAllTimePlayersCount}</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Daily Active Users (New vs. Returning) Chart -->
+    <section class="dau-chart-card" id="dau-chart-section">
+      <div class="dau-chart-header">
+        <div class="dau-header-left">
+          <div class="panel-title">
+            <span>📊 Daily Active Users — New vs. Returning</span>
+            <span class="panel-count" id="dau-days-count">\${dailyActiveSeries.length} days</span>
+          </div>
+        </div>
+        <div class="dau-header-right">
+          <div class="dau-legend">
+            <span class="dau-legend-item">
+              <span class="dau-legend-dot dau-dot-new"></span>
+              <span>New Users</span>
+            </span>
+            <span class="dau-legend-item">
+              <span class="dau-legend-dot dau-dot-returning"></span>
+              <span>Returning Users</span>
+            </span>
+          </div>
+          <div class="segmented-toggle" id="dau-range-toggle">
+            <button type="button" class="seg-btn dau-range-btn" id="dau-range-7d" onclick="setDauRange(7, this)">7D</button>
+            <button type="button" class="seg-btn dau-range-btn" id="dau-range-14d" onclick="setDauRange(14, this)">14D</button>
+            <button type="button" class="seg-btn dau-range-btn active" id="dau-range-all" onclick="setDauRange(0, this)">All</button>
+          </div>
+        </div>
+      </div>
+      <div class="dau-chart-viewport">
+        <div class="dau-chart-area">
+          <div class="dau-y-axis" id="dau-y-axis"></div>
+          <div class="dau-plot-wrap">
+            <div class="dau-grid-lines">
+              <div class="dau-grid-line"></div>
+              <div class="dau-grid-line"></div>
+              <div class="dau-grid-line"></div>
+              <div class="dau-grid-line"></div>
+              <div class="dau-grid-line"></div>
+            </div>
+            <div class="dau-bars-track" id="dau-bars-track">
+              \${dauBarsHtml}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Daily Puzzle Completion & Opens Funnel Chart -->
+    <section class="dau-chart-card" id="completion-chart-section">
+      <div class="dau-chart-header">
+        <div class="dau-header-left">
+          <div class="panel-title">
+            <span>🎯 Daily Puzzle Completion — Finished vs. Attempted &amp; Didn't Finish vs. Opened Only</span>
+            <span class="panel-count" id="completion-days-count">\${dailyActiveSeries.length} days</span>
+          </div>
+        </div>
+        <div class="dau-header-right">
+          <div class="dau-legend">
+            <span class="dau-legend-item">
+              <span class="dau-legend-dot dau-dot-finished"></span>
+              <span>Finished (<strong id="completion-legend-finished-total" style="color: #34d399;">\${totalFinishedSessions}</strong>)</span>
+            </span>
+            <span class="dau-legend-item">
+              <span class="dau-legend-dot dau-dot-unfinished"></span>
+              <span>Attempted &amp; Didn't Finish (<strong id="completion-legend-unfinished-total" style="color: #fbbf24;">\${totalUnfinishedSessions}</strong>)</span>
+            </span>
+            <span class="dau-legend-item">
+              <span class="dau-legend-dot dau-dot-opened"></span>
+              <span>Opened — No Guess (<strong id="completion-legend-opened-total" style="color: #a78bfa;">\${totalOpenedOnlySessions}</strong>)</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="dau-chart-viewport">
+        <div class="dau-chart-area">
+          <div class="dau-y-axis" id="completion-y-axis"></div>
+          <div class="dau-plot-wrap">
+            <div class="dau-grid-lines">
+              <div class="dau-grid-line"></div>
+              <div class="dau-grid-line"></div>
+              <div class="dau-grid-line"></div>
+              <div class="dau-grid-line"></div>
+              <div class="dau-grid-line"></div>
+            </div>
+            <div class="dau-bars-track" id="completion-bars-track">
+              \${completionBarsHtml}
+            </div>
+          </div>
         </div>
       </div>
     </section>

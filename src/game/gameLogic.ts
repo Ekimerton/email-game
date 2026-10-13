@@ -146,6 +146,9 @@ export async function getOrCreateGameState(
 
   const stored = await kvGet(kv, stateKey)
   if (stored && (!stored.puzzleId || stored.puzzleId === puzzle.id)) {
+    if (!Array.isArray(stored.letterMask)) {
+      stored.letterMask = stored.hasWon ? puzzle.word.split('') : createInitialMask(puzzle.word)
+    }
     if (!stored.guessesHistory) {
       stored.guessesHistory = []
     }

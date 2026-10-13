@@ -18,6 +18,9 @@ export async function addSubscriber(kv: StorageBackend, email: string): Promise<
     const existingIdx = subscribers.findIndex(s => s.email.toLowerCase().trim() === cleanEmail)
 
     if (existingIdx >= 0) {
+      if (subscribers[existingIdx].status !== 'active' || !subscribers[existingIdx].subscribedAt) {
+        subscribers[existingIdx].subscribedAt = new Date().toISOString()
+      }
       subscribers[existingIdx].status = 'active'
     } else {
       subscribers.push({
@@ -108,6 +111,7 @@ export async function processInactiveSubscribers(
   options?: {
     isDryRun?: boolean
     origin?: string
+    authSecret?: string
     mailgunApiKey?: string
     mailgunDomain?: string
     senderEmail?: string
@@ -131,6 +135,7 @@ export async function processInactiveSubscribers(
           from: options?.senderEmail,
           to: subscriber.email,
           origin: options?.origin,
+          authSecret: options?.authSecret,
         })
       }
     }

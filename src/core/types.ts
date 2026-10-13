@@ -33,6 +33,8 @@ export interface UserSettings {
   playedDates?: string[]
   playedPuzzles?: string[]
   submittedPuzzles?: string[]
+  openedDates?: string[]
+  openedPuzzles?: string[]
   theme?: EmailTheme
   colorCombo?: string
   primaryColor?: string

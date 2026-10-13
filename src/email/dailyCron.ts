@@ -198,6 +198,7 @@ export async function sendDailyPuzzleEmails(
       {
         isDryRun: options?.isDryRun,
         origin: prodOrigin,
+        authSecret,
         mailgunApiKey: env?.MAILGUN_API_KEY || process.env.MAILGUN_API_KEY,
         mailgunDomain: env?.MAILGUN_DOMAIN || process.env.MAILGUN_DOMAIN,
         senderEmail: env?.SENDER_EMAIL || process.env.SENDER_EMAIL,

@@ -20,6 +20,7 @@ import {
   getDomainLeaderboard,
   updateDomainLeaderboard,
   isDevTester,
+  recordUserOpen,
   recordUserSubmission,
   getUserStreak,
   getEffectiveLeaderboard,
@@ -36,6 +37,16 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       const isDev = await isDevTester(c.env, userEmail)
       const puzzle = getDailyPuzzle(target, { isDev })
       const stateKey = `game:${puzzle.date}:${userEmail}`
+
+      const hasExplicitUser = Boolean(
+        c.req.query('email') ||
+        c.req.header('x-user-email') ||
+        c.req.header('Authorization') ||
+        (c.req.query('__amp_source_origin') && !c.req.query('__amp_source_origin')?.includes('amp@gmail.dev'))
+      )
+      if (hasExplicitUser && userEmail && userEmail.includes('@')) {
+        await recordUserOpen(c.env, userEmail, target, { isDev })
+      }
 
       const payload = await withKeyLock(stateKey, async () => {
         const { state } = await getOrCreateGameState(c.env, userEmail, target, { isDev })

@@ -1,7 +1,7 @@
 import type { Hono } from 'hono'
 import { generateConfirmationToken, generateAccountToken, kvPut, withKeyLock, type Bindings, type SubscriberEntry } from '../core'
-import { buildPuzzleEmailContent, renderConfirmationEmailHtml } from '../email'
-import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser, getDevTesters, addDevTester, removeDevTester, isDevTester, getDashboardStats, updateUserProfileSettings } from '../services'
+import { buildPuzzleEmailContent, renderConfirmationEmailHtml, renderInactivityUnsubscribeEmailHtml } from '../email'
+import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser, getDevTesters, addDevTester, removeDevTester, isDevTester, getDashboardStats, computeDailyActiveUsers, updateUserProfileSettings } from '../services'
 import {
   getDevWorkbenchHtml,
   getDevSubscribersPageHtml,
@@ -122,6 +122,12 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
       const token = generateConfirmationToken(userEmail, authSecret)
       const confirmUrl = `${currentOrigin}/confirm?token=${encodeURIComponent(token)}`
       html = renderConfirmationEmailHtml(confirmUrl)
+    } else if (page === 'auto-unsub' || page === 'inactivity-email') {
+      html = renderInactivityUnsubscribeEmailHtml({
+        origin: currentOrigin,
+        email: userEmail,
+        authSecret,
+      })
     } else if (page === 'invalid') {
       html = getInvalidConfirmationHtml()
     } else if (page === 'privacy') {
@@ -235,6 +241,39 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     return c.html(renderConfirmationEmailHtml(confirmUrl))
   })
 
+  // Development-only direct render of inactivity auto-unsubscribe email
+  app.get('/dev/email/auto-unsub', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+
+    const userEmail = (c.req.query('email') || await getUserEmail(c)).toLowerCase().trim()
+    const currentOrigin = getDevOrigin(c)
+    const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+
+    return c.html(renderInactivityUnsubscribeEmailHtml({
+      origin: currentOrigin,
+      email: userEmail,
+      authSecret,
+    }))
+  })
+
+  app.get('/dev/page/auto-unsub', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+
+    const userEmail = (c.req.query('email') || await getUserEmail(c)).toLowerCase().trim()
+    const currentOrigin = getDevOrigin(c)
+    const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+
+    return c.html(renderInactivityUnsubscribeEmailHtml({
+      origin: currentOrigin,
+      email: userEmail,
+      authSecret,
+    }))
+  })
+
   // Development-only direct render of sub-pages
   app.get('/dev/page/signup', async (c) => {
     if (!isDevelopment(c)) {
@@ -317,6 +356,9 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
           if (!stats || !stats.todayPuzzle) {
             throw new Error('Invalid dashboard payload from production')
           }
+          if (!Array.isArray(stats.dailyActiveUsers) || (stats.dailyActiveUsers.length > 0 && typeof stats.dailyActiveUsers[0].unopenedUsers !== 'number')) {
+            stats.dailyActiveUsers = computeDailyActiveUsers(stats.allPlays || [], stats.todayPuzzle?.date, stats.userProfiles, stats.subscribers?.list)
+          }
           dataSource = 'prod'
         } else {
           throw new Error(`Production API returned HTTP ${prodRes.status}`)
@@ -365,7 +407,10 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
         const queryStr = puzzleParam ? `?puzzle=${encodeURIComponent(puzzleParam)}` : ''
         const prodRes = await fetch(`${prodOrigin}/api/admin/dashboard-data${queryStr}`, { headers })
         if (prodRes.ok) {
-          const data = await prodRes.json()
+          const data = (await prodRes.json()) as any
+          if (data && (!Array.isArray(data.dailyActiveUsers) || (data.dailyActiveUsers.length > 0 && typeof data.dailyActiveUsers[0].unopenedUsers !== 'number'))) {
+            data.dailyActiveUsers = computeDailyActiveUsers(data.allPlays || [], data.todayPuzzle?.date, data.userProfiles, data.subscribers?.list)
+          }
           return c.json(data)
         }
       } catch (err) {

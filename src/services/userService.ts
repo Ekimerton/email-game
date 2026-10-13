@@ -77,6 +77,8 @@ export async function getUserSettings(kv: StorageBackend, email: string): Promis
       playedDates: existing.playedDates,
       playedPuzzles: existing.playedPuzzles,
       submittedPuzzles: existing.submittedPuzzles,
+      openedDates: existing.openedDates,
+      openedPuzzles: existing.openedPuzzles,
       theme: existing.theme === 'dark' ? 'dark' : 'light',
       colorCombo: existing.colorCombo || 'amber-blue',
       primaryColor: existing.primaryColor,
@@ -103,6 +105,46 @@ export async function updateUserSettings(kv: StorageBackend, settings: UserSetti
   })
 }
 
+export async function recordUserOpen(
+  kv: StorageBackend,
+  email: string,
+  puzzleOrDate?: string | number,
+  options?: { isDev?: boolean }
+): Promise<UserSettings> {
+  const cleanEmail = email.toLowerCase().trim()
+  const key = `user:profile:${cleanEmail}`
+  return withKeyLock(key, async () => {
+    const profile = await getUserSettings(kv, cleanEmail)
+    const puzzle = getDailyPuzzle(puzzleOrDate, options)
+    const puzzleId = String(puzzle.id)
+    const dateStr = (options?.isDev && Number(puzzle.id) > 42)
+      ? (getDateForPuzzleId(puzzleId, { isDev: true }) || puzzle.date)
+      : puzzle.date
+
+    let changed = false
+    if (!profile.openedDates) {
+      profile.openedDates = [dateStr]
+      changed = true
+    } else if (!profile.openedDates.includes(dateStr)) {
+      profile.openedDates.push(dateStr)
+      changed = true
+    }
+
+    if (!profile.openedPuzzles) {
+      profile.openedPuzzles = [puzzleId]
+      changed = true
+    } else if (!profile.openedPuzzles.includes(puzzleId)) {
+      profile.openedPuzzles.push(puzzleId)
+      changed = true
+    }
+
+    if (changed) {
+      await kvPut(kv, key, profile)
+    }
+    return profile
+  })
+}
+
 export async function recordUserActivity(
   kv: StorageBackend,
   email: string,
@@ -115,6 +157,18 @@ export async function recordUserActivity(
     const puzzle = getDailyPuzzle(puzzleOrDate)
     const dateStr = puzzle.date
     const puzzleId = puzzle.id
+
+    if (!profile.openedDates) {
+      profile.openedDates = [dateStr]
+    } else if (!profile.openedDates.includes(dateStr)) {
+      profile.openedDates.push(dateStr)
+    }
+
+    if (!profile.openedPuzzles) {
+      profile.openedPuzzles = [puzzleId]
+    } else if (!profile.openedPuzzles.includes(puzzleId)) {
+      profile.openedPuzzles.push(puzzleId)
+    }
 
     if (!profile.playedDates) {
       profile.playedDates = [dateStr]
@@ -147,6 +201,18 @@ export async function recordUserSubmission(
     const puzzle = getDailyPuzzle(puzzleOrDate)
     const dateStr = puzzle.date
     const puzzleId = puzzle.id
+
+    if (!profile.openedDates) {
+      profile.openedDates = [dateStr]
+    } else if (!profile.openedDates.includes(dateStr)) {
+      profile.openedDates.push(dateStr)
+    }
+
+    if (!profile.openedPuzzles) {
+      profile.openedPuzzles = [puzzleId]
+    } else if (!profile.openedPuzzles.includes(puzzleId)) {
+      profile.openedPuzzles.push(puzzleId)
+    }
 
     if (!profile.playedDates) {
       profile.playedDates = [dateStr]
@@ -311,10 +377,6 @@ export async function isSubscriberInactive(
     const num = parseInt(String(id).replace('#', '').trim(), 10)
     if (!isNaN(num)) submittedNumbers.add(num)
   }
-  for (const id of settings.playedPuzzles || []) {
-    const num = parseInt(String(id).replace('#', '').trim(), 10)
-    if (!isNaN(num)) submittedNumbers.add(num)
-  }
 
   // The 7 games in a row prior to today
   const windowGames: number[] = []
@@ -326,13 +388,20 @@ export async function isSubscriberInactive(
     if (submittedNumbers.has(gameNum)) {
       return false
     }
-    // Fallback check in KV
+    // Fallback check in KV/D1 for actual game submissions (checking both LAUNCH_DATE-aligned date and static puzzle.date)
     const puzzle = getPuzzleById(gameNum)
     if (puzzle) {
-      const stateKey = `game:${puzzle.date}:${cleanEmail}`
+      const targetDate = getDateForPuzzleId(String(gameNum)) || puzzle.date
+      const stateKey = `game:${targetDate}:${cleanEmail}`
       const st = await kvGet(kv, stateKey)
-      if (st && (st.hasWon || st.guessCount > 0)) {
+      if (st && (st.hasWon || st.guessCount > 0 || st.hintsUsed > 0)) {
         return false
+      }
+      if (puzzle.date !== targetDate) {
+        const legacySt = await kvGet(kv, `game:${puzzle.date}:${cleanEmail}`)
+        if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0 || legacySt.hintsUsed > 0)) {
+          return false
+        }
       }
     }
   }
