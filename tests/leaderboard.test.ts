@@ -27,8 +27,7 @@ describe('Unified General Leaderboard (gmail.com, googlemail.com, yahoo.com)', (
     expect(res1.status).toBe(200)
     const data1 = (await res1.json()) as any
     expect(data1.hasWon).toBe(true)
-    expect(data1.shareText).toContain('(general)')
-    expect(data1.shareText).not.toContain('(gmail.com)')
+    expect(data1.shareText).toBe('I got inboxed in 1 guess! https://inboxed.fun')
 
     // 2. Yahoo user solves puzzle 1
     const res2 = await app.request(`/api/guess?email=${encodeURIComponent(yahooUser)}&puzzle=1`, {
@@ -39,7 +38,7 @@ describe('Unified General Leaderboard (gmail.com, googlemail.com, yahoo.com)', (
     expect(res2.status).toBe(200)
     const data2 = (await res2.json()) as any
     expect(data2.hasWon).toBe(true)
-    expect(data2.shareText).toContain('(general)')
+    expect(data2.shareText).toBe('I got inboxed in 1 guess! https://inboxed.fun')
 
     // 3. Googlemail user solves puzzle 1
     const res3 = await app.request(`/api/guess?email=${encodeURIComponent(googlemailUser)}&puzzle=1`, {

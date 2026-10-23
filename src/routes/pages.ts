@@ -1,5 +1,5 @@
 import type { Hono } from 'hono'
-import { LOGO_PNG_BASE64, verifyConfirmationToken, getAccountUrl, type Bindings } from '../core'
+import { LOGO_PNG_BASE64, INBOXED_FUN_PNG_BASE64, verifyConfirmationToken, getAccountUrl, type Bindings } from '../core'
 import { getDailyPuzzle, getPuzzleDateForSendCron } from '../game'
 import { addSubscriber, getUserEmail, extractDomain, recordUserActivity, getCoworkerCount, getPlayerCount } from '../services'
 import { renderAmpGame, type EmailTheme } from '../email'
@@ -29,6 +29,16 @@ export function registerPageRoutes(app: Hono<{ Bindings: Bindings }>) {
   // Serve static brand logo for email fallbacks & web
   app.get('/logo.png', (c) => {
     const binary = Uint8Array.from(atob(LOGO_PNG_BASE64), (ch) => ch.charCodeAt(0))
+    return new Response(binary, {
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    })
+  })
+
+  app.get('/inboxed-fun.png', (c) => {
+    const binary = Uint8Array.from(atob(INBOXED_FUN_PNG_BASE64), (ch) => ch.charCodeAt(0))
     return new Response(binary, {
       headers: {
         'Content-Type': 'image/png',

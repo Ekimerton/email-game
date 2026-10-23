@@ -382,7 +382,7 @@ export const EMAIL_HTML = `<!doctype html>
 
         .wordle-input-wrapper {
             position: relative;
-            margin-top: -40px;
+            margin-top: -78px;
             margin-bottom: 7px;
             display: flex;
             justify-content: center;
@@ -407,6 +407,8 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .action-buttons {
+            position: relative;
+            z-index: 5;
             display: flex;
             justify-content: center;
             gap: 8px;
@@ -507,7 +509,344 @@ export const EMAIL_HTML = `<!doctype html>
             font-weight: 800;
         }
 
-        /* Victory Card */
+        /* Play & Win State Containers */
+        .play-state-container {
+            position: relative;
+            z-index: 1;
+            height: 218px;
+            box-sizing: border-box;
+        }
+
+        .win-state-container {
+            position: relative;
+            z-index: 20;
+            height: 256px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 10px;
+            box-sizing: border-box;
+        }
+
+        .win-state-container[hidden],
+        .play-state-container[hidden],
+        .form-container[hidden],
+        .how-to-play[hidden],
+        .leaderboard-items[hidden],
+        .leaderboard-lock-banner[hidden] {
+            display: none;
+        }
+
+        .win-score-card {
+            position: relative;
+            overflow: hidden;
+            border: 3px double #d4d4d8;
+            border-radius: 12px;
+            background-color: #ffffff;
+            padding: 18px 16px;
+            text-align: center;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .win-star {
+            position: absolute;
+            z-index: 1;
+            line-height: 1;
+            opacity: 0.85;
+        }
+
+        .win-star-1 {
+            top: -12px;
+            left: -10px;
+            font-size: 34px;
+            transform: rotate(-18deg);
+        }
+
+        .win-star-2 {
+            top: 20px;
+            left: 24px;
+            font-size: 18px;
+            transform: rotate(15deg);
+            opacity: 0.75;
+        }
+
+        .win-star-3 {
+            top: -12px;
+            right: -8px;
+            font-size: 32px;
+            transform: rotate(22deg);
+        }
+
+        .win-star-4 {
+            top: 42%;
+            right: -12px;
+            font-size: 32px;
+            transform: rotate(-14deg);
+        }
+
+        .win-star-5 {
+            bottom: -10px;
+            left: 10%;
+            font-size: 28px;
+            transform: rotate(-12deg);
+        }
+
+        .win-star-6 {
+            bottom: 18%;
+            left: -10px;
+            font-size: 26px;
+            transform: rotate(-25deg);
+            opacity: 0.85;
+        }
+
+        .win-star-7 {
+            bottom: -12px;
+            right: -8px;
+            font-size: 32px;
+            transform: rotate(-20deg);
+        }
+
+        .win-star-8 {
+            bottom: 20px;
+            right: 24px;
+            font-size: 18px;
+            transform: rotate(18deg);
+            opacity: 0.75;
+        }
+
+        .win-star-9 {
+            top: -12px;
+            left: 22%;
+            font-size: 26px;
+            transform: rotate(10deg);
+            opacity: 0.85;
+        }
+
+        .win-star-10 {
+            top: 20px;
+            right: 24px;
+            font-size: 18px;
+            transform: rotate(-16deg);
+            opacity: 0.75;
+        }
+
+        .win-star-11 {
+            top: -14px;
+            left: 48%;
+            font-size: 28px;
+            transform: rotate(-14deg);
+        }
+
+        .win-star-12 {
+            top: -10px;
+            right: 22%;
+            font-size: 25px;
+            transform: rotate(18deg);
+            opacity: 0.85;
+        }
+
+        .win-star-13 {
+            top: 42%;
+            left: -12px;
+            font-size: 30px;
+            transform: rotate(20deg);
+        }
+
+        .win-star-14 {
+            bottom: -12px;
+            left: 23%;
+            font-size: 25px;
+            transform: rotate(16deg);
+            opacity: 0.85;
+        }
+
+        .win-star-15 {
+            bottom: -13px;
+            left: 50%;
+            font-size: 28px;
+            transform: rotate(-18deg);
+        }
+
+        .win-star-16 {
+            bottom: -11px;
+            right: 21%;
+            font-size: 25px;
+            transform: rotate(14deg);
+            opacity: 0.85;
+        }
+
+        .win-star-17 {
+            top: -10px;
+            left: 10%;
+            font-size: 23px;
+            transform: rotate(24deg);
+            opacity: 0.85;
+        }
+
+        .win-star-18 {
+            top: -9px;
+            left: 35%;
+            font-size: 22px;
+            transform: rotate(-22deg);
+            opacity: 0.85;
+        }
+
+        .win-star-19 {
+            top: -9px;
+            left: 61%;
+            font-size: 23px;
+            transform: rotate(16deg);
+            opacity: 0.85;
+        }
+
+        .win-star-20 {
+            top: -11px;
+            right: 10%;
+            font-size: 24px;
+            transform: rotate(-19deg);
+            opacity: 0.85;
+        }
+
+        .win-star-21 {
+            bottom: -12px;
+            left: -10px;
+            font-size: 30px;
+            transform: rotate(20deg);
+        }
+
+        .win-star-22 {
+            bottom: -9px;
+            left: 37%;
+            font-size: 22px;
+            transform: rotate(-20deg);
+            opacity: 0.85;
+        }
+
+        .win-star-23 {
+            bottom: -9px;
+            right: 34%;
+            font-size: 22px;
+            transform: rotate(22deg);
+            opacity: 0.85;
+        }
+
+        .win-star-24 {
+            bottom: -9px;
+            right: 10%;
+            font-size: 23px;
+            transform: rotate(-15deg);
+            opacity: 0.85;
+        }
+
+        .win-star-25 {
+            top: 18%;
+            left: -11px;
+            font-size: 26px;
+            transform: rotate(-15deg);
+            opacity: 0.85;
+        }
+
+        .win-star-26 {
+            top: 18%;
+            right: -11px;
+            font-size: 26px;
+            transform: rotate(16deg);
+            opacity: 0.85;
+        }
+
+        .win-star-27 {
+            bottom: 18%;
+            right: -10px;
+            font-size: 26px;
+            transform: rotate(24deg);
+            opacity: 0.85;
+        }
+
+        .win-star-28 {
+            bottom: 20px;
+            left: 24px;
+            font-size: 18px;
+            transform: rotate(19deg);
+            opacity: 0.75;
+        }
+
+        .win-congrats-title {
+            position: relative;
+            z-index: 2;
+            font-size: 24px;
+            font-weight: 900;
+            color: #09090b;
+            line-height: 1.2;
+            letter-spacing: -0.4px;
+            margin-bottom: 10px;
+        }
+
+        .win-score-pill {
+            position: relative;
+            z-index: 2;
+            display: inline-flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 4px;
+            background-color: #fcd34d;
+            color: #000000;
+            padding: 6px 18px;
+            border-radius: 999px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .win-score-number {
+            font-size: 28px;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -0.5px;
+        }
+
+        .win-score-unit {
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .win-score-sub {
+            position: relative;
+            z-index: 2;
+            font-size: 13px;
+            font-weight: 500;
+            color: #52525b;
+            line-height: 1.3;
+        }
+
+        .share-card {
+            background-color: #f4f4f5;
+            border: 1px solid #d4d4d8;
+            border-radius: 10px;
+            padding: 10px 14px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .share-card-text {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #18181b;
+            font-family: ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco, Consolas, monospace;
+            line-height: 1.35;
+        }
+
+        /* Victory Card (Legacy) */
         .win-card {
             background: #18181b;
             border: 1px solid #27272a;
@@ -601,19 +940,73 @@ export const EMAIL_HTML = `<!doctype html>
             gap: 8px;
         }
 
-        /* Leaderboard */
+        /* Leaderboard & How to Play */
         .leaderboard-container {
             position: relative;
-            height: 160px;
-            max-height: 160px;
+            height: 180px;
+            max-height: 180px;
             overflow: hidden;
             box-sizing: border-box;
+        }
+
+        .how-to-play,
+        .leaderboard-items {
+            padding: 4px 4px 0 4px;
+            box-sizing: border-box;
+        }
+
+        .how-to-play-title,
+        .leaderboard-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #18181b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .how-to-play-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .how-to-play-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            line-height: 1.35;
+            color: #52525b;
+            text-align: left;
+        }
+
+        .how-to-play-item strong {
+            color: #18181b;
+            font-weight: 700;
+        }
+
+        .how-to-play-bullet {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            border-radius: 50%;
+            background-color: #fcd34d;
+            color: #000000;
+            font-size: 10.5px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 18px;
+            flex-shrink: 0;
         }
 
         .leaderboard-blur-content {
             opacity: 0.15;
             filter: blur(4px);
-            max-height: 160px;
+            max-height: 180px;
             overflow: hidden;
         }
 
@@ -690,7 +1083,7 @@ export const EMAIL_HTML = `<!doctype html>
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 8px;
+            padding: 4px 8px;
             font-size: 12px;
             border-radius: 6px;
         }
@@ -816,6 +1209,13 @@ export const EMAIL_HTML = `<!doctype html>
             vertical-align: middle;
         }
 
+        .footer-logo {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         /* Updates & News Announcement Box (Edge to edge horizontally) */
         .news-ticker-container {
             width: 100%;
@@ -922,6 +1322,9 @@ export const EMAIL_HTML = `<!doctype html>
             <script type="application/json">
                 {
                     "hasWon": false,
+                    "score": 0,
+                    "winTitle": "",
+                    "shareText": "",
                     "wordLength": 7,
                     "version": 0
                 }
@@ -954,81 +1357,214 @@ export const EMAIL_HTML = `<!doctype html>
         </amp-state>
 
 
-        <!-- 1. Main Game -->
+        <!-- 1. Main Game (State 1: Active Game | State 2: Congrats + Score + Share Card) -->
         <div class="game-section">
             <div class="game-body">
                 <!-- Dynamic State Section - fetched fresh on every email open -->
-                <amp-list id="stateList" width="auto" height="218" layout="fixed-height" diffable
+                <amp-list id="stateList" width="auto" height="256" layout="fixed-height" diffable
                     src="https://inboxed.fun/api/state?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                     <template type="amp-mustache">
                         <div class="state-container">
-                            <div class="definitions-section">
-                                <div class="active-clue-card">
-                                    {{#definitions}}
-                                    <div class="clue-content"
-                                        [hidden]="(clueView.activeClue || {{revealedCount}}) != {{num}}">
-                                        <div class="clue-text {{^isRevealed}}blurred{{/isRevealed}}"
-                                            [class]="'clue-text' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? '' : ' blurred')">{{text}}</div>
+                            {{#hasWon}}
+                            <div class="win-state-container">
+                                <div class="win-score-card">
+                                    <span class="win-star win-star-1" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-2" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-3" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-4" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-5" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-6" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-7" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-8" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-9" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-10" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-11" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-12" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-13" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-14" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-15" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-16" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-17" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-18" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-19" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-20" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-21" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-22" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-23" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-24" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-25" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-26" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-27" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-28" aria-hidden="true">⭐</span>
+                                    <div class="win-congrats-title" [text]="gameState.winTitle || '{{winTitle}}'">{{winTitle}}</div>
+                                    <div class="win-score-pill">
+                                        <span class="win-score-number">{{score}}</span>
+                                        <span class="win-score-unit">pts</span>
                                     </div>
-                                    {{/definitions}}
+                                    <div class="win-score-sub">{{lastMessage}}</div>
                                 </div>
-                                <div class="clue-tabs-bar">
-                                    {{#definitions}}
-                                    <button type="button"
-                                        class="clue-tab-btn {{#isRevealed}}unlocked{{/isRevealed}}{{^isRevealed}}locked{{/isRevealed}} {{#isLatest}}active{{/isLatest}}"
-                                        [class]="'clue-tab-btn ' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? 'unlocked' : 'locked') + ((clueView.activeClue || {{revealedCount}}) == {{num}} ? ' active' : '')"
-                                        on="tap:AMP.setState({ clueView: { activeClue: {{num}} } })">
-                                        {{num}}
-                                    </button>
-                                    {{/definitions}}
+                                <div class="share-card">
+                                    <input type="text" readonly class="share-card-text" value="{{shareText}}" aria-label="Share score">
                                 </div>
                             </div>
-
-                            <div class="message-banner {{#hasWon}}message-banner-win{{/hasWon}}"
-                                [class]="'message-banner' + (gameState.hasWon ? ' message-banner-win' : '')"
-                                [text]="gameState.lastMessage || '{{lastMessage}}'">{{lastMessage}}</div>
-
-                            <div class="revealed-letters-section">
-                                <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
-                                    {{#formattedLetterMask}}
-                                    <span class="mask-tile {{#isRevealed}}tile-revealed{{/isRevealed}}"
-                                        [class]="'mask-tile ' + ((typed.word || '').slice({{index}}, {{indexNext}}) ? 'tile-typed' : ((gameState.letterMask && gameState.letterMask[{{index}}] != '_') ? 'tile-revealed' : '{{#isRevealed}}tile-revealed{{/isRevealed}}'))"
-                                        [text]="(typed.word || '').slice({{index}}, {{indexNext}}) || ((gameState.letterMask && gameState.letterMask[{{index}}] != '_') ? gameState.letterMask[{{index}}] : '{{char}}')">{{char}}</span>
-                                    {{/formattedLetterMask}}
-                                </label>
+                            {{/hasWon}}
+                            {{^hasWon}}
+                            <div class="win-state-container" hidden [hidden]="!gameState.hasWon">
+                                <div class="win-score-card">
+                                    <span class="win-star win-star-1" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-2" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-3" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-4" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-5" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-6" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-7" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-8" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-9" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-10" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-11" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-12" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-13" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-14" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-15" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-16" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-17" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-18" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-19" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-20" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-21" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-22" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-23" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-24" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-25" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-26" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-27" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-28" aria-hidden="true">⭐</span>
+                                    <div class="win-congrats-title" [text]="gameState.winTitle || (gameState.guessCount > 4 ? 'Close one!' : (gameState.guessCount > 2 ? 'Nicely done!' : 'You killed it!'))">{{winTitle}}</div>
+                                    <div class="win-score-pill">
+                                        <span class="win-score-number" [text]="gameState.score || '{{score}}'">{{score}}</span>
+                                        <span class="win-score-unit">pts</span>
+                                    </div>
+                                    <div class="win-score-sub" [text]="gameState.lastMessage || '{{lastMessage}}'">{{lastMessage}}</div>
+                                </div>
+                                <div class="share-card">
+                                    <input type="text" readonly class="share-card-text" value="{{shareText}}" [value]="gameState.shareText || '{{shareText}}'" aria-label="Share score">
+                                </div>
                             </div>
+                            <div class="play-state-container" [hidden]="gameState.hasWon">
+                                <div class="definitions-section">
+                                    <div class="active-clue-card">
+                                        {{#definitions}}
+                                        <div class="clue-content"
+                                            [hidden]="(clueView.activeClue || {{revealedCount}}) != {{num}}">
+                                            <div class="clue-text {{^isRevealed}}blurred{{/isRevealed}}"
+                                                [class]="'clue-text' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? '' : ' blurred')">{{text}}</div>
+                                        </div>
+                                        {{/definitions}}
+                                    </div>
+                                    <div class="clue-tabs-bar">
+                                        {{#definitions}}
+                                        <button type="button"
+                                            class="clue-tab-btn {{#isRevealed}}unlocked{{/isRevealed}}{{^isRevealed}}locked{{/isRevealed}} {{#isLatest}}active{{/isLatest}}"
+                                            [class]="'clue-tab-btn ' + ((gameState.revealedCount || {{revealedCount}}) >= {{num}} ? 'unlocked' : 'locked') + ((clueView.activeClue || {{revealedCount}}) == {{num}} ? ' active' : '')"
+                                            on="tap:AMP.setState({ clueView: { activeClue: {{num}} } })">
+                                            {{num}}
+                                        </button>
+                                        {{/definitions}}
+                                    </div>
+                                </div>
+
+                                <div class="message-banner {{#hasWon}}message-banner-win{{/hasWon}}"
+                                    [class]="'message-banner' + (gameState.hasWon ? ' message-banner-win' : '')"
+                                    [text]="gameState.lastMessage || '{{lastMessage}}'">{{lastMessage}}</div>
+
+                                <div class="revealed-letters-section">
+                                    <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                        {{#formattedLetterMask}}
+                                        <span class="mask-tile {{#isRevealed}}tile-revealed{{/isRevealed}}"
+                                            [class]="'mask-tile ' + ((typed.word || '').slice({{index}}, {{indexNext}}) ? 'tile-typed' : ((gameState.letterMask && gameState.letterMask[{{index}}] != '_') ? 'tile-revealed' : '{{#isRevealed}}tile-revealed{{/isRevealed}}'))"
+                                            [text]="(typed.word || '').slice({{index}}, {{indexNext}}) || ((gameState.letterMask && gameState.letterMask[{{index}}] != '_') ? gameState.letterMask[{{index}}] : '{{char}}')">{{char}}</span>
+                                        {{/formattedLetterMask}}
+                                    </label>
+                                </div>
+                            </div>
+                            {{/hasWon}}
                         </div>
                     </template>
                     <div placeholder>
                         <div class="state-container">
-                            <div class="definitions-section">
-                                __PLACEHOLDER_DEFS__
+                            <div class="win-state-container" hidden [hidden]="!gameState.hasWon">
+                                <div class="win-score-card">
+                                    <span class="win-star win-star-1" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-2" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-3" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-4" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-5" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-6" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-7" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-8" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-9" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-10" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-11" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-12" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-13" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-14" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-15" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-16" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-17" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-18" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-19" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-20" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-21" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-22" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-23" aria-hidden="true">⭐</span>
+                                    <span class="win-star win-star-24" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-25" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-26" aria-hidden="true">🎊</span>
+                                    <span class="win-star win-star-27" aria-hidden="true">🎉</span>
+                                    <span class="win-star win-star-28" aria-hidden="true">⭐</span>
+                                    <div class="win-congrats-title" [text]="gameState.winTitle || (gameState.guessCount > 4 ? 'Close one!' : (gameState.guessCount > 2 ? 'Nicely done!' : 'You killed it!'))">You killed it!</div>
+                                    <div class="win-score-pill">
+                                        <span class="win-score-number" [text]="gameState.score || 0">0</span>
+                                        <span class="win-score-unit">pts</span>
+                                    </div>
+                                    <div class="win-score-sub" [text]="gameState.lastMessage || 'Puzzle solved!'">Puzzle solved!</div>
+                                </div>
+                                <div class="share-card">
+                                    <input type="text" readonly class="share-card-text" value="" [value]="gameState.shareText || ''" aria-label="Share score">
+                                </div>
                             </div>
-                            <div class="message-banner" [text]="gameState.lastMessage || 'Guess the word!'">Guess the word!</div>
-                            <div class="revealed-letters-section">
-                                <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
-                                    __PLACEHOLDER_MASK_TILES__
-                                </label>
+                            <div class="play-state-container" [hidden]="gameState.hasWon">
+                                <div class="definitions-section">
+                                    __PLACEHOLDER_DEFS__
+                                </div>
+                                <div class="message-banner" [text]="gameState.lastMessage || 'Guess the word!'">Guess the word!</div>
+                                <div class="revealed-letters-section">
+                                    <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                        __PLACEHOLDER_MASK_TILES__
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div fallback>
                         <div class="state-container">
-                            <div class="definitions-section">
-                                __PLACEHOLDER_DEFS__
-                            </div>
-                            <div class="message-banner message-banner-retry" role="button" tabindex="0" on="tap:stateList.refresh" [text]="gameState.lastMessage || 'Connection issue &bull; Tap to reconnect'">Connection issue &bull; Tap to reconnect</div>
-                            <div class="revealed-letters-section">
-                                <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
-                                    __PLACEHOLDER_MASK_TILES__
-                                </label>
+                            <div class="play-state-container" [hidden]="gameState.hasWon">
+                                <div class="definitions-section">
+                                    __PLACEHOLDER_DEFS__
+                                </div>
+                                <div class="message-banner message-banner-retry" role="button" tabindex="0" on="tap:stateList.refresh" [text]="gameState.lastMessage || 'Connection issue &bull; Tap to reconnect'">Connection issue &bull; Tap to reconnect</div>
+                                <div class="revealed-letters-section">
+                                    <label for="guess-input" class="mask-grid" aria-label="Wordle Guess Tiles">
+                                        __PLACEHOLDER_MASK_TILES__
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </amp-list>
 
                 <!-- Input Form Section - Placed outside amp-list to prevent Gmail AMP Sanitizer DOM rejection -->
-                <div class="form-container">
+                <div class="form-container" [hidden]="gameState.hasWon">
                     <form id="guess-form" method="POST"
                         action-xhr="https://inboxed.fun/api/guess?email=USER_EMAIL_PLACEHOLDER&date=USER_DATE_PLACEHOLDER&domain=USER_DOMAIN_PLACEHOLDER"
                         on="submit:AMP.setState({ uiState: { submitting: true } });
@@ -1077,27 +1613,15 @@ export const EMAIL_HTML = `<!doctype html>
 
         <hr class="section-divider">
 
-        <!-- Mini Tutorial / Instructions -->
-        <div class="mini-tutorial">
-            Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within your email
-        </div>
-
-        <hr class="section-divider">
-
-        <!-- 2. Organization Leaderboard -->
+        <!-- 2. How to Play (State 1) / Organization Leaderboard (State 2) -->
         <div class="leaderboard-section">
-            <amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" diffable
+            <amp-list id="leaderboardList" width="auto" height="180" layout="fixed-height" diffable
                 src="https://inboxed.fun/api/leaderboard?domain=USER_DOMAIN_PLACEHOLDER&email=USER_EMAIL_PLACEHOLDER&puzzleId=USER_PUZZLE_ID_PLACEHOLDER&date=USER_DATE_PLACEHOLDER">
                 <template type="amp-mustache">
                     <div class="leaderboard-container">
-                        {{^hasWon}}
-                        <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon">
-                            <div class="leaderboard-lock-title">🔒 Solve today's puzzle to reveal the leaderboard!</div>
-                            <div class="leaderboard-lock-sub">Currently playing in the <strong>USER_DOMAIN_PLACEHOLDER</strong> leaderboard. You can switch between leaderboards in Manage Account & Preferences.</div>
-                        </div>
-                        {{/hasWon}}
-
-                        <div class="{{#hasWon}}leaderboard-items{{/hasWon}}{{^hasWon}}leaderboard-blur-content{{/hasWon}}">
+                        {{#hasWon}}
+                        <div class="leaderboard-items">
+                            <div class="leaderboard-title">{{leaderboardTitle}}</div>
                             {{#players}}
                             <div class="leaderboard-item {{#isCurrentPlayer}}current-player{{/isCurrentPlayer}}">
                                 <span class="rank-number">#{{rank}}</span>
@@ -1110,46 +1634,99 @@ export const EMAIL_HTML = `<!doctype html>
                                 this domain yet today!</div>
                             {{/players}}
                         </div>
+                        {{/hasWon}}
+                        {{^hasWon}}
+                        <div class="how-to-play" [hidden]="gameState.hasWon">
+                            <div class="how-to-play-title">How to Play</div>
+                            <div class="how-to-play-list">
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">1</span>
+                                    <span class="how-to-play-text"><strong>Guess the word</strong> that matches the definition clue by typing in the tiles.</span>
+                                </div>
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">2</span>
+                                    <span class="how-to-play-text"><strong>Misses unlock clues:</strong> Wrong guesses reveal the next definition (-100 pts, or -25 pts for synonyms).</span>
+                                </div>
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">3</span>
+                                    <span class="how-to-play-text"><strong>Use Letter Hints</strong> anytime to reveal the next missing letter (-150 pts).</span>
+                                </div>
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">4</span>
+                                    <span class="how-to-play-text"><strong>Compete &amp; rank:</strong> Currently playing in the <strong>USER_DOMAIN_PLACEHOLDER</strong> leaderboard.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="leaderboard-items" hidden [hidden]="!gameState.hasWon">
+                            <div class="leaderboard-title">{{leaderboardTitle}}</div>
+                            {{#players}}
+                            <div class="leaderboard-item {{#isCurrentPlayer}}current-player{{/isCurrentPlayer}}">
+                                <span class="rank-number">#{{rank}}</span>
+                                <span class="player-email">{{displayEmail}}</span>
+                                <span class="player-score">{{#hasStreak}}<span class="streak-text">{{streakBadge}}</span> {{/hasStreak}}{{score}}</span>
+                            </div>
+                            {{/players}}
+                            {{^players}}
+                            <div class="leaderboard-empty">No scores recorded for
+                                this domain yet today!</div>
+                            {{/players}}
+                        </div>
+                        {{/hasWon}}
                     </div>
                 </template>
                 <div placeholder>
                     <div class="leaderboard-container">
-                        <div class="leaderboard-lock-banner" [hidden]="gameState.hasWon">
-                            <div class="leaderboard-lock-title">🔒 Solve today's puzzle to reveal the leaderboard!</div>
-                            <div class="leaderboard-lock-sub">Currently playing in the <strong>USER_DOMAIN_PLACEHOLDER</strong> leaderboard. You can switch between leaderboards in Manage Account & Preferences.</div>
+                        <div class="how-to-play" [hidden]="gameState.hasWon">
+                            <div class="how-to-play-title">How to Play</div>
+                            <div class="how-to-play-list">
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">1</span>
+                                    <span class="how-to-play-text"><strong>Guess the word</strong> that matches the definition clue by typing in the tiles.</span>
+                                </div>
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">2</span>
+                                    <span class="how-to-play-text"><strong>Misses unlock clues:</strong> Wrong guesses reveal the next definition (-100 pts, or -25 pts for synonyms).</span>
+                                </div>
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">3</span>
+                                    <span class="how-to-play-text"><strong>Use Letter Hints</strong> anytime to reveal the next missing letter (-150 pts).</span>
+                                </div>
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">4</span>
+                                    <span class="how-to-play-text"><strong>Compete &amp; rank:</strong> Currently playing in the <strong>USER_DOMAIN_PLACEHOLDER</strong> leaderboard.</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="leaderboard-blur-content" [class]="gameState.hasWon ? 'leaderboard-items' : 'leaderboard-blur-content'">
-                            <div class="leaderboard-item">
-                                <span class="rank-number">#1</span>
-                                <span class="player-email">alex@company.com</span>
-                                <span class="player-score">925 points</span>
-                            </div>
-                            <div class="leaderboard-item">
-                                <span class="rank-number">#2</span>
-                                <span class="player-email">sarah@company.com</span>
-                                <span class="player-score">850 points</span>
-                            </div>
-                            <div class="leaderboard-item">
-                                <span class="rank-number">#3</span>
-                                <span class="player-email">david@company.com</span>
-                                <span class="player-score">775 points</span>
-                            </div>
-                            <div class="leaderboard-item">
-                                <span class="rank-number">#4</span>
-                                <span class="player-email">emily@company.com</span>
-                                <span class="player-score">710 points</span>
-                            </div>
-                            <div class="leaderboard-item">
-                                <span class="rank-number">#5</span>
-                                <span class="player-email">michael@company.com</span>
-                                <span class="player-score">650 points</span>
-                            </div>
+                        <div class="leaderboard-items" hidden [hidden]="!gameState.hasWon">
+                            <div class="leaderboard-title">Global Leaderboard</div>
+                            <div class="leaderboard-empty">Loading leaderboard...</div>
                         </div>
                     </div>
                 </div>
                 <div fallback>
                     <div class="leaderboard-container">
-                        <div class="leaderboard-lock-banner message-banner-retry" role="button" tabindex="0" on="tap:leaderboardList.refresh">
+                        <div class="how-to-play" [hidden]="gameState.hasWon">
+                            <div class="how-to-play-title">How to Play</div>
+                            <div class="how-to-play-list">
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">1</span>
+                                    <span class="how-to-play-text"><strong>Guess the word</strong> that matches the definition clue by typing in the tiles.</span>
+                                </div>
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">2</span>
+                                    <span class="how-to-play-text"><strong>Misses unlock clues:</strong> Wrong guesses reveal the next definition (-100 pts, or -25 pts for synonyms).</span>
+                                </div>
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">3</span>
+                                    <span class="how-to-play-text"><strong>Use Letter Hints</strong> anytime to reveal the next missing letter (-150 pts).</span>
+                                </div>
+                                <div class="how-to-play-item">
+                                    <span class="how-to-play-bullet">4</span>
+                                    <span class="how-to-play-text"><strong>Compete &amp; rank:</strong> Currently playing in the <strong>USER_DOMAIN_PLACEHOLDER</strong> leaderboard.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="leaderboard-lock-banner message-banner-retry" hidden [hidden]="!gameState.hasWon" role="button" tabindex="0" on="tap:leaderboardList.refresh">
                             Connection issue &bull; Tap to load leaderboard
                         </div>
                     </div>
@@ -1171,7 +1748,14 @@ export const EMAIL_HTML = `<!doctype html>
 
         <!-- Footer -->
         <div class="footer">
-            <a class="account-link" href="https://inboxed.fun/account?token=default-dev-token">Manage Account & Preferences</a> <span class="footer-dot" aria-hidden="true">&bull;</span> <a class="account-link" href="https://forms.gle/o3rAMb56i7cL1T1n8" target="_blank">Give Feedback</a>
+            <div>
+                <a class="account-link" href="https://inboxed.fun/account?token=default-dev-token">Manage Account & Preferences</a> <span class="footer-dot" aria-hidden="true">&bull;</span> <a class="account-link" href="https://forms.gle/o3rAMb56i7cL1T1n8" target="_blank">Give Feedback</a>
+            </div>
+            <div class="footer-logo">
+                <a href="https://inboxed.fun" target="_blank">
+                    <amp-img src="https://inboxed.fun/inboxed-fun.png" width="78" height="32" layout="fixed" alt="inboxed.fun"></amp-img>
+                </a>
+            </div>
         </div>
     </div>
 </body>

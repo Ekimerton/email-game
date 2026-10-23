@@ -39,6 +39,13 @@ export async function buildPuzzleEmailContent(
       ? 'Global'
       : activeLb.name
 
+  const leaderboardTitle =
+    activeLb.type === 'custom'
+      ? 'Custom Leaderboard'
+      : activeLb.type === 'domain'
+      ? 'Domain Leaderboard'
+      : 'Global Leaderboard'
+
   let ampHtml = EMAIL_HTML
     .replaceAll('https://inboxed.fun', origin)
     .replaceAll('USER_EMAIL_PLACEHOLDER', encodedEmail)
@@ -47,6 +54,7 @@ export async function buildPuzzleEmailContent(
       `<strong>${leaderboardPillLabel}</strong>`
     )
     .replaceAll('USER_DOMAIN_PLACEHOLDER', activeLb.name)
+    .replaceAll('<div class="leaderboard-title">Global Leaderboard</div>', `<div class="leaderboard-title">${leaderboardTitle}</div>`)
     .replaceAll('USER_COMPANY_DOMAIN_PLACEHOLDER', companyDomain)
     .replaceAll('USER_DATE_PLACEHOLDER', puzzle.date)
     .replaceAll('USER_PUZZLE_ID_PLACEHOLDER', puzzle.id)
@@ -79,7 +87,13 @@ export async function buildPuzzleEmailContent(
   ampHtml = ampHtml.replace('Guess the word!', initialMsg)
 
   if (state.hasWon) {
-    ampHtml = ampHtml.replaceAll('"hasWon": false', '"hasWon": true')
+    const shareText = `I got inboxed in ${state.guessCount} guess${state.guessCount === 1 ? '' : 'es'}! https://inboxed.fun`
+    const winTitle = GAME_MESSAGES.winTitle(state.guessCount)
+    ampHtml = ampHtml
+      .replaceAll('"hasWon": false', '"hasWon": true')
+      .replaceAll('"score": 0', `"score": ${state.score}`)
+      .replaceAll('"winTitle": ""', `"winTitle": ${JSON.stringify(winTitle)}`)
+      .replaceAll('"shareText": ""', `"shareText": ${JSON.stringify(shareText)}`)
   }
 
   const placeholderTabsHtml = puzzle.definitions.map((_, i) => {

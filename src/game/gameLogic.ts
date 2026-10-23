@@ -102,6 +102,13 @@ export function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?:
   })
 
   const guessedWords = state.guessedWords || (state.guessesHistory || []).map(g => g.guess)
+  const winTitle = state.hasWon ? GAME_MESSAGES.winTitle(state.guessCount) : 'You killed it!'
+  const lastMessage = state.hasWon
+    ? GAME_MESSAGES.puzzleSolved(puzzle.word, state.guessCount, state.score)
+    : state.lastMessage
+  const shareText = state.hasWon
+    ? `I got inboxed in ${state.guessCount} guess${state.guessCount === 1 ? '' : 'es'}! https://inboxed.fun`
+    : (state.shareText || '')
 
   const statePayload = {
     revealedCount: activeRevealedCount,
@@ -122,8 +129,9 @@ export function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?:
     hintsUsed: state.hintsUsed,
     score: state.score,
     hasWon: state.hasWon,
-    lastMessage: state.lastMessage,
-    shareText: state.shareText,
+    lastMessage,
+    winTitle,
+    shareText,
     guessedWords,
     guessesHistory: state.guessesHistory || [],
     version: state.version || 0,

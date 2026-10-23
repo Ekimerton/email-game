@@ -72,10 +72,12 @@ describe('Hono App & Layout Calculations', () => {
     expect(EMAIL_HTML).toContain("Have someone you think would like this game? Forward this email to invite them!")
   })
 
-  it('should include the mini tutorial within 40px height limit in EMAIL_HTML', () => {
-    expect(EMAIL_HTML).toContain('mini-tutorial')
-    expect(EMAIL_HTML).toContain('Misses unlock definitions &bull; Use Letter Hint for help &bull; Play within your email')
-    expect(EMAIL_HTML).toContain('max-height: 40px;')
+  it('should include the expanded How to Play section in EMAIL_HTML', () => {
+    expect(EMAIL_HTML).toContain('how-to-play')
+    expect(EMAIL_HTML).toContain('How to Play')
+    expect(EMAIL_HTML).toContain('Guess the word')
+    expect(EMAIL_HTML).toContain('Misses unlock clues:')
+    expect(EMAIL_HTML).toContain('Use Letter Hints')
   })
 
   it('should bound guess input to puzzle word length via maxlength', async () => {
@@ -258,7 +260,7 @@ describe('Synonym Guess Scoring & Feedback System', () => {
     expect(winData.guessCount).toBe(2)
     // Score must be 975 (1000 - 25), NOT 900 (1000 - 100)
     expect(winData.score).toBe(975)
-    expect(winData.lastMessage).toContain('Solved "LOAD" in 2 guesses! 975 pts')
+    expect(winData.lastMessage).toContain("You got today's word in 2 guesses!")
   })
 })
 
@@ -942,8 +944,8 @@ describe('Cold Start & Network Resilience Handling', () => {
   })
 
   it('should include diffable and fallback on amp-list components in EMAIL_HTML', () => {
-    expect(EMAIL_HTML).toContain('<amp-list id="stateList" width="auto" height="218" layout="fixed-height" diffable')
-    expect(EMAIL_HTML).toContain('<amp-list id="leaderboardList" width="auto" height="160" layout="fixed-height" diffable')
+    expect(EMAIL_HTML).toContain('<amp-list id="stateList" width="auto" height="256" layout="fixed-height" diffable')
+    expect(EMAIL_HTML).toContain('<amp-list id="leaderboardList" width="auto" height="180" layout="fixed-height" diffable')
     expect(EMAIL_HTML).toContain('on="tap:stateList.refresh"')
     expect(EMAIL_HTML).toContain('on="tap:leaderboardList.refresh"')
   })
@@ -960,11 +962,17 @@ describe('Cold Start & Network Resilience Handling', () => {
     expect(EMAIL_HTML).toContain('<input type="hidden" name="date" value="USER_DATE_PLACEHOLDER">')
   })
 
-  it('should include dynamic victory reveal bindings for leaderboard while keeping form-container visible', async () => {
-    expect(EMAIL_HTML).toContain('<div class="form-container">')
-    expect(EMAIL_HTML).not.toContain('<div class="form-container" [hidden]="gameState.hasWon">')
-    expect(EMAIL_HTML).toContain('[hidden]="gameState.hasWon"')
-    expect(EMAIL_HTML).toContain('[class]="gameState.hasWon ? \'leaderboard-items\' : \'leaderboard-blur-content\'"')
+  it('should include dynamic two-state victory reveal bindings for score card, share card, how-to-play, and leaderboard', async () => {
+    expect(EMAIL_HTML).toContain('<div class="form-container" [hidden]="gameState.hasWon">')
+    expect(EMAIL_HTML).toContain('<div class="play-state-container" [hidden]="gameState.hasWon">')
+    expect(EMAIL_HTML).toContain('<div class="win-state-container" hidden [hidden]="!gameState.hasWon">')
+    expect(EMAIL_HTML).toContain('<div class="how-to-play" [hidden]="gameState.hasWon">')
+    expect(EMAIL_HTML).toContain('<div class="leaderboard-items" hidden [hidden]="!gameState.hasWon">')
+    expect(EMAIL_HTML).toContain('win-score-card')
+    expect(EMAIL_HTML).toContain('You killed it!')
+    expect(EMAIL_HTML).toContain('Nicely done!')
+    expect(EMAIL_HTML).toContain('Close one!')
+    expect(EMAIL_HTML).toContain('share-card')
     expect(EMAIL_HTML).not.toContain('gameState.hasWon ||')
     expect(EMAIL_HTML).not.toContain('[text]="gameState.definitions')
 

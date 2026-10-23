@@ -27,8 +27,14 @@ export const MSG_ALL_LETTERS_REVEALED = 'All letters have already been revealed!
 export const MSG_HINT_REVEALED = (position: number, letter: string): string =>
   `Revealed letter #${position}: "${letter}"! -150 points`
 
-export const MSG_PUZZLE_SOLVED = (word: string, guessCount: number, score: number): string =>
-  `Solved "${word}" in ${guessCount} guess${guessCount > 1 ? 'es' : ''}! ${score} pts`
+export const MSG_PUZZLE_SOLVED = (_word: string, guessCount: number, _score?: number): string =>
+  `You got today's word in ${guessCount} guess${guessCount > 1 ? 'es' : ''}!`
+
+export const MSG_WIN_TITLE = (guessCount: number): string => {
+  if (guessCount <= 2) return 'You killed it!'
+  if (guessCount <= 4) return 'Nicely done!'
+  return 'Close one!'
+}
 
 export const GAME_MESSAGES = {
   initialPrompt: MSG_INITIAL_PROMPT,
@@ -39,4 +45,5 @@ export const GAME_MESSAGES = {
   allLettersRevealed: MSG_ALL_LETTERS_REVEALED,
   hintRevealed: MSG_HINT_REVEALED,
   puzzleSolved: MSG_PUZZLE_SOLVED,
+  winTitle: MSG_WIN_TITLE,
 } as const

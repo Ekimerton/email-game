@@ -8,6 +8,7 @@ import {
   MSG_ALL_LETTERS_REVEALED,
   MSG_HINT_REVEALED,
   MSG_PUZZLE_SOLVED,
+  MSG_WIN_TITLE,
   GAME_MESSAGES,
 } from '../src/game'
 
@@ -48,8 +49,16 @@ describe('Game Messages', () => {
   })
 
   it('should format MSG_PUZZLE_SOLVED correctly for single and multiple guesses', () => {
-    expect(MSG_PUZZLE_SOLVED('LOAD', 1, 1000)).toBe('Solved "LOAD" in 1 guess! 1000 pts')
-    expect(MSG_PUZZLE_SOLVED('LOAD', 3, 700)).toBe('Solved "LOAD" in 3 guesses! 700 pts')
-    expect(GAME_MESSAGES.puzzleSolved('APPLE', 2, 900)).toBe('Solved "APPLE" in 2 guesses! 900 pts')
+    expect(MSG_PUZZLE_SOLVED('LOAD', 1, 1000)).toBe("You got today's word in 1 guess!")
+    expect(MSG_PUZZLE_SOLVED('LOAD', 3, 700)).toBe("You got today's word in 3 guesses!")
+    expect(GAME_MESSAGES.puzzleSolved('APPLE', 2, 900)).toBe("You got today's word in 2 guesses!")
+  })
+
+  it('should format MSG_WIN_TITLE based on guess count', () => {
+    expect(MSG_WIN_TITLE(1)).toBe('You killed it!')
+    expect(MSG_WIN_TITLE(2)).toBe('You killed it!')
+    expect(GAME_MESSAGES.winTitle(3)).toBe('Nicely done!')
+    expect(GAME_MESSAGES.winTitle(4)).toBe('Nicely done!')
+    expect(GAME_MESSAGES.winTitle(5)).toBe('Close one!')
   })
 })

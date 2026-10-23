@@ -503,7 +503,7 @@ export const SHARED_GAME_CSS = `
 
         .wordle-input-wrapper {
             position: relative;
-            margin-top: -40px;
+            margin-top: -78px;
             margin-bottom: 7px;
             display: flex;
             justify-content: center;
@@ -528,6 +528,8 @@ export const SHARED_GAME_CSS = `
         }
 
         .action-buttons {
+            position: relative;
+            z-index: 5;
             display: flex;
             justify-content: center;
             gap: 8px;
@@ -628,7 +630,344 @@ export const SHARED_GAME_CSS = `
             font-weight: 800;
         }
 
-        /* Victory Card */
+        /* Play & Win State Containers */
+        .play-state-container {
+            position: relative;
+            z-index: 1;
+            height: 218px;
+            box-sizing: border-box;
+        }
+
+        .win-state-container {
+            position: relative;
+            z-index: 20;
+            height: 256px;
+            background-color: var(--color-white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 10px;
+            box-sizing: border-box;
+        }
+
+        .win-state-container[hidden],
+        .play-state-container[hidden],
+        .form-container[hidden],
+        .how-to-play[hidden],
+        .leaderboard-items[hidden],
+        .leaderboard-lock-banner[hidden] {
+            display: none;
+        }
+
+        .win-score-card {
+            position: relative;
+            overflow: hidden;
+            border: 3px double var(--color-zinc-300);
+            border-radius: 12px;
+            background-color: var(--color-surface);
+            padding: 18px 16px;
+            text-align: center;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .win-star {
+            position: absolute;
+            z-index: 1;
+            line-height: 1;
+            opacity: 0.85;
+        }
+
+        .win-star-1 {
+            top: -12px;
+            left: -10px;
+            font-size: 34px;
+            transform: rotate(-18deg);
+        }
+
+        .win-star-2 {
+            top: 20px;
+            left: 24px;
+            font-size: 18px;
+            transform: rotate(15deg);
+            opacity: 0.75;
+        }
+
+        .win-star-3 {
+            top: -12px;
+            right: -8px;
+            font-size: 32px;
+            transform: rotate(22deg);
+        }
+
+        .win-star-4 {
+            top: 42%;
+            right: -12px;
+            font-size: 32px;
+            transform: rotate(-14deg);
+        }
+
+        .win-star-5 {
+            bottom: -10px;
+            left: 10%;
+            font-size: 28px;
+            transform: rotate(-12deg);
+        }
+
+        .win-star-6 {
+            bottom: 18%;
+            left: -10px;
+            font-size: 26px;
+            transform: rotate(-25deg);
+            opacity: 0.85;
+        }
+
+        .win-star-7 {
+            bottom: -12px;
+            right: -8px;
+            font-size: 32px;
+            transform: rotate(-20deg);
+        }
+
+        .win-star-8 {
+            bottom: 20px;
+            right: 24px;
+            font-size: 18px;
+            transform: rotate(18deg);
+            opacity: 0.75;
+        }
+
+        .win-star-9 {
+            top: -12px;
+            left: 22%;
+            font-size: 26px;
+            transform: rotate(10deg);
+            opacity: 0.85;
+        }
+
+        .win-star-10 {
+            top: 20px;
+            right: 24px;
+            font-size: 18px;
+            transform: rotate(-16deg);
+            opacity: 0.75;
+        }
+
+        .win-star-11 {
+            top: -14px;
+            left: 48%;
+            font-size: 28px;
+            transform: rotate(-14deg);
+        }
+
+        .win-star-12 {
+            top: -10px;
+            right: 22%;
+            font-size: 25px;
+            transform: rotate(18deg);
+            opacity: 0.85;
+        }
+
+        .win-star-13 {
+            top: 42%;
+            left: -12px;
+            font-size: 30px;
+            transform: rotate(20deg);
+        }
+
+        .win-star-14 {
+            bottom: -12px;
+            left: 23%;
+            font-size: 25px;
+            transform: rotate(16deg);
+            opacity: 0.85;
+        }
+
+        .win-star-15 {
+            bottom: -13px;
+            left: 50%;
+            font-size: 28px;
+            transform: rotate(-18deg);
+        }
+
+        .win-star-16 {
+            bottom: -11px;
+            right: 21%;
+            font-size: 25px;
+            transform: rotate(14deg);
+            opacity: 0.85;
+        }
+
+        .win-star-17 {
+            top: -10px;
+            left: 10%;
+            font-size: 23px;
+            transform: rotate(24deg);
+            opacity: 0.85;
+        }
+
+        .win-star-18 {
+            top: -9px;
+            left: 35%;
+            font-size: 22px;
+            transform: rotate(-22deg);
+            opacity: 0.85;
+        }
+
+        .win-star-19 {
+            top: -9px;
+            left: 61%;
+            font-size: 23px;
+            transform: rotate(16deg);
+            opacity: 0.85;
+        }
+
+        .win-star-20 {
+            top: -11px;
+            right: 10%;
+            font-size: 24px;
+            transform: rotate(-19deg);
+            opacity: 0.85;
+        }
+
+        .win-star-21 {
+            bottom: -12px;
+            left: -10px;
+            font-size: 30px;
+            transform: rotate(20deg);
+        }
+
+        .win-star-22 {
+            bottom: -9px;
+            left: 37%;
+            font-size: 22px;
+            transform: rotate(-20deg);
+            opacity: 0.85;
+        }
+
+        .win-star-23 {
+            bottom: -9px;
+            right: 34%;
+            font-size: 22px;
+            transform: rotate(22deg);
+            opacity: 0.85;
+        }
+
+        .win-star-24 {
+            bottom: -9px;
+            right: 10%;
+            font-size: 23px;
+            transform: rotate(-15deg);
+            opacity: 0.85;
+        }
+
+        .win-star-25 {
+            top: 18%;
+            left: -11px;
+            font-size: 26px;
+            transform: rotate(-15deg);
+            opacity: 0.85;
+        }
+
+        .win-star-26 {
+            top: 18%;
+            right: -11px;
+            font-size: 26px;
+            transform: rotate(16deg);
+            opacity: 0.85;
+        }
+
+        .win-star-27 {
+            bottom: 18%;
+            right: -10px;
+            font-size: 26px;
+            transform: rotate(24deg);
+            opacity: 0.85;
+        }
+
+        .win-star-28 {
+            bottom: 20px;
+            left: 24px;
+            font-size: 18px;
+            transform: rotate(19deg);
+            opacity: 0.75;
+        }
+
+        .win-congrats-title {
+            position: relative;
+            z-index: 2;
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--color-zinc-950);
+            line-height: 1.2;
+            letter-spacing: -0.4px;
+            margin-bottom: 10px;
+        }
+
+        .win-score-pill {
+            position: relative;
+            z-index: 2;
+            display: inline-flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 4px;
+            background-color: var(--color-amber-300);
+            color: var(--color-black);
+            padding: 6px 18px;
+            border-radius: 999px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 2px var(--color-shadow-sm);
+        }
+
+        .win-score-number {
+            font-size: 28px;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -0.5px;
+        }
+
+        .win-score-unit {
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .win-score-sub {
+            position: relative;
+            z-index: 2;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-zinc-600);
+            line-height: 1.3;
+        }
+
+        .share-card {
+            background-color: var(--color-zinc-100);
+            border: 1px solid var(--color-zinc-300);
+            border-radius: 10px;
+            padding: 10px 14px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .share-card-text {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-zinc-900);
+            font-family: ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco, Consolas, monospace;
+            line-height: 1.35;
+        }
+
+        /* Victory Card (Legacy) */
         .win-card {
             background: var(--color-zinc-900);
             border: 1px solid var(--color-zinc-800);
@@ -722,19 +1061,73 @@ export const SHARED_GAME_CSS = `
             gap: 8px;
         }
 
-        /* Leaderboard */
+        /* Leaderboard & How to Play */
         .leaderboard-container {
             position: relative;
-            height: 160px;
-            max-height: 160px;
+            height: 180px;
+            max-height: 180px;
             overflow: hidden;
             box-sizing: border-box;
+        }
+
+        .how-to-play,
+        .leaderboard-items {
+            padding: 4px 4px 0 4px;
+            box-sizing: border-box;
+        }
+
+        .how-to-play-title,
+        .leaderboard-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--color-zinc-900);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .how-to-play-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .how-to-play-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            line-height: 1.35;
+            color: var(--color-zinc-600);
+            text-align: left;
+        }
+
+        .how-to-play-item strong {
+            color: var(--color-zinc-900);
+            font-weight: 700;
+        }
+
+        .how-to-play-bullet {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            border-radius: 50%;
+            background-color: var(--color-amber-300);
+            color: var(--color-black);
+            font-size: 10.5px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 18px;
+            flex-shrink: 0;
         }
 
         .leaderboard-blur-content {
             opacity: 0.15;
             filter: blur(4px);
-            max-height: 160px;
+            max-height: 180px;
             overflow: hidden;
         }
 
@@ -811,7 +1204,7 @@ export const SHARED_GAME_CSS = `
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 8px;
+            padding: 4px 8px;
             font-size: 12px;
             border-radius: 6px;
         }
@@ -935,6 +1328,13 @@ export const SHARED_GAME_CSS = `
             line-height: 1;
             color: var(--color-zinc-400);
             vertical-align: middle;
+        }
+
+        .footer-logo {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         /* Updates & News Announcement Box (Edge to edge horizontally) */
