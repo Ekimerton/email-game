@@ -825,21 +825,19 @@ export const EMAIL_HTML = `<!doctype html>
         }
 
         .share-card {
-            background-color: #f4f4f5;
-            border: 1px solid #d4d4d8;
-            border-radius: 8px;
-            padding: 6px 8px;
-            text-align: center;
-            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         .share-card-text {
             display: block;
             width: 100%;
-            padding: 0;
+            box-sizing: border-box;
+            padding: 6px 8px;
             margin: 0;
-            background: transparent;
-            border: none;
+            background-color: #ffffff;
+            border: 1px solid #d4d4d8;
+            border-radius: 8px;
             outline: none;
             text-align: center;
             font-size: 11px;
