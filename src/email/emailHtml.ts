@@ -827,23 +827,27 @@ export const EMAIL_HTML = `<!doctype html>
         .share-card {
             background-color: #f4f4f5;
             border: 1px solid #d4d4d8;
-            border-radius: 10px;
-            padding: 10px 14px;
+            border-radius: 8px;
+            padding: 6px 8px;
             text-align: center;
             box-sizing: border-box;
         }
 
         .share-card-text {
+            display: block;
             width: 100%;
+            padding: 0;
+            margin: 0;
             background: transparent;
             border: none;
             outline: none;
             text-align: center;
-            font-size: 13px;
+            font-size: 11px;
+            letter-spacing: -0.2px;
             font-weight: 600;
             color: #18181b;
             font-family: ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco, Consolas, monospace;
-            line-height: 1.35;
+            line-height: 1.2;
         }
 
         /* Victory Card (Legacy) */

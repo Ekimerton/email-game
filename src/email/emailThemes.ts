@@ -948,23 +948,27 @@ export const SHARED_GAME_CSS = `
         .share-card {
             background-color: var(--color-zinc-100);
             border: 1px solid var(--color-zinc-300);
-            border-radius: 10px;
-            padding: 10px 14px;
+            border-radius: 8px;
+            padding: 6px 8px;
             text-align: center;
             box-sizing: border-box;
         }
 
         .share-card-text {
+            display: block;
             width: 100%;
+            padding: 0;
+            margin: 0;
             background: transparent;
             border: none;
             outline: none;
             text-align: center;
-            font-size: 13px;
+            font-size: 11px;
+            letter-spacing: -0.2px;
             font-weight: 600;
             color: var(--color-zinc-900);
             font-family: ui-monospace, SFMono-Regular, "Roboto Mono", Menlo, Monaco, Consolas, monospace;
-            line-height: 1.35;
+            line-height: 1.2;
         }
 
         /* Victory Card (Legacy) */
