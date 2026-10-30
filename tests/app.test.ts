@@ -36,7 +36,7 @@ describe('Hono App & Layout Calculations', () => {
     expect(html).toContain('background-color: #f4f4f5')
     expect(html).toContain('border: 1px solid #e4e4e7')
     expect(html).toContain('border-top: 1px solid #e4e4e7')
-    expect(html).toContain('logo.png')
+    expect(html).toContain('logo-new.png')
     expect(html).toContain('alt="INBOXED"')
     expect(html).toContain('update your account preferences')
   })
@@ -273,7 +273,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(html).toContain('action="/api/subscribe"')
     expect(html).toContain('Enter your email address')
     expect(html).toContain('Subscribe to Daily Puzzles')
-    expect(html).toContain('logo-tiles')
+    expect(html).toContain('logo-new.png')
   })
 
   it('should serve the email signup landing page at GET /signup', async () => {
@@ -373,10 +373,10 @@ describe('Email Signup Landing Page & Subscribe API', () => {
 
     expect(html).toContain('<!doctype html>')
     expect(html).toContain('<title>Confirm your Inboxed subscription</title>')
-    expect(html).toContain('src="https://inboxed.fun/logo.png"')
+    expect(html).toContain('src="https://inboxed.fun/logo-new.png"')
     expect(html).toContain('alt="INBOXED"')
     expect(html).toContain('width="160"')
-    expect(html).toContain('height="38"')
+    expect(html).toContain('height="56"')
     expect(html).toContain('href="https://inboxed.fun"')
     expect(html).toContain('Confirm Subscription')
     expect(html).toContain('background-color: #C4F7CA')
@@ -591,7 +591,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(res.status).toBe(200)
     expect(res.headers.get('content-type')).toBe('image/png')
     const buffer = await res.arrayBuffer()
-    expect(buffer.byteLength).toBe(18686)
+    expect(buffer.byteLength).toBe(24059)
   })
 
   it('should serve the inbox row image at GET /inbox-row.png', async () => {
@@ -759,7 +759,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
       const confirmEmailRes = await app.request('http://localhost:8787/dev/email/confirm?email=test%40example.com')
       expect(confirmEmailRes.status).toBe(200)
       const confirmEmailHtml = await confirmEmailRes.text()
-      expect(confirmEmailHtml).toContain('logo.png')
+      expect(confirmEmailHtml).toContain('logo-new.png')
       expect(confirmEmailHtml).toContain('alt="INBOXED"')
       expect(confirmEmailHtml).toContain('Confirm your subscription')
 
@@ -807,7 +807,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
       expect(fallbackRaw).toContain('Seeing this while trying to load the game?')
 
       const confirmEmailRaw = await (await app.request('http://localhost:8787/dev/raw?page=confirm-email&email=test%40example.com')).text()
-      expect(confirmEmailRaw).toContain('logo.png')
+      expect(confirmEmailRaw).toContain('logo-new.png')
       expect(confirmEmailRaw).toContain('alt="INBOXED"')
       expect(confirmEmailRaw).toContain('Confirm your subscription')
 

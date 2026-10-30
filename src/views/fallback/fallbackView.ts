@@ -22,7 +22,7 @@ export function getFallbackHtml(options: FallbackOptions): string {
   // Use clean public URL without raw query string email parameters to pass Gmail security filters
   const cleanPlayUrl = playUrl.split('?')[0]
   const origin = cleanPlayUrl.replace(/\/$/, '')
-  const logoUrl = `${origin}/logo.png`
+  const logoUrl = `${origin}/logo-new.png`
   const accountUrl = options.accountUrl || getAccountUrl(email, cleanPlayUrl)
   const safeEmail = escapeHtml(email)
   const safeDomain = escapeHtml(domain)
@@ -63,7 +63,7 @@ export function getFallbackHtml(options: FallbackOptions): string {
     <div style="background-color: ${cardBg}; border: 1px solid ${cardBorder}; border-radius: 12px; padding: 20px 16px; box-sizing: border-box;">
       <div style="text-align: center; margin: 0 0 20px;">
         <a href="${safePlayUrl}" style="text-decoration: none; display: inline-block;">
-          <img src="${safeLogoUrl}" alt="INBOXED" width="160" height="38" style="display: block; margin: 0 auto; width: 160px; height: 38px; border: 0; outline: none; text-decoration: none;">
+          <img src="${safeLogoUrl}" alt="INBOXED" width="160" height="56" style="display: block; margin: 0 auto; width: 160px; height: 56px; border: 0; outline: none; text-decoration: none;">
         </a>
       </div>
 

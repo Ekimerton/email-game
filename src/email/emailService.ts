@@ -107,7 +107,7 @@ export function renderConfirmationEmailHtml(
   }
   const cleanOrigin = origin.replace(/\/$/, '')
   const playUrl = options?.playUrl || cleanOrigin
-  const logoUrl = options?.logoUrl || `${cleanOrigin}/logo.png`
+  const logoUrl = options?.logoUrl || `${cleanOrigin}/logo-new.png`
 
   const safeConfirmUrl = escapeHtml(confirmUrl)
   const safePlayUrl = escapeHtml(playUrl)
@@ -136,7 +136,7 @@ export function renderConfirmationEmailHtml(
             <td align="center">
               <div style="text-align: center; margin: 0 0 20px;">
                 <a href="${safePlayUrl}" style="text-decoration: none; display: inline-block;">
-                  <img src="${safeLogoUrl}" alt="INBOXED" width="160" height="38" style="display: block; margin: 0 auto; width: 160px; height: 38px; border: 0; outline: none; text-decoration: none; font-size: 22px; font-weight: 900; color: #14532d; letter-spacing: 2px;">
+                  <img src="${safeLogoUrl}" alt="INBOXED" width="160" height="56" style="display: block; margin: 0 auto; width: 160px; height: 56px; border: 0; outline: none; text-decoration: none; font-size: 22px; font-weight: 900; color: #14532d; letter-spacing: 2px;">
                 </a>
               </div>
               <h1 style="font-size: 20px; font-weight: 800; color: #18181b; margin: 0 0 12px 0;">
@@ -191,7 +191,7 @@ export function renderInactivityUnsubscribeEmailHtml(
 ): string {
   const origin = (options?.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
   const playUrl = options?.playUrl || origin
-  const logoUrl = options?.logoUrl || `${origin}/logo.png`
+  const logoUrl = options?.logoUrl || `${origin}/logo-new.png`
   const accountUrl = options?.accountUrl
     || (options?.email ? getAccountUrl(options.email, origin, options.authSecret) : `${origin}/account`)
 
@@ -222,7 +222,7 @@ export function renderInactivityUnsubscribeEmailHtml(
             <td align="center">
               <div style="text-align: center; margin: 0 0 20px;">
                 <a href="${safePlayUrl}" style="text-decoration: none; display: inline-block;">
-                  <img src="${safeLogoUrl}" alt="INBOXED" width="160" height="38" style="display: block; margin: 0 auto; width: 160px; height: 38px; border: 0; outline: none; text-decoration: none; font-size: 22px; font-weight: 900; color: #14532d; letter-spacing: 2px;">
+                  <img src="${safeLogoUrl}" alt="INBOXED" width="160" height="56" style="display: block; margin: 0 auto; width: 160px; height: 56px; border: 0; outline: none; text-decoration: none; font-size: 22px; font-weight: 900; color: #14532d; letter-spacing: 2px;">
                 </a>
               </div>
               <h1 style="font-size: 20px; font-weight: 800; color: #18181b; margin: 0 0 12px 0;">

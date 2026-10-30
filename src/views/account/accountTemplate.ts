@@ -1725,15 +1725,7 @@ body.dark-theme .footer-text a {
         return (
           <div className="container" style={{ textAlign: 'center' }}>
             <div className="logo-container">
-              <div className="logo-tiles" aria-label="INBOXED">
-                <span className="logo-tile rotate-neg">I</span>
-                <span className="logo-tile rotate-pos">N</span>
-                <span className="logo-tile rotate-neg">B</span>
-                <span className="logo-tile rotate-pos">O</span>
-                <span className="logo-tile rotate-neg">X</span>
-                <span className="logo-tile rotate-pos">E</span>
-                <span className="logo-tile rotate-neg">D</span>
-              </div>
+              <img src="/logo-new.png" alt="INBOXED" width="180" height="63" style={{ display: 'block', margin: '0 auto', width: '180px', height: 'auto' }} />
             </div>
             <div style={{ marginTop: '16px' }}>
               <div style={{ fontSize: '38px', marginBottom: '12px' }}>⚠️</div>
@@ -1753,15 +1745,7 @@ body.dark-theme .footer-text a {
           {toast && <div className="toast">{toast}</div>}
 
           <div className="logo-container">
-            <div className="logo-tiles" aria-label="INBOXED">
-              <span className="logo-tile rotate-neg">I</span>
-              <span className="logo-tile rotate-pos">N</span>
-              <span className="logo-tile rotate-neg">B</span>
-              <span className="logo-tile rotate-pos">O</span>
-              <span className="logo-tile rotate-neg">X</span>
-              <span className="logo-tile rotate-pos">E</span>
-              <span className="logo-tile rotate-neg">D</span>
-            </div>
+            <img src="/logo-new.png" alt="INBOXED" width="180" height="63" style={{ display: 'block', margin: '0 auto', width: '180px', height: 'auto' }} />
           </div>
 
           <div className="header">

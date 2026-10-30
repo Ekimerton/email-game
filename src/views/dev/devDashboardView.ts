@@ -422,15 +422,7 @@ export function getDevDashboardPageHtml(params: DevDashboardViewParams): string 
   <header class="dev-header">
     <div class="header-inner">
       <div class="brand-section">
-        <div class="logo-tiles" aria-label="INBOXED">
-          <span class="logo-tile" style="background-color: #D8FFC5;">I</span>
-          <span class="logo-tile" style="background-color: #C4F7CA;">N</span>
-          <span class="logo-tile" style="background-color: #D8FFC5;">B</span>
-          <span class="logo-tile" style="background-color: #C4F7CA;">O</span>
-          <span class="logo-tile" style="background-color: #D8FFC5;">X</span>
-          <span class="logo-tile" style="background-color: #C4F7CA;">E</span>
-          <span class="logo-tile" style="background-color: #D8FFC5;">D</span>
-        </div>
+        <img src="/logo-new.png" alt="INBOXED" height="28" style="height: 28px; width: auto; display: block;">
         <span class="badge-dev">ANALYTICS DASHBOARD</span>
         <span id="source-badge" class="badge-source ${isProd ? 'badge-prod' : 'badge-local-source'}">
           ${isProd ? '🟢 Live Production DB' : '💻 Local Dev KV'}

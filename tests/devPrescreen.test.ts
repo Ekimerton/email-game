@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { app } from '../src/index'
 import { MEMORY_STORE, generateAccountToken } from '../src/core'
-import { getDailyPuzzle } from '../src/game'
+import { getDailyPuzzle, escapeHtml } from '../src/game'
 import { getDevTesters, isDevTester, addDevTester, removeDevTester } from '../src/services'
 import { buildPuzzleEmailContent } from '../src/email'
 
@@ -351,7 +351,7 @@ describe('Dev Prescreen & Public Launch Schedule Reset', () => {
       expect(resRoot.status).toBe(200)
       const htmlRoot = await resRoot.text()
       expect(htmlRoot).toContain(`Puzzle #${currentPuzzle.id}`)
-      expect(htmlRoot).toContain(currentPuzzle.definitions[0])
+      expect(htmlRoot).toContain(escapeHtml(currentPuzzle.definitions[0]))
       expect(htmlRoot).not.toContain('Puzzle #42')
       expect(htmlRoot).not.toContain('Puzzle #43')
 

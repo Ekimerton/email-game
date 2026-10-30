@@ -15,7 +15,20 @@ export interface PatchNote {
   sections?: PatchNoteSection[]
 }
 
+export const GAME_IDEAS_FORM_URL = 'https://forms.gle/YoPVkYgR7cHwFUAP9'
+
 export const UPDATES: PatchNote[] = [
+  {
+    id: 'october-29-2026',
+    title: 'Have an idea for a new game? Tell me what to build next!',
+    date: 'October 29, 2026',
+    paragraphs: [
+      'Hey everyone! Thank you so much for playing Inboxed every morning and testing out what interactive emails can do. Building this prototype around guessing a word from its definitions was a great way to prove out the tech, and now I’m starting to think about what the actual game should be.',
+      'Instead of sticking purely with the current guess-the-word-from-definitions format, I want to explore fresh daily game concepts that feel genuinely fun and native to your inbox, whether that’s a different twist on wordplay, trivia, logic puzzles, or something completely new.',
+      `If you have an idea for a daily game you’d love to play in your email (or mechanics from other games you think would work great here), I’d love to hear it! Drop your ideas in the <a href="${GAME_IDEAS_FORM_URL}" target="_blank" rel="noopener noreferrer">game ideas form</a>. There will be credit given for the idea, as well as maybe a prize :^)`,
+      'As always, thank you for playing and helping shape where Inboxed goes next!<br><br>Ekim'
+    ]
+  },
   {
     id: 'october-12-2026',
     title: 'Custom leaderboards are here! Create, join, and play with friends',

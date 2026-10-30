@@ -665,15 +665,7 @@ export const DEV_WORKBENCH_HTML = `  return \`<!doctype html>
   <header class="dev-header">
     <div class="header-content">
       <div class="brand-section">
-        <div class="logo-tiles" aria-label="INBOXED">
-          <span class="logo-tile" style="background-color: #D8FFC5;">I</span>
-          <span class="logo-tile" style="background-color: #C4F7CA;">N</span>
-          <span class="logo-tile" style="background-color: #D8FFC5;">B</span>
-          <span class="logo-tile" style="background-color: #C4F7CA;">O</span>
-          <span class="logo-tile" style="background-color: #D8FFC5;">X</span>
-          <span class="logo-tile" style="background-color: #C4F7CA;">E</span>
-          <span class="logo-tile" style="background-color: #D8FFC5;">D</span>
-        </div>
+        <img src="/logo-new.png" alt="INBOXED" height="28" style="height: 28px; width: auto; display: block;">
         <span class="badge-dev">DEV WORKBENCH</span>
         <span class="badge-local">Local Only</span>
       </div>

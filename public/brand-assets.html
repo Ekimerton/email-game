@@ -557,6 +557,22 @@
       color: #ffffff;
     }
 
+    .card-light .hl-green {
+      color: #16a34a;
+    }
+
+    .card-dark .hl-green {
+      color: #4ade80;
+    }
+
+    .card-light .hl-blue {
+      color: #2563eb;
+    }
+
+    .card-dark .hl-blue {
+      color: #60a5fa;
+    }
+
     .card-subheadline {
       font-size: 21px;
       line-height: 1.4;
@@ -697,13 +713,13 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      margin-top: -40px;
+      margin-top: -60px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      gap: 28px;
+      gap: 22px;
       width: 100%;
       max-width: 900px;
       z-index: 1;
@@ -839,10 +855,7 @@
   <!-- Top bar -->
   <header class="header-bar">
     <div class="brand-title">
-      <div class="card-logo-tiles">
-        <span class="logo-tile" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:#D8FFC5;color:#18181b;font-weight:900;border:2.5px solid #18181b;border-radius:8px;transform:rotate(-8deg);margin-right:-3px;">I</span>
-        <span class="logo-tile" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;background:#C4F7CA;color:#18181b;font-weight:900;border:2.5px solid #18181b;border-radius:8px;transform:rotate(8deg);">N</span>
-      </div>
+      <img src="/logo-new.png" alt="INBOXED" height="34" style="height:34px;width:auto;display:block;">
       <span>Inboxed Brand Kit</span>
       <span class="brand-pill">Clean Media Kit</span>
     </div>
@@ -961,7 +974,7 @@
             </div>
             <div class="tab-item">
               <span class="tab-icon-small">I</span>
-              <span>Inboxed - The Daily Word Game that Lives in Your Email</span>
+              <span>Inboxed - Play daily games 🧩 in your email 📫</span>
               <span style="margin-left: 8px; color: #71717a; font-size: 10px;">✕</span>
             </div>
           </div>
@@ -1012,22 +1025,14 @@
 
         <!-- Top row: Logo -->
         <div class="card-top">
-          <div class="card-logo-tiles" aria-label="INBOXED">
-            <span class="card-tile rot-n">I</span>
-            <span class="card-tile rot-p">N</span>
-            <span class="card-tile rot-n">B</span>
-            <span class="card-tile rot-p">O</span>
-            <span class="card-tile rot-n">X</span>
-            <span class="card-tile rot-p">E</span>
-            <span class="card-tile rot-n">D</span>
-          </div>
+          <img src="/logo-new.png" alt="INBOXED" height="80" style="height: 80px; width: auto; display: block;">
         </div>
 
         <!-- Middle Hero Content -->
         <div class="card-middle">
           <div class="card-hero-text">
             <h1 class="card-headline">
-              The Daily Word Game that Lives <em>in Your Email</em>
+              Play <span class="hl-green">daily games</span> 🧩<br><em>in your <span class="hl-blue">email</span></em> 📫
             </h1>
           </div>
 
@@ -1084,22 +1089,14 @@
 
         <!-- Top row: Logo -->
         <div class="card-top">
-          <div class="card-logo-tiles" aria-label="INBOXED">
-            <span class="card-tile rot-n">I</span>
-            <span class="card-tile rot-p">N</span>
-            <span class="card-tile rot-n">B</span>
-            <span class="card-tile rot-p">O</span>
-            <span class="card-tile rot-n">X</span>
-            <span class="card-tile rot-p">E</span>
-            <span class="card-tile rot-n">D</span>
-          </div>
+          <img src="/logo-new.png" alt="INBOXED" height="80" style="height: 80px; width: auto; display: block;">
         </div>
 
         <!-- Middle Hero Content -->
         <div class="card-middle">
           <div class="card-hero-text">
             <h1 class="card-headline">
-              The Daily Word Game that Lives <em>in Your Email</em>
+              Play <span class="hl-green">daily games</span> 🧩<br><em>in your <span class="hl-blue">email</span></em> 📫
             </h1>
           </div>
 
@@ -1163,19 +1160,11 @@
         <!-- Centered Core Content -->
         <div class="centered-hero">
           <div class="centered-header-group">
-            <!-- Centered Logo Tiles -->
-            <div class="card-logo-tiles" aria-label="INBOXED">
-              <span class="card-tile rot-n">I</span>
-              <span class="card-tile rot-p">N</span>
-              <span class="card-tile rot-n">B</span>
-              <span class="card-tile rot-p">O</span>
-              <span class="card-tile rot-n">X</span>
-              <span class="card-tile rot-p">E</span>
-              <span class="card-tile rot-n">D</span>
-            </div>
+            <!-- Centered Logo -->
+            <img src="/logo-new.png" alt="INBOXED" height="136" style="height: 136px; width: auto; display: block;">
 
             <h1 class="centered-headline">
-              The Daily Word Game that Lives <em>in Your Email</em>
+              Play <span class="hl-green">daily games</span> 🧩 <em>in your <span class="hl-blue">email</span></em> 📫
             </h1>
           </div>
 
@@ -1215,9 +1204,11 @@
   <canvas id="downloadCanvas" width="1200" height="630"></canvas>
 
   <script>
-    // Preload the user's uploaded Gmail inbox row image for instant canvas rendering
+    // Preload the user's uploaded Gmail inbox row image and new logo for instant canvas rendering
     const inboxRowImg = new Image();
     inboxRowImg.src = 'inbox-row.png';
+    const logoNewImg = new Image();
+    logoNewImg.src = '/logo-new.png';
 
     function copySnippet() {
       const code = document.getElementById('codeSnippet').innerText;
@@ -1316,57 +1307,48 @@
         }
       }
 
-      // 2. Top Bar: Logo tiles (I N B O X E D)
-      const letters = ['I', 'N', 'B', 'O', 'X', 'E', 'D'];
-      const tileStartX = 80;
-      const tileStartY = 64;
-      const tileSize = 60;
+      // 2. Top Bar: Logo image (logo-new.png)
+      if (logoNewImg && logoNewImg.complete && logoNewImg.naturalWidth > 0) {
+        const logoH = 80;
+        const logoW = Math.round(logoH * (logoNewImg.naturalWidth / logoNewImg.naturalHeight));
+        ctx.drawImage(logoNewImg, 80, 56, logoW, logoH);
+      }
 
-      letters.forEach((char, i) => {
-        ctx.save();
-        const curX = tileStartX + i * 58;
-        const curY = tileStartY;
-        const rot = (i % 2 === 0 ? -8 : 8) * Math.PI / 180;
-        const bg = (i % 2 === 0 ? '#D8FFC5' : '#C4F7CA');
-
-        ctx.translate(curX + tileSize / 2, curY + tileSize / 2);
-        ctx.rotate(rot);
-
-        ctx.beginPath();
-        ctx.roundRect(-tileSize / 2, -tileSize / 2, tileSize, tileSize, 12);
-        ctx.fillStyle = bg;
-        ctx.shadowColor = 'rgba(0,0,0,0.15)';
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 4;
-        ctx.fill();
-
-        ctx.shadowColor = 'transparent';
-        ctx.lineWidth = 3.5;
-        ctx.strokeStyle = '#18181b';
-        ctx.stroke();
-
-        ctx.fillStyle = '#18181b';
-        ctx.font = '900 34px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(char, 0, 2);
-
-        ctx.restore();
-      });
-
-      // 3. Main Headline (one color, less weight, italicized "in Your Email")
+      // 3. Main Headline ("Play daily games 🧩 in your email 📫")
       ctx.save();
       ctx.textAlign = 'left';
-      ctx.fillStyle = isDark ? '#ffffff' : '#09090b';
-      ctx.font = '700 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText('The Daily Word Game', 80, 290);
+      const baseColor = isDark ? '#ffffff' : '#09090b';
+      const greenColor = isDark ? '#4ade80' : '#16a34a';
+      const blueColor = isDark ? '#60a5fa' : '#2563eb';
 
-      const splitPart1 = 'that Lives ';
-      const splitPart2 = 'in Your Email';
-      ctx.fillText(splitPart1, 80, 355);
-      const splitPart1Width = ctx.measureText(splitPart1).width;
+      // Line 1: Play [daily games] 🧩
+      ctx.font = '700 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const line1Part1 = 'Play ';
+      const line1Part2 = 'daily games';
+      const line1Part3 = ' 🧩';
+      ctx.fillStyle = baseColor;
+      ctx.fillText(line1Part1, 80, 290);
+      const w1_1 = ctx.measureText(line1Part1).width;
+      ctx.fillStyle = greenColor;
+      ctx.fillText(line1Part2, 80 + w1_1, 290);
+      const w1_2 = ctx.measureText(line1Part2).width;
+      ctx.fillStyle = baseColor;
+      ctx.fillText(line1Part3, 80 + w1_1 + w1_2, 290);
+
+      // Line 2: in your [email] 📫
+      const line2Part1 = 'in your ';
+      const line2Part2 = 'email';
+      const line2Part3 = ' 📫';
       ctx.font = 'italic 700 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(splitPart2, 80 + splitPart1Width, 355);
+      ctx.fillStyle = baseColor;
+      ctx.fillText(line2Part1, 80, 355);
+      const w2_1 = ctx.measureText(line2Part1).width;
+      ctx.fillStyle = blueColor;
+      ctx.fillText(line2Part2, 80 + w2_1, 355);
+      const w2_2 = ctx.measureText(line2Part2).width;
+      ctx.font = '700 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillStyle = baseColor;
+      ctx.fillText(line2Part3, 80 + w2_1 + w2_2, 355);
       ctx.restore();
 
       // 4. Gameplay Preview (Direct Inbox Row + Clue + Tiles, no fake browser card)
@@ -1463,66 +1445,45 @@
         }
       }
 
-      // 2. Logo & Subtitle absolute centered in the card with -40px vertical offset (Canvas center Y = 315 - 40 = 275)
-      const letters = ['I', 'N', 'B', 'O', 'X', 'E', 'D'];
-      const tileSize = 60;
-      const totalW = letters.length * 58;
-      const startX = (1200 - totalW) / 2;
-      const startY = 174;
+      // 2. Centered Logo image (logo-new.png)
+      if (logoNewImg && logoNewImg.complete && logoNewImg.naturalWidth > 0) {
+        const logoH = 136;
+        const logoW = Math.round(logoH * (logoNewImg.naturalWidth / logoNewImg.naturalHeight));
+        ctx.drawImage(logoNewImg, Math.round((1200 - logoW) / 2), 135, logoW, logoH);
+      }
 
-      letters.forEach((char, i) => {
-        ctx.save();
-        const curX = startX + i * 58;
-        const curY = startY;
-        const rot = (i % 2 === 0 ? -8 : 8) * Math.PI / 180;
-        const bg = (i % 2 === 0 ? '#D8FFC5' : '#C4F7CA');
+      // 3. Headline
+      ctx.save();
+      const baseColor = isDark ? '#ffffff' : '#09090b';
+      const greenColor = isDark ? '#4ade80' : '#16a34a';
+      const blueColor = isDark ? '#60a5fa' : '#2563eb';
+      const normalFont = '700 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const italicFont = 'italic 700 46px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
-        ctx.translate(curX + tileSize / 2, curY + tileSize / 2);
-        ctx.rotate(rot);
+      const segments = [
+        { text: 'Play ', font: normalFont, color: baseColor },
+        { text: 'daily games', font: normalFont, color: greenColor },
+        { text: ' 🧩 ', font: normalFont, color: baseColor },
+        { text: 'in your ', font: italicFont, color: baseColor },
+        { text: 'email', font: italicFont, color: blueColor },
+        { text: ' 📫', font: normalFont, color: baseColor },
+      ];
 
-        ctx.beginPath();
-        ctx.roundRect(-tileSize / 2, -tileSize / 2, tileSize, tileSize, 12);
-        ctx.fillStyle = bg;
-        ctx.shadowColor = 'rgba(0,0,0,0.18)';
-        ctx.shadowBlur = 10;
-        ctx.shadowOffsetY = 4;
-        ctx.fill();
-
-        ctx.shadowColor = 'transparent';
-        ctx.lineWidth = 3.5;
-        ctx.strokeStyle = '#18181b';
-        ctx.stroke();
-
-        ctx.fillStyle = '#18181b';
-        ctx.font = '900 34px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(char, 0, 2);
-
-        ctx.restore();
+      let cTotalW = 0;
+      segments.forEach((seg) => {
+        ctx.font = seg.font;
+        seg.width = ctx.measureText(seg.text).width;
+        cTotalW += seg.width;
       });
 
-      // 3. Headline (offset by -40px)
-      ctx.save();
-      ctx.fillStyle = isDark ? '#ffffff' : '#09090b';
-      ctx.font = '700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('The Daily Word Game', 600, 302);
-
-      const centerPart1 = 'that Lives ';
-      const centerPart2 = 'in Your Email';
-      ctx.font = '700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      const cW1 = ctx.measureText(centerPart1).width;
-      ctx.font = 'italic 700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      const cW2 = ctx.measureText(centerPart2).width;
-      const cTotalW = cW1 + cW2;
-      const cStartX = (1200 - cTotalW) / 2;
-
+      let curX = (1200 - cTotalW) / 2;
       ctx.textAlign = 'left';
-      ctx.font = '700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(centerPart1, cStartX, 362);
-      ctx.font = 'italic 700 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText(centerPart2, cStartX + cW1, 362);
+      segments.forEach((seg) => {
+        ctx.font = seg.font;
+        ctx.fillStyle = seg.color;
+        ctx.fillText(seg.text, curX, 335);
+        curX += seg.width;
+      });
       ctx.restore();
 
       // 4. Bottom Email Box (Peeking & Cut-Off at Bottom, moved down 10px)
