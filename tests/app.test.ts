@@ -206,7 +206,8 @@ describe('Synonym Guess Scoring & Feedback System', () => {
     const hintData = await hintRes.json() as any
     expect(hintData.hintsUsed).toBe(1)
     expect(hintData.score).toBe(850) // 1000 - 150 = 850
-    expect(hintData.lastMessage).toBe('Revealed letter #1: "F"! -150 points')
+    const expectedFirstLetter = getDailyPuzzle(puzzleDate).word[0]
+    expect(hintData.lastMessage).toBe(`Revealed letter #1: "${expectedFirstLetter}"! -150 points`)
   })
 
   it('should detect puzzle synonyms case-insensitively', () => {
@@ -921,9 +922,9 @@ describe('Cold Start & Network Resilience Handling', () => {
 
     expect(res.status).toBe(200)
     const data = (await res.json()) as any
-    // Aug 5 2026 puzzle target word is VIBRANT (7 letters), RESILIENT is 9 letters so should trigger invalidLength(7)
-    expect(data.wordLength).toBe(7)
-    expect(data.lastMessage).toContain('7-letter')
+    const expectedLength = getDailyPuzzle('2026-08-05').word.length
+    expect(data.wordLength).toBe(expectedLength)
+    expect(data.lastMessage).toContain(`${expectedLength}-letter`)
   })
 
   it('should parse date from POST body in /api/hint when query date is missing', async () => {
@@ -940,7 +941,7 @@ describe('Cold Start & Network Resilience Handling', () => {
     expect(res.status).toBe(200)
     const data = (await res.json()) as any
     expect(data.hintsUsed).toBe(1)
-    expect(data.wordLength).toBe(7)
+    expect(data.wordLength).toBe(getDailyPuzzle('2026-08-05').word.length)
   })
 
   it('should include diffable and fallback on amp-list components in EMAIL_HTML', () => {
