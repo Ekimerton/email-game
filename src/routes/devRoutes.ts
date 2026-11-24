@@ -1,6 +1,6 @@
 import type { Hono } from 'hono'
 import { generateConfirmationToken, generateAccountToken, kvPut, withKeyLock, type Bindings, type SubscriberEntry } from '../core'
-import { buildPuzzleEmailContent, renderConfirmationEmailHtml, renderInactivityUnsubscribeEmailHtml } from '../email'
+import { buildPuzzleEmailContent, renderConfirmationEmailHtml, renderInactivityWarningEmailHtml, renderInactivityUnsubscribeEmailHtml } from '../email'
 import { getUserEmail, getSubscribers, addSubscriber, unsubscribeUser, getDevTesters, addDevTester, removeDevTester, isDevTester, getDashboardStats, computeDailyActiveUsers, updateUserProfileSettings } from '../services'
 import {
   getDevWorkbenchHtml,
@@ -122,6 +122,12 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
       const token = generateConfirmationToken(userEmail, authSecret)
       const confirmUrl = `${currentOrigin}/confirm?token=${encodeURIComponent(token)}`
       html = renderConfirmationEmailHtml(confirmUrl)
+    } else if (page === 'inactivity-check-in' || page === 'check-in-email') {
+      html = renderInactivityWarningEmailHtml({
+        origin: currentOrigin,
+        email: userEmail,
+        authSecret,
+      })
     } else if (page === 'auto-unsub' || page === 'inactivity-email') {
       html = renderInactivityUnsubscribeEmailHtml({
         origin: currentOrigin,
@@ -239,6 +245,23 @@ export function registerDevRoutes(app: Hono<{ Bindings: Bindings }>) {
     const token = generateConfirmationToken(userEmail, authSecret)
     const confirmUrl = `${currentOrigin}/confirm?token=${encodeURIComponent(token)}`
     return c.html(renderConfirmationEmailHtml(confirmUrl))
+  })
+
+  // Development-only direct render of 14-day inactivity check-in email
+  app.get('/dev/email/inactivity-check-in', async (c) => {
+    if (!isDevelopment(c)) {
+      return c.text('Not Found', 404)
+    }
+
+    const userEmail = (c.req.query('email') || await getUserEmail(c)).toLowerCase().trim()
+    const currentOrigin = getDevOrigin(c)
+    const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+
+    return c.html(renderInactivityWarningEmailHtml({
+      origin: currentOrigin,
+      email: userEmail,
+      authSecret,
+    }))
   })
 
   // Development-only direct render of inactivity auto-unsubscribe email

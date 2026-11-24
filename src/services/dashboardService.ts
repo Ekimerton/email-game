@@ -10,7 +10,7 @@ import {
   type LeaderboardEntry,
   type GameState
 } from '../core'
-import { getDailyPuzzle, getDateForPuzzleId, getPuzzleById, LAUNCH_DATE, PUZZLES } from '../game'
+import { getDailyPuzzle, getDateForPuzzleId, getPuzzleById, LAUNCH_DATE, WEEKDAY_SCHEDULE_START_DATE, PUZZLES } from '../game'
 import { getSubscribers, addSubscriber, unsubscribeUser } from './subscribers'
 import { getDevTesters, getUserSettings, updateUserSettings, addDevTester, removeDevTester } from './userService'
 
@@ -932,7 +932,11 @@ export function computeDailyActiveUsers(
     let curUtc = Date.UTC(sy, sm - 1, sd)
     const endUtc = Date.UTC(ey, em - 1, ed)
     while (curUtc <= endUtc) {
-      allDatesSet.add(new Date(curUtc).toISOString().slice(0, 10))
+      const dStr = new Date(curUtc).toISOString().slice(0, 10)
+      const dow = new Date(curUtc).getUTCDay()
+      if (!(dStr >= WEEKDAY_SCHEDULE_START_DATE && (dow === 0 || dow === 6))) {
+        allDatesSet.add(dStr)
+      }
       curUtc += 86400000
     }
   } else {

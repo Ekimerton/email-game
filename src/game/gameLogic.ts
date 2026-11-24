@@ -84,8 +84,41 @@ export function getRedactedText(text: string): string {
   return text.replace(/[^\s]/g, '•')
 }
 
+export function buildShareText(
+  state: GameState,
+  puzzle: DailyPuzzle,
+  streak?: number
+): string {
+  const targetWord = puzzle.word.toUpperCase()
+  const symbols: string[] = []
+
+  for (const g of state.guessesHistory || []) {
+    if (g.guess.toUpperCase() === targetWord) continue
+    symbols.push(isPuzzleSynonym(puzzle, g.guess) ? '🟨' : '⬜')
+  }
+
+  const expectedWrong = Math.max(0, (state.guessCount || 0) - 1)
+  if (symbols.length < expectedWrong) {
+    const missing = expectedWrong - symbols.length
+    const knownSyns = symbols.filter(s => s === '🟨').length
+    const extraSyns = Math.min(missing, Math.max(0, (state.synonymGuessesCount || 0) - knownSyns))
+    for (let i = 0; i < extraSyns; i++) symbols.push('🟨')
+    for (let i = extraSyns; i < missing; i++) symbols.push('⬜')
+  }
+
+  const hints = Math.max(0, state.hintsUsed || 0)
+  for (let i = 0; i < hints; i++) {
+    symbols.push('💡')
+  }
+  symbols.push('🟩')
+
+  const trail = symbols.join('')
+  const streakPart = streak && streak >= 2 ? ` 🔥${streak}` : ''
+  return `Inboxed #${puzzle.id} ${trail} ${state.score}pts${streakPart} https://inboxed.fun`
+}
+
 // Helper to build standardized state payload for AMP list
-export function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?: string) {
+export function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?: string, streak?: number) {
   const activeRevealedCount = state.hasWon ? puzzle.definitions.length : state.revealedCount
   const definitions = puzzle.definitions.map((def, i) => {
     const isRevealed = i < activeRevealedCount
@@ -107,7 +140,9 @@ export function buildStatePayload(state: GameState, puzzle: DailyPuzzle, error?:
     ? GAME_MESSAGES.puzzleSolved(puzzle.word, state.guessCount, state.score)
     : state.lastMessage
   const shareText = state.hasWon
-    ? `I got inboxed in ${state.guessCount} guess${state.guessCount === 1 ? '' : 'es'}! https://inboxed.fun`
+    ? (state.shareText && state.shareText.startsWith('Inboxed #')
+        ? state.shareText
+        : buildShareText(state, puzzle, streak))
     : (state.shareText || '')
 
   const statePayload = {

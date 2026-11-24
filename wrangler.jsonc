@@ -30,7 +30,7 @@
   },
   "triggers": {
     "crons": [
-      "0 15 * * *"
+      "0 15 * * 1-5"
     ]
   },
   "vars": {
@@ -38,6 +38,6 @@
     "SENDER_EMAIL": "Inboxed <game@inboxed.fun>",
     "MAILGUN_DOMAIN": "inboxed.fun",
     "TEST_EMAILS": "ekim0252@gmail.com",
-    "SEND_CRON": "0 15 * * *"
+    "SEND_CRON": "0 15 * * 1-5"
   }
 }

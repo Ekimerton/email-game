@@ -1,7 +1,7 @@
-import { extractEmailDomain, kvGet, kvPut, withKeyLock, type StorageBackend } from '../core'
+import { extractEmailDomain, kvGet, kvPut, withKeyLock, type StorageBackend, type EmailFrequency } from '../core'
 import type { SubscriberEntry } from '../core'
-import { isSubscriberInactive } from './userService'
-import { sendInactivityUnsubscribeEmail } from '../email/emailService'
+import { getSubscriberInactivityStatus, INACTIVITY_WARNING_DAYS, INACTIVITY_UNSUBSCRIBE_DAYS } from './userService'
+import { sendInactivityUnsubscribeEmail, sendInactivityWarningEmail } from '../email/emailService'
 
 const SUBSCRIBERS_KEY = 'subscribers:list'
 
@@ -22,6 +22,8 @@ export async function addSubscriber(kv: StorageBackend, email: string): Promise<
         subscribers[existingIdx].subscribedAt = new Date().toISOString()
       }
       subscribers[existingIdx].status = 'active'
+      subscribers[existingIdx].pausedUntil = null
+      subscribers[existingIdx].inactivityWarningSentForPuzzle = null
     } else {
       subscribers.push({
         email: cleanEmail,
@@ -33,6 +35,74 @@ export async function addSubscriber(kv: StorageBackend, email: string): Promise<
 
     await kvPut(kv, SUBSCRIBERS_KEY, subscribers)
     return subscribers
+  })
+}
+
+export async function updateSubscriberDeliveryPreferences(
+  kv: StorageBackend,
+  email: string,
+  updates: {
+    emailFrequency?: EmailFrequency
+    pausedUntil?: string | null
+    confirmActive?: boolean
+    reactivate?: boolean
+  }
+): Promise<SubscriberEntry> {
+  const cleanEmail = email.toLowerCase().trim()
+  const domain = extractEmailDomain(cleanEmail)
+  const nowIso = new Date().toISOString()
+
+  return withKeyLock(SUBSCRIBERS_KEY, async () => {
+    const subscribers = await getSubscribers(kv)
+    let existingIdx = subscribers.findIndex(s => s.email.toLowerCase().trim() === cleanEmail)
+
+    if (existingIdx < 0) {
+      subscribers.push({
+        email: cleanEmail,
+        domain,
+        subscribedAt: nowIso,
+        status: updates.reactivate ? 'active' : 'unsubscribed',
+      })
+      existingIdx = subscribers.length - 1
+    }
+
+    const entry = subscribers[existingIdx]
+    if (updates.reactivate) {
+      if (entry.status !== 'active' || !entry.subscribedAt) {
+        entry.subscribedAt = nowIso
+      }
+      entry.status = 'active'
+    }
+    if (updates.emailFrequency !== undefined) {
+      entry.emailFrequency = updates.emailFrequency
+    }
+    if (updates.pausedUntil !== undefined) {
+      entry.pausedUntil = updates.pausedUntil
+    }
+    if (updates.confirmActive) {
+      entry.inactivityConfirmedAt = nowIso
+      entry.inactivityWarningSentForPuzzle = null
+    }
+
+    await kvPut(kv, SUBSCRIBERS_KEY, subscribers)
+    return entry
+  })
+}
+
+export async function markInactivityWarningSent(
+  kv: StorageBackend,
+  email: string,
+  puzzleId: string | number
+): Promise<void> {
+  const cleanEmail = email.toLowerCase().trim()
+  const cleanPuzzleId = String(puzzleId).replace('#', '').trim()
+  await withKeyLock(SUBSCRIBERS_KEY, async () => {
+    const subscribers = await getSubscribers(kv)
+    const entry = subscribers.find(s => s.email.toLowerCase().trim() === cleanEmail)
+    if (entry) {
+      entry.inactivityWarningSentForPuzzle = cleanPuzzleId
+      await kvPut(kv, SUBSCRIBERS_KEY, subscribers)
+    }
   })
 }
 
@@ -115,18 +185,48 @@ export async function processInactiveSubscribers(
     mailgunApiKey?: string
     mailgunDomain?: string
     senderEmail?: string
+    targetDate?: string
   }
-): Promise<{ unsubscribedCount: number; unsubscribedEmails: string[] }> {
+): Promise<{
+  unsubscribedCount: number
+  unsubscribedEmails: string[]
+  warnedCount: number
+  warnedEmails: string[]
+}> {
   const subscribers = await getSubscribers(kv)
   const activeSubscribers = subscribers.filter(s => s.status === 'active')
   const unsubscribedEmails: string[] = []
+  const warnedEmails: string[] = []
 
   for (const subscriber of activeSubscribers) {
-    const inactive = await isSubscriberInactive(kv, subscriber.email, currentPuzzleId, subscriber)
-    if (inactive) {
+    const status = await getSubscriberInactivityStatus(
+      kv,
+      subscriber.email,
+      currentPuzzleId,
+      subscriber,
+      { targetDate: options?.targetDate }
+    )
+
+    if (status === 'warn') {
+      warnedEmails.push(subscriber.email)
+      if (options?.isDryRun) {
+        console.log(`[Inactive Check] [DRY RUN] Would send check-in email to ${subscriber.email} due to ${INACTIVITY_WARNING_DAYS} consecutive games without submission`)
+      } else {
+        await markInactivityWarningSent(kv, subscriber.email, currentPuzzleId)
+        await sendInactivityWarningEmail({
+          apiKey: options?.mailgunApiKey,
+          domain: options?.mailgunDomain,
+          from: options?.senderEmail,
+          to: subscriber.email,
+          origin: options?.origin,
+          authSecret: options?.authSecret,
+          inactiveDays: INACTIVITY_WARNING_DAYS,
+        })
+      }
+    } else if (status === 'unsubscribe') {
       unsubscribedEmails.push(subscriber.email)
       if (options?.isDryRun) {
-        console.log(`[Inactive Check] [DRY RUN] Would unsubscribe ${subscriber.email} due to 7 consecutive games without submission`)
+        console.log(`[Inactive Check] [DRY RUN] Would unsubscribe ${subscriber.email} due to ${INACTIVITY_UNSUBSCRIBE_DAYS} consecutive games without submission`)
       } else {
         await unsubscribeUser(kv, subscriber.email)
         await sendInactivityUnsubscribeEmail({
@@ -136,6 +236,7 @@ export async function processInactiveSubscribers(
           to: subscriber.email,
           origin: options?.origin,
           authSecret: options?.authSecret,
+          inactiveDays: INACTIVITY_UNSUBSCRIBE_DAYS,
         })
       }
     }
@@ -144,6 +245,8 @@ export async function processInactiveSubscribers(
   return {
     unsubscribedCount: unsubscribedEmails.length,
     unsubscribedEmails,
+    warnedCount: warnedEmails.length,
+    warnedEmails,
   }
 }
 

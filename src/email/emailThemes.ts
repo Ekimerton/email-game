@@ -1258,6 +1258,35 @@ export const SHARED_GAME_CSS = `
             font-weight: 600;
         }
 
+        .streak-banner {
+            display: block;
+            width: 100%;
+            margin: 0 0 8px 0;
+            padding: 5px 10px;
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-zinc-300);
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--color-zinc-900);
+            text-align: center;
+            line-height: 1.3;
+            box-sizing: border-box;
+        }
+
+        .solo-domain-nudge {
+            margin-top: 8px;
+            padding: 6px 10px;
+            background-color: var(--color-surface);
+            border: 1px dashed var(--color-zinc-300);
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-zinc-600);
+            text-align: center;
+            line-height: 1.35;
+        }
+
         .leaderboard-empty {
             text-align: center;
             color: var(--color-slate-500);

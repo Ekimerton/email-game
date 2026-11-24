@@ -656,6 +656,121 @@ input:checked + .slider:before {
   background-color: #f4f4f5;
   border-color: #a1a1aa;
 }
+.btn:focus-visible,
+.leaderboard-tab-btn:focus-visible,
+.delivery-btn:focus-visible {
+  outline: 3px solid #14532d;
+  outline-offset: 2px;
+}
+
+.action-banner {
+  background-color: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #14532d;
+  text-align: center;
+  line-height: 1.45;
+}
+.delivery-controls {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #f4f4f5;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.delivery-schedule-note {
+  font-size: 13px;
+  color: #52525b;
+  line-height: 1.45;
+  margin: 0;
+}
+.delivery-fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+.delivery-legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181b;
+  margin-bottom: 8px;
+}
+.delivery-toggle-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.delivery-btn {
+  min-height: 44px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #e4e4e7;
+  background-color: #fafafa;
+  color: #52525b;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.delivery-btn:hover:not(:disabled) {
+  background-color: #f4f4f5;
+  border-color: #d4d4d8;
+  color: #18181b;
+}
+.delivery-btn.active {
+  background-color: #C4F7CA;
+  border-color: #7ecc84;
+  color: #14532d;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 0 #e8ffea;
+}
+.pause-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background-color: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.pause-row.paused {
+  background-color: #fefce8;
+  border-color: #fde047;
+}
+.pause-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pause-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #18181b;
+}
+.pause-desc {
+  font-size: 12px;
+  color: #52525b;
+  line-height: 1.4;
+}
+@media (pointer: coarse) {
+  .delivery-btn,
+  .pause-row .btn {
+    min-height: 48px;
+  }
+}
+@media (max-width: 480px) {
+  .pause-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
 
 /* Dark Mode Theme Overrides for Account Preferences SPA - commented out until it's in a better state
 body.dark-theme {
@@ -1382,6 +1497,121 @@ input:checked + .slider:before {
   background-color: #f4f4f5;
   border-color: #a1a1aa;
 }
+.btn:focus-visible,
+.leaderboard-tab-btn:focus-visible,
+.delivery-btn:focus-visible {
+  outline: 3px solid #14532d;
+  outline-offset: 2px;
+}
+
+.action-banner {
+  background-color: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #14532d;
+  text-align: center;
+  line-height: 1.45;
+}
+.delivery-controls {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #f4f4f5;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.delivery-schedule-note {
+  font-size: 13px;
+  color: #52525b;
+  line-height: 1.45;
+  margin: 0;
+}
+.delivery-fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+.delivery-legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: #18181b;
+  margin-bottom: 8px;
+}
+.delivery-toggle-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.delivery-btn {
+  min-height: 44px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #e4e4e7;
+  background-color: #fafafa;
+  color: #52525b;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.delivery-btn:hover:not(:disabled) {
+  background-color: #f4f4f5;
+  border-color: #d4d4d8;
+  color: #18181b;
+}
+.delivery-btn.active {
+  background-color: #C4F7CA;
+  border-color: #7ecc84;
+  color: #14532d;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 0 #e8ffea;
+}
+.pause-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background-color: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.pause-row.paused {
+  background-color: #fefce8;
+  border-color: #fde047;
+}
+.pause-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pause-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #18181b;
+}
+.pause-desc {
+  font-size: 12px;
+  color: #52525b;
+  line-height: 1.4;
+}
+@media (pointer: coarse) {
+  .delivery-btn,
+  .pause-row .btn {
+    min-height: 48px;
+  }
+}
+@media (max-width: 480px) {
+  .pause-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
 
 /* Dark Mode Theme Overrides for Account Preferences SPA - commented out until it's in a better state
 body.dark-theme {
@@ -1448,7 +1678,9 @@ body.dark-theme .footer-text a {
       const [loading, setLoading] = useState(true);
       const [user, setUser] = useState(null);
       const [toast, setToast] = useState('');
+      const [actionBanner, setActionBanner] = useState('');
       const [updatingSub, setUpdatingSub] = useState(false);
+      const [updatingDelivery, setUpdatingDelivery] = useState(false);
       const [updatingPriv, setUpdatingPriv] = useState(false);
       // Dark mode commented out until it's in a better state - default everyone to light mode
       // const [updatingTheme, setUpdatingTheme] = useState(false);
@@ -1461,6 +1693,7 @@ body.dark-theme .footer-text a {
 
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token') || '';
+      const initialAction = (urlParams.get('action') || '').trim().toLowerCase();
 
       useEffect(() => {
         if (!token) {
@@ -1473,12 +1706,41 @@ body.dark-theme .footer-text a {
             if (!res.ok) throw new Error('Unauthorized');
             return res.json();
           })
-          .then(data => {
+          .then(async (data) => {
             if (data.success) {
               setUser(data);
-              const initialTab = data.leaderboardType || (data.isCustomDomain ? 'domain' : 'general');
+              const rawType = data.leaderboardType || (data.isCustomDomain ? 'domain' : 'general');
+              const initialTab = rawType === 'domain' && data.isCustomDomain ? 'domain' : 'general';
               setSelectedTab(initialTab);
               setCustomId(data.customLeaderboardId || '');
+
+              if (['keep', 'weekdays', 'pause', 'resume'].includes(initialAction)) {
+                try {
+                  const actRes = await fetch('/api/account/delivery-preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: data.token, action: initialAction })
+                  });
+                  const actData = await actRes.json();
+                  if (actData.success) {
+                    setUser(prev => ({
+                      ...prev,
+                      isSubscribed: actData.isSubscribed,
+                      emailFrequency: actData.emailFrequency,
+                      isPaused: actData.isPaused,
+                      pausedUntil: actData.pausedUntil,
+                    }));
+                    setActionBanner(actData.message);
+                    if (window.history && window.history.replaceState) {
+                      const cleanUrl = new URL(window.location.href);
+                      cleanUrl.searchParams.delete('action');
+                      window.history.replaceState({}, '', cleanUrl.toString());
+                    }
+                  }
+                } catch (_) {
+                  showToast('Could not apply email action. Please update your preferences below.');
+                }
+              }
             } else {
               setUser(null);
             }
@@ -1520,7 +1782,12 @@ body.dark-theme .footer-text a {
           });
           const data = await res.json();
           if (data.success) {
-            setUser(prev => ({ ...prev, isSubscribed: data.isSubscribed }));
+            setUser(prev => ({
+              ...prev,
+              isSubscribed: data.isSubscribed,
+              isPaused: Boolean(data.isPaused),
+              pausedUntil: data.pausedUntil || null,
+            }));
             showToast(data.message);
           } else {
             showToast(data.message || 'Failed to update');
@@ -1529,6 +1796,43 @@ body.dark-theme .footer-text a {
           showToast('Failed to update subscription');
         }
         setUpdatingSub(false);
+      };
+
+      const formatPauseDate = (dateStr) => {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-').map(Number);
+        if (parts.length !== 3) return dateStr;
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+        return \`\${months[parts[1] - 1] || ''} \${parts[2]}, \${parts[0]}\`.trim();
+      };
+
+      const handleUpdateDelivery = async (payload) => {
+        if (!user || !user.token) return;
+        setUpdatingDelivery(true);
+        try {
+          const res = await fetch('/api/account/delivery-preferences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: user.token, ...payload })
+          });
+          const data = await res.json();
+          if (data.success) {
+            setUser(prev => ({
+              ...prev,
+              isSubscribed: data.isSubscribed,
+              emailFrequency: data.emailFrequency,
+              isPaused: data.isPaused,
+              pausedUntil: data.pausedUntil,
+            }));
+            setActionBanner('');
+            showToast(data.message);
+          } else {
+            showToast(data.message || 'Failed to update delivery preferences');
+          }
+        } catch (_) {
+          showToast('Failed to update delivery preferences');
+        }
+        setUpdatingDelivery(false);
       };
 
       const handleTogglePrivacy = async (e) => {
@@ -1742,7 +2046,7 @@ body.dark-theme .footer-text a {
 
       return (
         <div className="container">
-          {toast && <div className="toast">{toast}</div>}
+          {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
 
           <div className="logo-container">
             <img src="/logo-new.png" alt="INBOXED" width="180" height="63" style={{ display: 'block', margin: '0 auto', width: '180px', height: 'auto' }} />
@@ -1755,6 +2059,12 @@ body.dark-theme .footer-text a {
             </div>
           </div>
 
+          {actionBanner && (
+            <div className="action-banner" role="status" aria-live="polite">
+              {actionBanner}
+            </div>
+          )}
+
           {/* General Section */}
           <div className="setting-section">
             <div className="section-subtitle">General</div>
@@ -1762,7 +2072,7 @@ body.dark-theme .footer-text a {
               <span className="setting-name">Daily Email</span>
               <div className="switch-container">
                 <span className="switch-label" style={{ color: user.isSubscribed ? '#14532d' : '#71717a' }}>
-                  {user.isSubscribed ? 'Subscribed' : 'Unsubscribed'}
+                  {user.isSubscribed ? (user.isPaused ? 'Paused' : 'Subscribed') : 'Unsubscribed'}
                 </span>
                 <label className="switch">
                   <input
@@ -1775,6 +2085,46 @@ body.dark-theme .footer-text a {
                 </label>
               </div>
             </div>
+
+            {user.isSubscribed && (
+              <div className="delivery-controls">
+                <p className="delivery-schedule-note">
+                  Puzzles arrive every weekday (Monday–Friday) at 9:00 AM PST.
+                </p>
+
+                {user.isPaused && user.pausedUntil ? (
+                  <div className="pause-row paused">
+                    <div className="pause-info">
+                      <span className="pause-title">Emails paused</span>
+                      <span className="pause-desc">Resuming automatically on <strong>{formatPauseDate(user.pausedUntil)}</strong>.</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={() => handleUpdateDelivery({ action: 'resume' })}
+                      disabled={updatingDelivery}
+                    >
+                      Resume Now
+                    </button>
+                  </div>
+                ) : (
+                  <div className="pause-row">
+                    <div className="pause-info">
+                      <span className="pause-title">Taking a break?</span>
+                      <span className="pause-desc">Pause emails for 2 weeks without losing your subscription or settings.</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline"
+                      onClick={() => handleUpdateDelivery({ action: 'pause' })}
+                      disabled={updatingDelivery}
+                    >
+                      Pause for 2 Weeks
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <hr className="section-divider" />
@@ -1783,20 +2133,22 @@ body.dark-theme .footer-text a {
           <div className="setting-section">
             <div className="section-subtitle">Leaderboards</div>
             <p className="setting-desc" style={{ fontSize: '13px', color: '#52525b', marginBottom: '12px', lineHeight: 1.45 }}>
-              Choose which leaderboard you participate in. You can switch between General, your domain leaderboard, or a custom leaderboard. Changes take effect in your next daily email.
+              {hasCustomDomain
+                ? 'Choose which leaderboard you participate in. You can switch between General and your domain leaderboard. Changes take effect in your next puzzle email.'
+                : 'You are competing on the global General leaderboard. Changes to leaderboard visibility take effect immediately.'}
             </p>
 
-            {/* Leaderboard Selection Buttons */}
-            <div className="leaderboard-switch-group">
-              <button
-                type="button"
-                className={\`leaderboard-tab-btn \${activeTab === 'general' ? 'active' : ''}\`}
-                onClick={() => handleSelectLeaderboard('general')}
-                disabled={updatingLeaderboard}
-              >
-                General
-              </button>
-              {hasCustomDomain && (
+            {/* Leaderboard Selection Buttons (only shown for organization/custom domains; Custom tab hidden for now) */}
+            {hasCustomDomain && (
+              <div className="leaderboard-switch-group">
+                <button
+                  type="button"
+                  className={\`leaderboard-tab-btn \${activeTab !== 'domain' ? 'active' : ''}\`}
+                  onClick={() => handleSelectLeaderboard('general')}
+                  disabled={updatingLeaderboard}
+                >
+                  General
+                </button>
                 <button
                   type="button"
                   className={\`leaderboard-tab-btn \${activeTab === 'domain' ? 'active' : ''}\`}
@@ -1805,19 +2157,21 @@ body.dark-theme .footer-text a {
                 >
                   {user.domain}
                 </button>
-              )}
-              <button
-                type="button"
-                className={\`leaderboard-tab-btn \${activeTab === 'custom' ? 'active' : ''}\`}
-                onClick={() => handleSelectLeaderboard('custom')}
-                disabled={updatingLeaderboard}
-              >
-                Custom
-              </button>
-            </div>
+                {/* Custom Leaderboard tab hidden for now
+                <button
+                  type="button"
+                  className={\`leaderboard-tab-btn \${activeTab === 'custom' ? 'active' : ''}\`}
+                  onClick={() => handleSelectLeaderboard('custom')}
+                  disabled={updatingLeaderboard}
+                >
+                  Custom
+                </button>
+                */}
+              </div>
+            )}
 
             {/* Active Leaderboard Details */}
-            {activeTab === 'general' && (
+            {(!hasCustomDomain || activeTab !== 'domain') && (
               <div className="leaderboard-info-card">
                 <div className="leaderboard-info-title">Global General Leaderboard</div>
                 <div>You are currently playing in the global leaderboard with players across all domains.</div>
@@ -1831,6 +2185,7 @@ body.dark-theme .footer-text a {
               </div>
             )}
 
+            {/* Custom Leaderboard Panel - hidden for now
             {activeTab === 'custom' && (
               <div className="custom-lb-card">
                 <div className="custom-lb-title">Custom Leaderboard</div>
@@ -1861,7 +2216,6 @@ body.dark-theme .footer-text a {
                 )}
 
                 <div className="custom-lb-actions-grid">
-                  {/* Create New */}
                   <div className="custom-lb-action-box">
                     <div className="action-box-title">Create New</div>
                     <div className="action-box-desc">
@@ -1877,7 +2231,6 @@ body.dark-theme .footer-text a {
                     </button>
                   </div>
 
-                  {/* Join Existing */}
                   <div className="custom-lb-action-box">
                     <div className="action-box-title">Join Existing</div>
                     <div className="action-box-desc">
@@ -1906,6 +2259,7 @@ body.dark-theme .footer-text a {
                 </div>
               </div>
             )}
+            */}
 
             {/* Privacy Toggle Row */}
             <div className="setting-row" style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #f4f4f5' }}>
@@ -1979,7 +2333,7 @@ body.dark-theme .footer-text a {
                   </div>
                   <div className="palette-preview-body">
                     <div className="preview-news-bar" style={{ backgroundColor: activeCombo.preview.secondary }}>
-                      <span className="preview-news-text">Custom leaderboards are here!</span>
+                      <span className="preview-news-text">Inboxed is now weekdays only (Mon–Fri)!</span>
                       <span className="preview-news-btn">Read more</span>
                     </div>
 

@@ -8,6 +8,7 @@ import {
   evaluateGuess,
   isPuzzleSynonym,
   calculateScore,
+  buildShareText,
   buildStatePayload,
   getOrCreateGameState,
   type DailyPuzzle
@@ -50,7 +51,10 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
 
       const payload = await withKeyLock(stateKey, async () => {
         const { state } = await getOrCreateGameState(c.env, userEmail, target, { isDev })
-        return buildStatePayload(state, puzzle)
+        const userStreak = (state.hasWon && !state.shareText?.startsWith('Inboxed #'))
+          ? await getUserStreak(c.env, userEmail, puzzle.id)
+          : undefined
+        return buildStatePayload(state, puzzle, undefined, userStreak)
       })
 
       return c.json(payload)
@@ -135,6 +139,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         state.updatedAt = new Date().toISOString()
         await recordUserSubmission(c.env, userEmail, puzzle.id)
 
+        let userStreak: number | undefined = undefined
         if (isCorrect) {
           state.hasWon = true
           state.revealedCount = puzzle.definitions.length
@@ -166,7 +171,8 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
             leaderboardEntry
           )
 
-          state.shareText = `I got inboxed in ${state.guessCount} guess${state.guessCount === 1 ? '' : 'es'}! https://inboxed.fun`
+          userStreak = await getUserStreak(c.env, userEmail, puzzle.id)
+          state.shareText = buildShareText(state, puzzle, userStreak)
         } else {
           if (state.revealedCount < puzzle.definitions.length) {
             state.revealedCount += 1
@@ -185,7 +191,7 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         }
 
         await kvPut(c.env, stateKey, state)
-        return buildStatePayload(state, puzzle)
+        return buildStatePayload(state, puzzle, undefined, userStreak)
       })
 
       return c.json(payload)
@@ -293,47 +299,46 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         })
       )
 
-      const allItems = await Promise.all(
-        visibleEntriesWithSettings
-          .filter(item => item.showOnLeaderboard)
-          .map(async (item, index) => {
-            const isCurrentPlayer = item.entry.email.toLowerCase() === userEmail.toLowerCase()
-            let streak: number | undefined = undefined
-            let streakBadge: string | undefined = undefined
-            let hasStreak = false
-
-            if (isCurrentPlayer) {
-              const userStreak = await getUserStreak(c.env, userEmail, puzzle.id)
-              if (userStreak >= 3) {
-                streak = userStreak
-                streakBadge = `🔥 ${userStreak}`
-                hasStreak = true
-              }
-            }
-
-            return {
-              rank: index + 1,
-              displayEmail: formatDisplayEmail(item.entry.email),
-              score: `${item.entry.score} points`,
-              email: item.entry.email,
-              isCurrentPlayer,
-              hasStreak,
-              ...(streak !== undefined ? { streak, streakBadge } : {})
-            }
-          })
-      )
+      const allItems = visibleEntriesWithSettings
+        .filter(item => item.showOnLeaderboard)
+        .map((item, index) => {
+          const isCurrentPlayer = item.entry.email.toLowerCase() === userEmail.toLowerCase()
+          return {
+            rank: index + 1,
+            displayEmail: formatDisplayEmail(item.entry.email),
+            score: `${item.entry.score} points`,
+            email: item.entry.email,
+            isCurrentPlayer,
+          }
+        })
 
       const top5 = allItems.slice(0, 5)
       const currentPlayerItem = allItems.find(item => item.isCurrentPlayer)
 
-      const items = [...top5]
+      const visibleItems = [...top5]
       if (currentPlayerItem && !top5.some(item => item.email.toLowerCase() === userEmail.toLowerCase())) {
-        items.push(currentPlayerItem)
+        visibleItems.push(currentPlayerItem)
       }
+
+      const items = await Promise.all(
+        visibleItems.map(async (item) => {
+          const userStreak = await getUserStreak(c.env, item.email, puzzle.id)
+          const hasStreak = userStreak >= 2
+          return {
+            ...item,
+            hasStreak,
+            ...(hasStreak ? { streak: userStreak, streakBadge: `🔥 ${userStreak}` } : {}),
+          }
+        })
+      )
 
       const { state: userState } = await getOrCreateGameState(c.env, userEmail, puzzle.date, { isDev })
 
       const hasWon = Boolean(userState.hasWon || currentPlayerItem)
+      const isSoloDomainPlayer = activeLb.type === 'domain' && allItems.length === 1 && Boolean(currentPlayerItem)
+      const soloNudgeText = isSoloDomainPlayer
+        ? `You're #1 at ${displayDomain} (only player today) — forward this email to challenge a coworker!`
+        : ''
       const leaderboardTitle =
         activeLb.type === 'custom'
           ? 'Custom Leaderboard'
@@ -347,6 +352,8 @@ export function registerGameApiRoutes(app: Hono<{ Bindings: Bindings }>) {
         date: puzzle.date,
         puzzleId: puzzle.id,
         hasWon,
+        isSoloDomainPlayer,
+        soloNudgeText,
         players: items
       }
 

@@ -19,6 +19,26 @@ export const GAME_IDEAS_FORM_URL = 'https://forms.gle/YoPVkYgR7cHwFUAP9'
 
 export const UPDATES: PatchNote[] = [
   {
+    id: 'november-24-2026',
+    title: 'Now weekdays only (Mon–Fri) + streak & share updates!',
+    date: 'November 24, 2026',
+    paragraphs: [
+      'Hey everyone! Starting this weekend (Nov 28), Inboxed is switching to a <strong>weekdays-only schedule (Monday–Friday at 9:00 AM PST)</strong> for everyone. Most folks play during the work/school week, so taking weekends off keeps your streak intact and your weekend inbox lighter.',
+      'Along with the new schedule, here are a few quality-of-life updates:',
+    ],
+    sections: [
+      {
+        heading: 'What’s New',
+        bullets: [
+          'Softer streaks: You now get 1 free grace day per week (every 5 puzzles) so missing a single day won’t wipe out your streak, and streaks starting at 🔥 2 are visible for everyone on the leaderboard.',
+          'Check-in & pause options: Instead of auto-unsubscribing after 7 missed puzzles, we’ll send a friendly check-in after 14 missed puzzles (with a 2-week pause option in Preferences) before auto-unsubscribing at 21.',
+          'Upgraded share card: Your win card now copies a compact emoji summary showing your puzzle number, guess trail (⬜ miss, 🟨 synonym, 💡 hint, 🟩 solved), score, and streak.',
+          'Streamlined leaderboards: Custom leaderboards are temporarily hidden in Account Preferences while we focus on the core Global and company/school domain leaderboards.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'october-29-2026',
     title: 'Have an idea for a new game? Tell me what to build next!',
     date: 'October 29, 2026',

@@ -3,12 +3,13 @@ import { app } from '../src/index'
 import { UPDATES, LATEST_UPDATE, getUpdatesHtml } from '../src/views'
 
 describe('Updates & Patch Notes Feature (/updates)', () => {
-  it('should have valid updates data structure with October 29 update, October 12 update, October 6 update, and First update', () => {
+  it('should have valid updates data structure with November 24 update, October 29 update, October 12 update, October 6 update, and First update', () => {
     expect(UPDATES).toBeDefined()
     expect(Array.isArray(UPDATES)).toBe(true)
-    expect(UPDATES.length).toBeGreaterThanOrEqual(4)
-    expect(LATEST_UPDATE.title).toBe('Have an idea for a new game? Tell me what to build next!')
-    expect(LATEST_UPDATE.id).toBe('october-29-2026')
+    expect(UPDATES.length).toBeGreaterThanOrEqual(5)
+    expect(LATEST_UPDATE.title).toBe('Now weekdays only (Mon–Fri) + streak & share updates!')
+    expect(LATEST_UPDATE.id).toBe('november-24-2026')
+    expect(UPDATES.some(u => u.id === 'october-29-2026')).toBe(true)
     expect(UPDATES.some(u => u.id === 'october-12-2026')).toBe(true)
     expect(UPDATES.some(u => u.id === 'october-6-2026')).toBe(true)
     expect(UPDATES.some(u => u.id === 'first-update')).toBe(true)
@@ -21,6 +22,8 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
 
     const html = await res.text()
     expect(html).toContain('Updates &amp; Patch Notes')
+    expect(html).toContain('Now weekdays only (Mon–Fri) + streak &amp; share updates!')
+    expect(html).toContain('Softer streaks:')
     expect(html).toContain('Have an idea for a new game? Tell me what to build next!')
     expect(html).toContain('game ideas form')
     expect(html).toContain('https://forms.gle/YoPVkYgR7cHwFUAP9')
@@ -41,6 +44,7 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
   it('getUpdatesHtml function should produce complete HTML with accordion', () => {
     const html = getUpdatesHtml()
     expect(html).toContain('<!doctype html>')
+    expect(html).toContain('Now weekdays only (Mon–Fri) + streak &amp; share updates!')
     expect(html).toContain('Have an idea for a new game? Tell me what to build next!')
     expect(html).toContain('Custom leaderboards are here! Create, join, and play with friends')
     expect(html).toContain('New styles &amp; customizable colors in user preferences!')
@@ -49,6 +53,7 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
     expect(html).toContain('class="update-header"')
     expect(html).toContain('class="update-date"')
     expect(html).toContain('class="update-title"')
+    expect(html).toContain('November 24, 2026')
     expect(html).toContain('October 29, 2026')
     expect(html).toContain('October 12, 2026')
     expect(html).toContain('October 6, 2026')
@@ -58,7 +63,9 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
 
   it('should only expand the latest update accordion by default', () => {
     const html = getUpdatesHtml()
-    expect(html).toContain('id="october-29-2026" open')
+    expect(html).toContain('id="november-24-2026" open')
+    expect(html).toContain('id="october-29-2026"')
+    expect(html).not.toContain('id="october-29-2026" open')
     expect(html).toContain('id="october-12-2026"')
     expect(html).not.toContain('id="october-12-2026" open')
     expect(html).toContain('id="october-6-2026"')
@@ -79,7 +86,7 @@ describe('Updates & Patch Notes Feature (/updates)', () => {
     expect(html).toContain('class="news-ticker-content"')
     expect(html).toContain('class="news-ticker-text"')
     expect(html).not.toContain('Update October 6th:')
-    expect(html).toContain('Have an idea for a new game? Tell me what to build next!')
+    expect(html).toContain('Now weekdays only (Mon–Fri) + streak &amp; share updates!')
     expect(html).toContain('color: #000000')
     expect(html).toContain('class="news-ticker-btn"')
     expect(html).toContain('.news-ticker-btn:hover')

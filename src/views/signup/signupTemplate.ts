@@ -759,7 +759,7 @@ h1 {
 
     <h1>The Daily Word Game that Lives in Your Email</h1>
     <p class="subtitle">
-      Guess the hidden word from its definitions. Every morning at 9:00 AM, right inside your email.
+      Guess the hidden word from its definitions. Every weekday morning (Mon–Fri) at 9:00 AM, right inside your email.
     </p>
 
     <!-- Sample Game Video Spot -->
@@ -808,7 +808,7 @@ h1 {
         <strong>Company leaderboard:</strong> Compete automatically with coworkers at your email domain.
       </div>
       <div class="feature-item">
-        <strong>Zero spam:</strong> Strictly one puzzle per day. One-click unsubscribe anytime.
+        <strong>Zero spam:</strong> Strictly one puzzle per weekday (Mon–Fri). One-click unsubscribe anytime.
       </div>
     </div>
 

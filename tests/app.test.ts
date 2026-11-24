@@ -297,7 +297,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     expect(res.status).toBe(200)
     const html = await res.text()
     expect(html).toContain("You're Subscribed!")
-    expect(html).toContain("You'll get emails at 9:00 AM every day.")
+    expect(html).toContain("You'll get emails at 9:00 AM on weekdays (Mon–Fri).")
     expect(html).not.toContain("Play Today's Puzzle Online")
   })
 
@@ -307,7 +307,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     const html = await res.text()
     expect(html).toContain('Inboxed does not currently support Apple Mail, Outlook, or other non-AMP clients.')
     expect(html).toContain('https://amp.dev/support/faq/email-support/')
-    expect(html).toContain('Every morning at 9:00 AM, right inside your email.')
+    expect(html).toContain('Every weekday morning (Mon–Fri) at 9:00 AM, right inside your email.')
     expect(html).not.toContain('feature-icon')
     expect(html).not.toContain('⚠️')
     expect(html).not.toContain('Quick daily habit')
@@ -430,7 +430,7 @@ describe('Email Signup Landing Page & Subscribe API', () => {
     const html = await confirmRes.text()
 
     expect(html).toContain("You're Subscribed!")
-    expect(html).toContain("You'll get emails at 9am PST every day.")
+    expect(html).toContain("You'll get emails at 9am PST every weekday (Mon–Fri).")
     expect(html).toContain("Receive Today's Puzzle Now")
     expect(html).toContain('send-today-btn')
   })

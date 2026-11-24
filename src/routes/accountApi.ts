@@ -7,14 +7,20 @@ import {
   getColorComboLabel,
   type Bindings,
   type EmailTheme,
+  type EmailFrequency,
   type LeaderboardType
 } from '../core'
+import { formatPrettyDate, getPuzzleDateForSendCron } from '../game'
 import {
   getUserSettings,
   updateUserSettings,
   getSubscribers,
   addSubscriber,
   removeSubscriber,
+  updateSubscriberDeliveryPreferences,
+  isSubscriberPaused,
+  addDaysToDateString,
+  DEFAULT_PAUSE_DAYS,
   getEffectiveLeaderboard,
 } from '../services'
 
@@ -30,7 +36,13 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
 
     const userProfile = await getUserSettings(c.env, verified.email)
     const subscribers = await getSubscribers(c.env)
-    const isSubscribed = subscribers.some(s => s.email.toLowerCase() === verified.email.toLowerCase() && s.status === 'active')
+    const subscriber = subscribers.find(s => s.email.toLowerCase() === verified.email.toLowerCase())
+    const isSubscribed = Boolean(subscriber && subscriber.status === 'active')
+    const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
+    const todayDate = getPuzzleDateForSendCron(new Date(), cronStr)
+    const isPaused = isSubscribed && isSubscriberPaused(subscriber, todayDate)
+    const pausedUntil = isPaused ? (subscriber?.pausedUntil || null) : null
+    const emailFrequency: EmailFrequency = subscriber?.emailFrequency === 'weekdays' ? 'weekdays' : 'daily'
     const theme = userProfile.theme || 'light'
 
     const colorCombo = userProfile.colorCombo || 'amber-blue'
@@ -44,6 +56,9 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       isCustomDomain,
       token,
       isSubscribed,
+      emailFrequency,
+      isPaused,
+      pausedUntil,
       showOnLeaderboard: userProfile.showOnLeaderboard,
       theme,
       darkMode: theme === 'dark',
@@ -80,10 +95,111 @@ export function registerAccountApiRoutes(app: Hono<{ Bindings: Bindings }>) {
       return c.json({
         success: true,
         isSubscribed: targetSubscribed,
-        message: targetSubscribed ? '🎉 Subscribed to daily 9:00 AM PST emails!' : 'Unsubscribed from daily emails.'
+        isPaused: false,
+        pausedUntil: null,
+        message: targetSubscribed ? '🎉 Subscribed to weekday 9:00 AM PST emails!' : 'Unsubscribed from daily emails.'
       })
     } catch (error: any) {
       return c.json({ success: false, message: 'Failed to update subscription.' }, 500)
+    }
+  })
+
+  // React API Endpoint: Delivery Cadence, Pause, and Re-engagement Check-In Actions (AJAX)
+  app.post('/api/account/delivery-preferences', async (c) => {
+    try {
+      const body = await c.req.json()
+      const token = body?.token
+      const authSecret = c.env?.AUTH_SECRET || process.env.AUTH_SECRET
+      const verified = verifyAccountToken(token, authSecret)
+
+      if (!verified) {
+        return c.json({ success: false, message: 'Invalid authentication token.' }, 401)
+      }
+
+      const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * 1-5'
+      const todayDate = getPuzzleDateForSendCron(new Date(), cronStr)
+      const action = typeof body?.action === 'string' ? body.action.trim().toLowerCase() : undefined
+      const rawFreq = typeof body?.emailFrequency === 'string' ? body.emailFrequency.trim().toLowerCase() : undefined
+
+      if (action && !['keep', 'weekdays', 'pause', 'resume'].includes(action)) {
+        return c.json({ success: false, message: 'Invalid action. Must be keep, weekdays, pause, or resume.' }, 400)
+      }
+      if (rawFreq && !['daily', 'weekdays'].includes(rawFreq)) {
+        return c.json({ success: false, message: 'Invalid emailFrequency. Must be daily or weekdays.' }, 400)
+      }
+
+      let updated
+      let message = 'Delivery preferences updated!'
+
+      if (action === 'keep') {
+        updated = await updateSubscriberDeliveryPreferences(c.env, verified.email, {
+          reactivate: true,
+          pausedUntil: null,
+          confirmActive: true,
+        })
+        message = 'You’re all set! We’ll keep sending your puzzles.'
+      } else if (action === 'weekdays') {
+        updated = await updateSubscriberDeliveryPreferences(c.env, verified.email, {
+          reactivate: true,
+          emailFrequency: 'weekdays',
+          pausedUntil: null,
+          confirmActive: true,
+        })
+        message = 'Switched to weekdays only (Mon–Fri)!'
+      } else if (action === 'pause' || typeof body?.pauseDays === 'number') {
+        const rawDays = typeof body?.pauseDays === 'number' && Number.isFinite(body.pauseDays)
+          ? Math.round(body.pauseDays)
+          : DEFAULT_PAUSE_DAYS
+        const clampedDays = Math.min(30, Math.max(1, rawDays))
+        const pausedUntil = addDaysToDateString(todayDate, clampedDays)
+        updated = await updateSubscriberDeliveryPreferences(c.env, verified.email, {
+          reactivate: true,
+          pausedUntil,
+          confirmActive: true,
+        })
+        message = `Emails paused until ${formatPrettyDate(pausedUntil)}.`
+      } else if (action === 'resume' || body?.resume === true) {
+        updated = await updateSubscriberDeliveryPreferences(c.env, verified.email, {
+          reactivate: true,
+          pausedUntil: null,
+          confirmActive: true,
+        })
+        message = 'Welcome back! Puzzle emails have resumed.'
+      } else if (rawFreq) {
+        const nextFreq = rawFreq as EmailFrequency
+        updated = await updateSubscriberDeliveryPreferences(c.env, verified.email, {
+          emailFrequency: nextFreq,
+          confirmActive: true,
+        })
+        message = nextFreq === 'weekdays'
+          ? 'Switched to weekdays only (Mon–Fri)!'
+          : 'Switched to every day (Mon–Sun)!'
+      } else if (body?.confirmActive === true) {
+        updated = await updateSubscriberDeliveryPreferences(c.env, verified.email, {
+          reactivate: true,
+          pausedUntil: null,
+          confirmActive: true,
+        })
+        message = 'You’re all set! We’ll keep sending your puzzles.'
+      } else {
+        return c.json({ success: false, message: 'No delivery preference change specified.' }, 400)
+      }
+
+      const isSubscribed = updated.status === 'active'
+      const isPaused = isSubscribed && isSubscriberPaused(updated, todayDate)
+      const pausedUntil = isPaused ? (updated.pausedUntil || null) : null
+      const emailFrequency: EmailFrequency = updated.emailFrequency === 'weekdays' ? 'weekdays' : 'daily'
+
+      return c.json({
+        success: true,
+        isSubscribed,
+        emailFrequency,
+        isPaused,
+        pausedUntil,
+        message,
+      })
+    } catch (error: any) {
+      return c.json({ success: false, message: 'Failed to update delivery preferences.' }, 500)
     }
   })
 

@@ -27,7 +27,7 @@ describe('Unified General Leaderboard (gmail.com, googlemail.com, yahoo.com)', (
     expect(res1.status).toBe(200)
     const data1 = (await res1.json()) as any
     expect(data1.hasWon).toBe(true)
-    expect(data1.shareText).toBe('I got inboxed in 1 guess! https://inboxed.fun')
+    expect(data1.shareText).toBe('Inboxed #1 🟩 1000pts https://inboxed.fun')
 
     // 2. Yahoo user solves puzzle 1
     const res2 = await app.request(`/api/guess?email=${encodeURIComponent(yahooUser)}&puzzle=1`, {
@@ -38,7 +38,7 @@ describe('Unified General Leaderboard (gmail.com, googlemail.com, yahoo.com)', (
     expect(res2.status).toBe(200)
     const data2 = (await res2.json()) as any
     expect(data2.hasWon).toBe(true)
-    expect(data2.shareText).toBe('I got inboxed in 1 guess! https://inboxed.fun')
+    expect(data2.shareText).toBe('Inboxed #1 🟩 1000pts https://inboxed.fun')
 
     // 3. Googlemail user solves puzzle 1
     const res3 = await app.request(`/api/guess?email=${encodeURIComponent(googlemailUser)}&puzzle=1`, {
@@ -153,5 +153,87 @@ describe('Unified General Leaderboard (gmail.com, googlemail.com, yahoo.com)', (
 
     const after = await getDomainLeaderboard(undefined, 'general', '1')
     expect(after.some(e => e.email === user)).toBe(false)
+  })
+
+  it('should build rich shareText with misses, synonyms, hints, score, and streak', async () => {
+    const p1 = getDailyPuzzle(1)
+    const p2 = getDailyPuzzle(2)
+    const user = `share_trail_${Date.now()}@gmail.com`
+
+    // Solve puzzle 1 so user has streak = 2 when solving puzzle 2
+    await app.request(`/api/guess?email=${encodeURIComponent(user)}&puzzle=1`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': p1.word }).toString()
+    })
+
+    // On puzzle 2: 1 regular miss (same length), 1 synonym guess, 1 hint, then solve
+    const wrongSameLen = 'Z'.repeat(p2.word.length)
+    await app.request(`/api/guess?email=${encodeURIComponent(user)}&puzzle=2`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': wrongSameLen }).toString()
+    })
+
+    const syn = p2.synonyms && p2.synonyms[0] ? p2.synonyms[0] : 'CHANGE'
+    await app.request(`/api/guess?email=${encodeURIComponent(user)}&puzzle=2`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': syn }).toString()
+    })
+
+    await app.request(`/api/hint?email=${encodeURIComponent(user)}&puzzle=2`, {
+      method: 'POST'
+    })
+
+    const winRes = await app.request(`/api/guess?email=${encodeURIComponent(user)}&puzzle=2`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': p2.word }).toString()
+    })
+    expect(winRes.status).toBe(200)
+    const winData = (await winRes.json()) as any
+    // Base 1000 - 100 (miss) - 25 (synonym) - 150 (hint) = 725pts, streak 2
+    expect(winData.shareText).toBe('Inboxed #2 ⬜🟨💡🟩 725pts 🔥2 https://inboxed.fun')
+  })
+
+  it('should emit solo domain player nudge only when user is the sole player on a company domain leaderboard', async () => {
+    const p1 = getDailyPuzzle(1)
+    const soloDomain = `solo-${Date.now()}.com`
+    const player1 = `alice@${soloDomain}`
+    const player2 = `bob@${soloDomain}`
+    const gmailPlayer = `solo_gmail_${Date.now()}@gmail.com`
+
+    // 1. Alice solves on solo domain -> solo nudge enabled
+    await app.request(`/api/guess?email=${encodeURIComponent(player1)}&puzzle=1`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': p1.word }).toString()
+    })
+    const lbSoloRes = await app.request(`/api/leaderboard?domain=${soloDomain}&email=${encodeURIComponent(player1)}&puzzle=1`)
+    const lbSolo = (await lbSoloRes.json()) as any
+    expect(lbSolo.isSoloDomainPlayer).toBe(true)
+    expect(lbSolo.soloNudgeText).toContain(`You're #1 at ${soloDomain} (only player today)`)
+
+    // 2. Bob also solves on same domain -> solo nudge turns off
+    await app.request(`/api/guess?email=${encodeURIComponent(player2)}&puzzle=1`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': p1.word }).toString()
+    })
+    const lbTeamRes = await app.request(`/api/leaderboard?domain=${soloDomain}&email=${encodeURIComponent(player1)}&puzzle=1`)
+    const lbTeam = (await lbTeamRes.json()) as any
+    expect(lbTeam.isSoloDomainPlayer).toBe(false)
+    expect(lbTeam.soloNudgeText).toBe('')
+
+    // 3. Single gmail player on Global ('general') leaderboard -> never shows solo domain nudge
+    await app.request(`/api/guess?email=${encodeURIComponent(gmailPlayer)}&puzzle=1`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ 'user-guess': p1.word }).toString()
+    })
+    const lbGenRes = await app.request(`/api/leaderboard?domain=general&email=${encodeURIComponent(gmailPlayer)}&puzzle=1`)
+    const lbGen = (await lbGenRes.json()) as any
+    expect(lbGen.isSoloDomainPlayer).toBe(false)
   })
 })

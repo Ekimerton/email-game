@@ -26,18 +26,42 @@ export function parseCronTime(cronStr: string = '0 15 * * *'): { minute: number;
   }
 }
 
+export const LAUNCH_DATE = '2026-09-28'
+export const WEEKDAY_SCHEDULE_START_DATE = '2026-11-28'
+export const WEEKDAY_LAST_DAILY_DATE = '2026-11-27'
+export const WEEKDAY_LAST_DAILY_INDEX = 60
+export const DEV_PUZZLE_OFFSET = 42
+
+export function isWeekendDateString(dateStr: string): boolean {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const day = new Date(Date.UTC(y, m - 1, d)).getUTCDay()
+  return day === 0 || day === 6
+}
+
 /**
- * Returns the active puzzle date string (YYYY-MM-DD) based on the daily send cron schedule.
- * Switches over to the new day's puzzle exactly `leadTimeMinutes` (default: 5) minutes
- * before the scheduled daily send cron.
- *
- * For Cloudflare cron "0 15 * * *" (15:00 UTC), switchover occurs at 14:55 UTC:
- * - Before 14:55 UTC: resolves to previous day's puzzle date.
- * - At or after 14:55 UTC: resolves to today's new puzzle date.
+ * Starting on WEEKDAY_SCHEDULE_START_DATE (Sat 2026-11-28), Inboxed switched to weekdays only (Mon-Fri).
+ * Weekend dates on or after that date roll back to Friday's active puzzle date.
  */
-export function getPuzzleDateForSendCron(
+export function rollBackToWeekday(dateStr: string): string {
+  if (!dateStr || dateStr < WEEKDAY_SCHEDULE_START_DATE || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return dateStr
+  }
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const utc = Date.UTC(y, m - 1, d)
+  const day = new Date(utc).getUTCDay()
+  if (day === 6) {
+    return new Date(utc - 86400000).toISOString().slice(0, 10)
+  }
+  if (day === 0) {
+    return new Date(utc - 2 * 86400000).toISOString().slice(0, 10)
+  }
+  return dateStr
+}
+
+export function getRawPuzzleDateForSendCron(
   now: Date = new Date(),
-  cronStr: string = '0 15 * * *',
+  cronStr: string = '0 15 * * 1-5',
   leadTimeMinutes: number = 5
 ): string {
   const { minute, hour } = parseCronTime(cronStr)
@@ -46,15 +70,25 @@ export function getPuzzleDateForSendCron(
   return effectiveTime.toISOString().slice(0, 10)
 }
 
-export const LAUNCH_DATE = '2026-09-28'
-export const DEV_PUZZLE_OFFSET = 42
+/**
+ * Returns the active puzzle date string (YYYY-MM-DD) based on the daily send cron schedule.
+ * Switches over to the new day's puzzle exactly `leadTimeMinutes` (default: 5) minutes
+ * before the scheduled send cron, and rolls weekend dates (from 2026-11-28 onward) back to Friday.
+ */
+export function getPuzzleDateForSendCron(
+  now: Date = new Date(),
+  cronStr: string = '0 15 * * 1-5',
+  leadTimeMinutes: number = 5
+): string {
+  return rollBackToWeekday(getRawPuzzleDateForSendCron(now, cronStr, leadTimeMinutes))
+}
 
 /**
- * Convenience helper to get the active puzzle based on the daily send cron switchover time.
+ * Convenience helper to get the active puzzle based on the send cron switchover time.
  */
 export function getSendDailyPuzzle(
   now: Date = new Date(),
-  cronStr: string = '0 15 * * *',
+  cronStr: string = '0 15 * * 1-5',
   leadTimeMinutes: number = 5,
   options?: { isDev?: boolean }
 ): DailyPuzzle {
@@ -96,21 +130,31 @@ export function getDailyPuzzle(dateOrPuzzleId?: string | number, options?: { isD
     }
   }
 
-  // Calculate days since launch date (2026-09-28)
-  const [ty, tm, td] = targetDate.split('-').map(Number)
+  const effectiveDate = rollBackToWeekday(targetDate)
+  const [ty, tm, td] = effectiveDate.split('-').map(Number)
   const [ly, lm, ld] = LAUNCH_DATE.split('-').map(Number)
-  const targetUtc = Date.UTC(ty, tm - 1, td)
+  const effectiveUtc = Date.UTC(ty, tm - 1, td)
   const launchUtc = Date.UTC(ly, lm - 1, ld)
-  const daysSinceLaunch = Math.round((targetUtc - launchUtc) / 86400000)
 
-  // Dev testers prescreen puzzles 42 days in advance (Puzzle #43 "DIGEST" on Sept 28 launch, #44 tomorrow, etc.)
+  let baseIndex: number
+  if (effectiveDate <= WEEKDAY_LAST_DAILY_DATE) {
+    baseIndex = Math.round((effectiveUtc - launchUtc) / 86400000)
+  } else {
+    const [wy, wm, wd] = WEEKDAY_LAST_DAILY_DATE.split('-').map(Number)
+    const lastDailyUtc = Date.UTC(wy, wm - 1, wd)
+    const diffFromFri = Math.round((effectiveUtc - lastDailyUtc) / 86400000)
+    const weekdaysAfterFri = Math.floor(diffFromFri / 7) * 5 + Math.max(0, (diffFromFri % 7) - 2)
+    baseIndex = WEEKDAY_LAST_DAILY_INDEX + weekdaysAfterFri
+  }
+
+  // Dev testers prescreen puzzles 42 puzzles in advance
   const offset = options?.isDev ? DEV_PUZZLE_OFFSET : 0
-  const puzzleIndex = Math.abs(daysSinceLaunch + offset) % PUZZLES.length
+  const puzzleIndex = Math.abs(baseIndex + offset) % PUZZLES.length
   const basePuzzle = PUZZLES[puzzleIndex]
 
   return {
     ...basePuzzle,
-    date: targetDate
+    date: effectiveDate
   }
 }
 
@@ -141,16 +185,38 @@ export function getPuzzleById(id: string | number): DailyPuzzle | undefined {
   return PUZZLES.find(p => p.id === cleanId)
 }
 
+export function getPuzzleDateForSendCronLegacy(
+  now: Date = new Date(),
+  cronStr: string = '0 15 * * *',
+  leadTimeMinutes: number = 5
+): string {
+  return getRawPuzzleDateForSendCron(now, cronStr, leadTimeMinutes)
+}
+
+export function parseCronTimeOrDefault(cronStr: string = '0 15 * * 1-5'): { minute: number; hour: number } {
+  return parseCronTime(cronStr)
+}
+
 export function getDateForPuzzleId(id: string | number, options?: { isDev?: boolean }): string {
   const cleanId = typeof id === 'number' ? id : parseInt(String(id).replace('#', '').trim(), 10)
   if (isNaN(cleanId) || cleanId < 1) return LAUNCH_DATE
 
   const offset = options?.isDev ? DEV_PUZZLE_OFFSET : 0
-  const daysSinceLaunch = cleanId - 1 - offset
+  const effectiveIndex = cleanId - 1 - offset
 
-  const [ly, lm, ld] = LAUNCH_DATE.split('-').map(Number)
-  const launchUtc = Date.UTC(ly, lm - 1, ld)
-  const targetUtc = launchUtc + (daysSinceLaunch * 86400000)
-  const targetDate = new Date(targetUtc)
-  return targetDate.toISOString().slice(0, 10)
+  if (effectiveIndex <= WEEKDAY_LAST_DAILY_INDEX) {
+    const [ly, lm, ld] = LAUNCH_DATE.split('-').map(Number)
+    const launchUtc = Date.UTC(ly, lm - 1, ld)
+    const targetUtc = launchUtc + (effectiveIndex * 86400000)
+    return new Date(targetUtc).toISOString().slice(0, 10)
+  }
+
+  const weekdaysAfterFri = effectiveIndex - WEEKDAY_LAST_DAILY_INDEX
+  const fullWeeks = Math.floor((weekdaysAfterFri - 1) / 5)
+  const dayInWeek = ((weekdaysAfterFri - 1) % 5) + 1
+  const calendarDaysAfterFri = fullWeeks * 7 + dayInWeek + 2
+
+  const [wy, wm, ld] = WEEKDAY_LAST_DAILY_DATE.split('-').map(Number)
+  const lastDailyUtc = Date.UTC(wy, wm - 1, ld)
+  return new Date(lastDailyUtc + (calendarDaysAfterFri * 86400000)).toISOString().slice(0, 10)
 }

@@ -16,11 +16,17 @@ export interface LeaderboardEntry {
   wonAt: string
 }
 
+export type EmailFrequency = 'daily' | 'weekdays'
+
 export interface SubscriberEntry {
   email: string
   domain: string
   subscribedAt: string
   status: 'active' | 'unsubscribed'
+  emailFrequency?: EmailFrequency
+  pausedUntil?: string | null
+  inactivityConfirmedAt?: string | null
+  inactivityWarningSentForPuzzle?: string | null
 }
 
 export type LeaderboardType = 'general' | 'domain' | 'custom'
@@ -94,5 +100,7 @@ export interface DailyEmailDispatchResult {
   puzzleDate?: string
   puzzleId?: string
   unsubscribedDueToInactivity?: string[]
+  warnedDueToInactivity?: string[]
+  skippedDueToSchedule?: string[]
 }
 

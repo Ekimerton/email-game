@@ -267,81 +267,63 @@ export async function getUserStreak(
 
   if (isNaN(currentTargetNum) || currentTargetNum < 1) return 0
 
-  // Check if currentTargetNum was played/won in storage if not already in set
-  if (!playedNumbers.has(currentTargetNum)) {
-    const staticPuzzle = getPuzzleById(currentTargetNum)
+  const didPlayPuzzle = async (checkNum: number): Promise<boolean> => {
+    if (checkNum < 1) return false
+    if (playedNumbers.has(checkNum)) {
+      return true
+    }
+
+    const staticPuzzle = getPuzzleById(checkNum)
     if (staticPuzzle) {
-      const targetDate = getDateForPuzzleId(String(currentTargetNum)) || staticPuzzle.date
+      const targetDate = getDateForPuzzleId(String(checkNum)) || staticPuzzle.date
       const stateKey = `game:${targetDate}:${cleanEmail}`
       const st = await kvGet(kv, stateKey)
       if (st && (st.hasWon || st.guessCount > 0)) {
-        playedNumbers.add(currentTargetNum)
-      } else if (staticPuzzle.date !== targetDate) {
+        playedNumbers.add(checkNum)
+        return true
+      }
+      if (staticPuzzle.date !== targetDate) {
         const legacySt = await kvGet(kv, `game:${staticPuzzle.date}:${cleanEmail}`)
         if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0)) {
-          playedNumbers.add(currentTargetNum)
+          playedNumbers.add(checkNum)
+          return true
         }
       }
     }
-    if (!playedNumbers.has(currentTargetNum)) {
-      const domain = extractDomain(cleanEmail)
-      const lb = await getDomainLeaderboard(kv, domain, String(currentTargetNum))
-      if (lb && lb.some(e => e.email.toLowerCase() === cleanEmail)) {
-        playedNumbers.add(currentTargetNum)
-      }
+
+    const domain = extractDomain(cleanEmail)
+    const lb = await getDomainLeaderboard(kv, domain, String(checkNum))
+    if (lb && lb.some(e => e.email.toLowerCase() === cleanEmail)) {
+      playedNumbers.add(checkNum)
+      return true
     }
+
+    return false
   }
 
   // If the target game wasn't played, current streak is 0
-  if (!playedNumbers.has(currentTargetNum)) {
+  if (!(await didPlayPuzzle(currentTargetNum))) {
     return 0
   }
 
-  // Count backwards consecutive games down to game 1
+  // Count backwards with 1 missed puzzle grace day forgiven per 5 puzzles (1 workweek)
   let streak = 0
   let checkNum = currentTargetNum
+  let lastFreezeAt: number | null = null
+
   while (checkNum >= 1) {
-    if (playedNumbers.has(checkNum)) {
+    if (await didPlayPuzzle(checkNum)) {
       streak++
       checkNum--
+    } else if (
+      checkNum > 1 &&
+      (lastFreezeAt === null || lastFreezeAt - checkNum >= 5) &&
+      await didPlayPuzzle(checkNum - 1)
+    ) {
+      // Bridge a single missed puzzle without incrementing streak for the missed day
+      lastFreezeAt = checkNum
+      checkNum--
     } else {
-      // Fallback check in KV for checkNum
-      const staticPuzzle = getPuzzleById(checkNum)
-      let found = false
-      if (staticPuzzle) {
-        const targetDate = getDateForPuzzleId(String(checkNum)) || staticPuzzle.date
-        const stateKey = `game:${targetDate}:${cleanEmail}`
-        const st = await kvGet(kv, stateKey)
-        if (st && (st.hasWon || st.guessCount > 0)) {
-          playedNumbers.add(checkNum)
-          streak++
-          checkNum--
-          found = true
-          continue
-        } else if (staticPuzzle.date !== targetDate) {
-          const legacySt = await kvGet(kv, `game:${staticPuzzle.date}:${cleanEmail}`)
-          if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0)) {
-            playedNumbers.add(checkNum)
-            streak++
-            checkNum--
-            found = true
-            continue
-          }
-        }
-      }
-
-      if (!found) {
-        const domain = extractDomain(cleanEmail)
-        const lb = await getDomainLeaderboard(kv, domain, String(checkNum))
-        if (lb && lb.some(e => e.email.toLowerCase() === cleanEmail)) {
-          playedNumbers.add(checkNum)
-          streak++
-          checkNum--
-          found = true
-          continue
-        }
-      }
-
       break
     }
   }
@@ -349,26 +331,141 @@ export async function getUserStreak(
   return streak
 }
 
-export async function isSubscriberInactive(
+export const INACTIVITY_WARNING_DAYS = 14
+export const INACTIVITY_UNSUBSCRIBE_DAYS = 21
+export const DEFAULT_PAUSE_DAYS = 14
+
+export type SubscriberInactivityStatus = 'active' | 'warn' | 'warned' | 'unsubscribe'
+
+/**
+ * Returns true if the given YYYY-MM-DD date string falls on Saturday or Sunday (UTC).
+ */
+export function isWeekendDate(dateStr: string): boolean {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const day = new Date(Date.UTC(y, m - 1, d)).getUTCDay()
+  return day === 0 || day === 6
+}
+
+/**
+ * Adds a whole number of calendar days to a YYYY-MM-DD date string in UTC.
+ */
+export function addDaysToDateString(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const utc = Date.UTC(y, m - 1, d) + days * 86400000
+  return new Date(utc).toISOString().slice(0, 10)
+}
+
+/**
+ * Returns true if the subscriber has an active pause covering targetDate (YYYY-MM-DD).
+ * Emails automatically resume on the pausedUntil date itself (i.e. paused while targetDate < pausedUntil).
+ */
+export function isSubscriberPaused(subscriber: SubscriberEntry | undefined, targetDate: string): boolean {
+  if (!subscriber?.pausedUntil || !targetDate) return false
+  const pausedUntil = subscriber.pausedUntil.slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(pausedUntil)) return false
+  return targetDate < pausedUntil
+}
+
+/**
+ * Returns true if a subscriber should be skipped for daily puzzle delivery on targetDate
+ * due to an active pause or weekday-only cadence on a weekend.
+ */
+export function shouldSkipSubscriberForDate(subscriber: SubscriberEntry | undefined, targetDate: string): boolean {
+  if (!subscriber) return false
+  if (isSubscriberPaused(subscriber, targetDate)) return true
+  if (subscriber.emailFrequency === 'weekdays' && isWeekendDate(targetDate)) return true
+  return false
+}
+
+function getGraceAnchorPuzzleNum(subscriber: SubscriberEntry | undefined, currentDate: string): number | null {
+  if (!subscriber) return null
+  const candidateDates: string[] = []
+
+  if (subscriber.subscribedAt) {
+    candidateDates.push(subscriber.subscribedAt.slice(0, 10))
+  }
+  if (subscriber.inactivityConfirmedAt) {
+    candidateDates.push(subscriber.inactivityConfirmedAt.slice(0, 10))
+  }
+  if (subscriber.pausedUntil) {
+    const resumeDate = subscriber.pausedUntil.slice(0, 10)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(resumeDate) && resumeDate <= currentDate) {
+      candidateDates.push(resumeDate)
+    }
+  }
+
+  let maxPuzzleNum: number | null = null
+  for (const dateStr of candidateDates) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) continue
+    const puzzle = getDailyPuzzle(dateStr)
+    const num = parseInt(puzzle.id, 10)
+    if (!isNaN(num) && (maxPuzzleNum === null || num > maxPuzzleNum)) {
+      maxPuzzleNum = num
+    }
+  }
+  return maxPuzzleNum
+}
+
+async function hasSubmissionInWindow(
+  kv: StorageBackend,
+  cleanEmail: string,
+  currentPuzzleNum: number,
+  windowDays: number,
+  submittedNumbers: Set<number>
+): Promise<boolean> {
+  const startGame = Math.max(1, currentPuzzleNum - windowDays)
+  for (let gameNum = currentPuzzleNum - 1; gameNum >= startGame; gameNum--) {
+    if (submittedNumbers.has(gameNum)) {
+      return true
+    }
+    const puzzle = getPuzzleById(gameNum)
+    if (puzzle) {
+      const targetDate = getDateForPuzzleId(String(gameNum)) || puzzle.date
+      const stateKey = `game:${targetDate}:${cleanEmail}`
+      const st = await kvGet(kv, stateKey)
+      if (st && (st.hasWon || st.guessCount > 0 || st.hintsUsed > 0)) {
+        return true
+      }
+      if (puzzle.date !== targetDate) {
+        const legacySt = await kvGet(kv, `game:${puzzle.date}:${cleanEmail}`)
+        if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0 || legacySt.hintsUsed > 0)) {
+          return true
+        }
+      }
+    }
+  }
+  return false
+}
+
+/**
+ * Evaluates a subscriber's inactivity status before dispatching currentPuzzleId:
+ * - 'active': paused, within grace period, or submitted in the last 14 puzzles
+ * - 'warn': missed 14..20 consecutive puzzles and hasn't been sent a check-in email for this streak yet
+ * - 'warned': missed 14..20 consecutive puzzles and already received a check-in email for this streak
+ * - 'unsubscribe': missed 21+ consecutive puzzles (outside grace period)
+ */
+export async function getSubscriberInactivityStatus(
   kv: StorageBackend,
   email: string,
   currentPuzzleId: string | number,
-  subscriber?: SubscriberEntry
-): Promise<boolean> {
+  subscriber?: SubscriberEntry,
+  options?: { targetDate?: string }
+): Promise<SubscriberInactivityStatus> {
   const cleanEmail = email.toLowerCase().trim()
   const currentPuzzleNum = parseInt(String(currentPuzzleId).replace('#', '').trim(), 10)
-  if (isNaN(currentPuzzleNum) || currentPuzzleNum <= 7) {
-    return false
+  if (isNaN(currentPuzzleNum) || currentPuzzleNum <= INACTIVITY_WARNING_DAYS) {
+    return 'active'
   }
 
-  // If subscriber entry exists with subscribedAt, check if they subscribed less than 7 games ago
-  if (subscriber?.subscribedAt) {
-    const subDateStr = subscriber.subscribedAt.slice(0, 10)
-    const subPuzzle = getDailyPuzzle(subDateStr)
-    const subPuzzleNum = parseInt(subPuzzle.id, 10)
-    if (!isNaN(subPuzzleNum) && subPuzzleNum > currentPuzzleNum - 7) {
-      return false
-    }
+  const currentDate = options?.targetDate || getDateForPuzzleId(currentPuzzleNum)
+  if (isSubscriberPaused(subscriber, currentDate)) {
+    return 'active'
+  }
+
+  const graceAnchor = getGraceAnchorPuzzleNum(subscriber, currentDate)
+  if (graceAnchor !== null && graceAnchor > currentPuzzleNum - INACTIVITY_WARNING_DAYS) {
+    return 'active'
   }
 
   const settings = await getUserSettings(kv, cleanEmail)
@@ -378,35 +475,72 @@ export async function isSubscriberInactive(
     if (!isNaN(num)) submittedNumbers.add(num)
   }
 
-  // The 7 games in a row prior to today
-  const windowGames: number[] = []
-  for (let i = 1; i <= 7; i++) {
-    windowGames.push(currentPuzzleNum - i)
+  // Active if they submitted in the last INACTIVITY_WARNING_DAYS (14) puzzles
+  if (await hasSubmissionInWindow(kv, cleanEmail, currentPuzzleNum, INACTIVITY_WARNING_DAYS, submittedNumbers)) {
+    return 'active'
   }
 
-  for (const gameNum of windowGames) {
-    if (submittedNumbers.has(gameNum)) {
-      return false
-    }
-    // Fallback check in KV/D1 for actual game submissions (checking both LAUNCH_DATE-aligned date and static puzzle.date)
-    const puzzle = getPuzzleById(gameNum)
-    if (puzzle) {
-      const targetDate = getDateForPuzzleId(String(gameNum)) || puzzle.date
-      const stateKey = `game:${targetDate}:${cleanEmail}`
-      const st = await kvGet(kv, stateKey)
-      if (st && (st.hasWon || st.guessCount > 0 || st.hintsUsed > 0)) {
-        return false
-      }
-      if (puzzle.date !== targetDate) {
-        const legacySt = await kvGet(kv, `game:${puzzle.date}:${cleanEmail}`)
-        if (legacySt && (legacySt.hasWon || legacySt.guessCount > 0 || legacySt.hintsUsed > 0)) {
-          return false
-        }
-      }
+  // Check if they also missed the full INACTIVITY_UNSUBSCRIBE_DAYS (21) window
+  const pastUnsubGrace =
+    currentPuzzleNum > INACTIVITY_UNSUBSCRIBE_DAYS &&
+    (graceAnchor === null || graceAnchor <= currentPuzzleNum - INACTIVITY_UNSUBSCRIBE_DAYS)
+
+  if (pastUnsubGrace) {
+    const hadRecentSubmission = await hasSubmissionInWindow(
+      kv,
+      cleanEmail,
+      currentPuzzleNum,
+      INACTIVITY_UNSUBSCRIBE_DAYS,
+      submittedNumbers
+    )
+    if (!hadRecentSubmission) {
+      return 'unsubscribe'
     }
   }
 
-  return true
+  // Otherwise they are in the 14..20 day warning zone. Only send one check-in per inactivity stretch.
+  const warnGap = INACTIVITY_UNSUBSCRIBE_DAYS - INACTIVITY_WARNING_DAYS
+  if (subscriber?.inactivityWarningSentForPuzzle) {
+    const warnedNum = parseInt(String(subscriber.inactivityWarningSentForPuzzle).replace('#', '').trim(), 10)
+    if (!isNaN(warnedNum) && currentPuzzleNum - warnedNum >= 0 && currentPuzzleNum - warnedNum < warnGap) {
+      return 'warned'
+    }
+  }
+
+  return 'warn'
+}
+
+export async function isSubscriberInactive(
+  kv: StorageBackend,
+  email: string,
+  currentPuzzleId: string | number,
+  subscriber?: SubscriberEntry,
+  windowDays: number = INACTIVITY_UNSUBSCRIBE_DAYS
+): Promise<boolean> {
+  const cleanEmail = email.toLowerCase().trim()
+  const currentPuzzleNum = parseInt(String(currentPuzzleId).replace('#', '').trim(), 10)
+  if (isNaN(currentPuzzleNum) || currentPuzzleNum <= windowDays) {
+    return false
+  }
+
+  const currentDate = getDateForPuzzleId(currentPuzzleNum)
+  if (isSubscriberPaused(subscriber, currentDate)) {
+    return false
+  }
+
+  const graceAnchor = getGraceAnchorPuzzleNum(subscriber, currentDate)
+  if (graceAnchor !== null && graceAnchor > currentPuzzleNum - windowDays) {
+    return false
+  }
+
+  const settings = await getUserSettings(kv, cleanEmail)
+  const submittedNumbers = new Set<number>()
+  for (const id of settings.submittedPuzzles || []) {
+    const num = parseInt(String(id).replace('#', '').trim(), 10)
+    if (!isNaN(num)) submittedNumbers.add(num)
+  }
+
+  return !(await hasSubmissionInWindow(kv, cleanEmail, currentPuzzleNum, windowDays, submittedNumbers))
 }
 
 export async function getCoworkerCount(

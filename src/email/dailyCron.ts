@@ -1,9 +1,9 @@
-import { getDailyPuzzle, getPuzzleDateForSendCron, formatPrettyDate, getRedactedText, getOrCreateGameState, buildStatePayload, GAME_MESSAGES, type DailyPuzzle } from '../game'
+import { getDailyPuzzle, getPuzzleDateForSendCron, getRawPuzzleDateForSendCron, WEEKDAY_SCHEDULE_START_DATE, formatPrettyDate, getRedactedText, getOrCreateGameState, buildStatePayload, buildShareText, GAME_MESSAGES, type DailyPuzzle } from '../game'
 import { EMAIL_HTML } from './emailHtml'
 import { generateAccountToken, getAccountUrl, extractEmailDomain, getLeaderboardDomain, isGeneralLeaderboardDomain, type Bindings, type DailyEmailDispatchResult, type StorageBackend } from '../core'
 import { sendMailgunEmail } from './emailService'
 import { applyEmailTheme, type EmailTheme } from './emailThemes'
-import { recordUserActivity, getUserSettings, getCoworkerCount, getPlayerCount, getUserEmail, getSubscribers, processInactiveSubscribers, isDevTester, getDevTesters, getEffectiveLeaderboard } from '../services'
+import { recordUserActivity, getUserSettings, getUserStreak, getCoworkerCount, getPlayerCount, getUserEmail, getSubscribers, processInactiveSubscribers, shouldSkipSubscriberForDate, isWeekendDate, isDevTester, getDevTesters, getEffectiveLeaderboard } from '../services'
 import { getFallbackHtml } from '../views'
 
 // Helper to build full AMP + Fallback HTML content for daily puzzle emails
@@ -86,15 +86,35 @@ export async function buildPuzzleEmailContent(
   const initialMsg = GAME_MESSAGES.initialPrompt(puzzle.word.length)
   ampHtml = ampHtml.replace('Guess the word!', initialMsg)
 
+  const currentPuzzleNum = parseInt(puzzle.id, 10)
+  let currentStreak = 0
+  let streakBannerHtml = ''
+
   if (state.hasWon) {
-    const shareText = `I got inboxed in ${state.guessCount} guess${state.guessCount === 1 ? '' : 'es'}! https://inboxed.fun`
+    currentStreak = await getUserStreak(kv, userEmail, puzzle.id)
+    const shareText = (state.shareText && state.shareText.startsWith('Inboxed #'))
+      ? state.shareText
+      : buildShareText(state, puzzle, currentStreak)
     const winTitle = GAME_MESSAGES.winTitle(state.guessCount)
     ampHtml = ampHtml
       .replaceAll('"hasWon": false', '"hasWon": true')
       .replaceAll('"score": 0', `"score": ${state.score}`)
       .replaceAll('"winTitle": ""', `"winTitle": ${JSON.stringify(winTitle)}`)
       .replaceAll('"shareText": ""', `"shareText": ${JSON.stringify(shareText)}`)
+
+    if (currentStreak >= 2) {
+      streakBannerHtml = `<div class="streak-banner">🔥 ${currentStreak}-day streak!</div>`
+    }
+  } else if (!isNaN(currentPuzzleNum) && currentPuzzleNum > 1) {
+    const incomingStreak = await getUserStreak(kv, userEmail, currentPuzzleNum - 1)
+    if (incomingStreak >= 2) {
+      streakBannerHtml = `<div class="streak-banner">🔥 ${incomingStreak}-day streak — keep it alive today!</div>`
+    } else if (incomingStreak === 1) {
+      streakBannerHtml = `<div class="streak-banner">🔥 1-day streak — play today to make it 2!</div>`
+    }
   }
+
+  ampHtml = ampHtml.replaceAll('<!-- __STREAK_BANNER__ -->', streakBannerHtml)
 
   const placeholderTabsHtml = puzzle.definitions.map((_, i) => {
     const isFirst = i === 0
@@ -148,7 +168,7 @@ export async function buildPuzzleEmailContent(
 // Serve AMP HTML preview page helper
 export async function renderAmpGame(c: any) {
   const userEmail = await getUserEmail(c)
-  const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
+  const cronStr = c.env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * 1-5'
   const puzzleParam = c.req.query('puzzle') || c.req.query('puzzleId') || c.req.query('id')
   const dateParam = c.req.query('date')
   const target = puzzleParam || dateParam || getPuzzleDateForSendCron(new Date(), cronStr)
@@ -189,9 +209,15 @@ export async function sendDailyPuzzleEmails(
     cronStr?: string
     leadTimeMinutes?: number
     now?: Date
+    allowWeekend?: boolean
   }
 ): Promise<DailyEmailDispatchResult> {
-  const cronStr = options?.cronStr || env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * *'
+  const cronStr = options?.cronStr || env?.SEND_CRON || process.env.SEND_CRON || '0 15 * * 1-5'
+  const rawTargetDate = options?.dateStr || getRawPuzzleDateForSendCron(
+    options?.now || new Date(),
+    cronStr,
+    options?.leadTimeMinutes ?? 5
+  )
   const targetDate = options?.dateStr || getPuzzleDateForSendCron(
     options?.now || new Date(),
     cronStr,
@@ -203,8 +229,38 @@ export async function sendDailyPuzzleEmails(
   const authSecret = env?.AUTH_SECRET || process.env.AUTH_SECRET
   const mode = options?.mode || 'all'
 
+  // On weekends starting 2026-11-28, skip automatic subscriber dispatch and inactivity checks
+  if (
+    mode === 'subscribers' &&
+    (!options?.targetEmails || options.targetEmails.length === 0) &&
+    !options?.allowWeekend &&
+    options?.puzzleId === undefined &&
+    rawTargetDate >= WEEKDAY_SCHEDULE_START_DATE &&
+    isWeekendDate(rawTargetDate)
+  ) {
+    const subscribers = await getSubscribers(env?.DB || env?.GAME_STATE_KV)
+    const activeSubscribers = subscribers
+      .filter(s => s.status === 'active')
+      .map(s => s.email.toLowerCase().trim())
+    console.log(`[Daily Cron] Skipping subscriber dispatch on weekend (${rawTargetDate}).`)
+    return {
+      total: 0,
+      sent: 0,
+      failed: 0,
+      recipients: [],
+      errors: {},
+      puzzleDate: puzzle.date,
+      puzzleId: puzzle.id,
+      unsubscribedDueToInactivity: [],
+      warnedDueToInactivity: [],
+      skippedDueToSchedule: activeSubscribers,
+    }
+  }
+
   // 0. Process inactive subscribers if dispatching to subscribers
   let unsubscribedDueToInactivity: string[] = []
+  let warnedDueToInactivity: string[] = []
+  let skippedDueToSchedule: string[] = []
   if (mode === 'subscribers' || mode === 'all') {
     const inactiveResult = await processInactiveSubscribers(
       env?.DB || env?.GAME_STATE_KV,
@@ -216,9 +272,11 @@ export async function sendDailyPuzzleEmails(
         mailgunApiKey: env?.MAILGUN_API_KEY || process.env.MAILGUN_API_KEY,
         mailgunDomain: env?.MAILGUN_DOMAIN || process.env.MAILGUN_DOMAIN,
         senderEmail: env?.SENDER_EMAIL || process.env.SENDER_EMAIL,
+        targetDate: puzzle.date,
       }
     )
     unsubscribedDueToInactivity = inactiveResult.unsubscribedEmails
+    warnedDueToInactivity = inactiveResult.warnedEmails
   }
 
   // 1. Determine recipients
@@ -232,9 +290,18 @@ export async function sendDailyPuzzleEmails(
     if (mode === 'subscribers' || mode === 'all') {
       const subscribers = await getSubscribers(env?.DB || env?.GAME_STATE_KV)
       const inactiveSet = new Set(unsubscribedDueToInactivity.map(e => e.toLowerCase().trim()))
-      activeSubscribers = subscribers
-        .filter(s => s.status === 'active' && !inactiveSet.has(s.email.toLowerCase().trim()))
-        .map(s => s.email.toLowerCase().trim())
+      const warnedSet = new Set(warnedDueToInactivity.map(e => e.toLowerCase().trim()))
+      for (const s of subscribers) {
+        const cleanEmail = s.email.toLowerCase().trim()
+        if (s.status !== 'active' || inactiveSet.has(cleanEmail) || warnedSet.has(cleanEmail)) {
+          continue
+        }
+        if (shouldSkipSubscriberForDate(s, puzzle.date)) {
+          skippedDueToSchedule.push(cleanEmail)
+          continue
+        }
+        activeSubscribers.push(cleanEmail)
+      }
     }
 
     if (mode === 'test' || mode === 'all') {
@@ -261,7 +328,18 @@ export async function sendDailyPuzzleEmails(
 
   if (recipients.length === 0) {
     console.log(`[Daily Cron] No recipients found for mode '${mode}'. Skipping email dispatch.`)
-    return { total: 0, sent: 0, failed: 0, recipients: [], errors: {}, unsubscribedDueToInactivity }
+    return {
+      total: 0,
+      sent: 0,
+      failed: 0,
+      recipients: [],
+      errors: {},
+      puzzleDate: puzzle.date,
+      puzzleId: puzzle.id,
+      unsubscribedDueToInactivity,
+      warnedDueToInactivity,
+      skippedDueToSchedule,
+    }
   }
 
   console.log(`[Daily Cron] Dispatching Inboxed #${puzzle.id} (${formatPrettyDate(puzzle.date)}) to ${recipients.length} recipient(s): ${recipients.join(', ')}`)
@@ -327,5 +405,16 @@ export async function sendDailyPuzzleEmails(
   }
 
   console.log(`[Daily Cron] Finished dispatch. ${sent} sent, ${failed} failed.`)
-  return { total: recipients.length, sent, failed, recipients, errors, puzzleDate: puzzle.date, puzzleId: puzzle.id, unsubscribedDueToInactivity }
+  return {
+    total: recipients.length,
+    sent,
+    failed,
+    recipients,
+    errors,
+    puzzleDate: puzzle.date,
+    puzzleId: puzzle.id,
+    unsubscribedDueToInactivity,
+    warnedDueToInactivity,
+    skippedDueToSchedule,
+  }
 }

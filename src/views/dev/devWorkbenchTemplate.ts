@@ -724,6 +724,7 @@ export const DEV_WORKBENCH_HTML = `  return \`<!doctype html>
       <button type="button" class="page-tab-btn" data-page="account">⚙️ Account Preferences</button>
       <button type="button" class="page-tab-btn" data-page="fallback">✉️ Fallback Email</button>
       <button type="button" class="page-tab-btn" data-page="confirm-email">✉️ Confirm Email</button>
+      <button type="button" class="page-tab-btn" data-page="inactivity-check-in">👋 Check-In Email</button>
       <button type="button" class="page-tab-btn" data-page="auto-unsub">📭 Auto-Unsub Email</button>
       <button type="button" class="page-tab-btn" data-page="invalid">⚠️ Invalid / Expired Token</button>
       <button type="button" class="page-tab-btn" data-page="privacy">🔒 Privacy Policy</button>
@@ -850,9 +851,15 @@ export const DEV_WORKBENCH_HTML = `  return \`<!doctype html>
         badge: 'Email',
         url: '/dev/email/confirm?email=' + currentEmail
       },
+      'inactivity-check-in': {
+        title: '👋 Inactivity Check-In Email (14-Puzzle Re-engagement)',
+        desc: 'Friendly check-in sent after 14 consecutive missed puzzles with 1-click Keep Getting Puzzles and Pause for 2 Weeks options.',
+        badge: 'Email',
+        url: '/dev/email/inactivity-check-in?email=' + currentEmail
+      },
       'auto-unsub': {
-        title: '📭 Auto-Unsubscribe Email (7-Day Inactivity)',
-        desc: 'Notification email sent when a subscriber misses 7 consecutive puzzles, with a button linking to User Preferences to subscribe again.',
+        title: '📭 Auto-Unsubscribe Email (21-Puzzle Inactivity)',
+        desc: 'Notification email sent when a subscriber misses 21 consecutive puzzles, with a button linking to User Preferences to subscribe again.',
         badge: 'Email',
         url: '/dev/email/auto-unsub?email=' + currentEmail
       },

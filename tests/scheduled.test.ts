@@ -112,6 +112,7 @@ describe('Cloudflare Daily Cron & Email Dispatch', () => {
         PUBLIC_HTTPS_URL: 'https://inboxed.fun',
       },
       {
+        dateStr: '2026-11-23',
         isDryRun: true,
         mode: 'subscribers',
       }
@@ -221,6 +222,33 @@ describe('Cloudflare Daily Cron & Email Dispatch', () => {
       const postHtml = getSignupHtml(mockCtx, undefined, new Date('2026-09-25T14:55:00Z'))
       expect(postHtml).toContain(`Puzzle #${puzzle25.id}`)
       expect(postHtml).toContain(puzzle25.definitions[0])
+    })
+
+    it('should skip automatic subscriber dispatch on weekends starting 2026-11-28', async () => {
+      const { addSubscriber } = await import('../src/services')
+      const { MEMORY_STORE } = await import('../src/core')
+      MEMORY_STORE.clear()
+      const testStorage: any = {}
+      await addSubscriber(testStorage, 'weekday_player@example.com')
+
+      // Saturday 2026-11-28 at 15:00 UTC -> skipped cleanly
+      const satRes = await sendDailyPuzzleEmails(
+        { DB: testStorage, PUBLIC_HTTPS_URL: 'https://inboxed.fun' },
+        { mode: 'subscribers', isDryRun: true, now: new Date('2026-11-28T15:00:00Z') }
+      )
+      expect(satRes.total).toBe(0)
+      expect(satRes.recipients).toEqual([])
+      expect(satRes.skippedDueToSchedule).toContain('weekday_player@example.com')
+
+      // Monday 2026-11-30 at 15:00 UTC -> dispatches Puzzle #62
+      const monRes = await sendDailyPuzzleEmails(
+        { DB: testStorage, PUBLIC_HTTPS_URL: 'https://inboxed.fun' },
+        { mode: 'subscribers', isDryRun: true, now: new Date('2026-11-30T15:00:00Z') }
+      )
+      expect(monRes.total).toBe(1)
+      expect(monRes.recipients).toContain('weekday_player@example.com')
+      expect(monRes.puzzleId).toBe('62')
+      expect(monRes.puzzleDate).toBe('2026-11-30')
     })
   })
 })

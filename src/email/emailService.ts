@@ -143,7 +143,7 @@ export function renderConfirmationEmailHtml(
                 Confirm your subscription
               </h1>
               <p style="font-size: 14px; color: #52525b; line-height: 1.5; margin: 0 0 24px 0;">
-                Thanks for signing up! Please confirm your email address to start receiving daily word puzzles directly inside your inbox every morning at 9:00 AM PST.
+                Thanks for signing up! Please confirm your email address to start receiving daily word puzzles directly inside your inbox every weekday morning (Mon–Fri) at 9:00 AM PST.
               </p>
               <div style="margin: 28px 0;">
                 <a href="${safeConfirmUrl}" class="btn-confirm" style="background-color: #C4F7CA; color: #000000; border: 1.5px solid #7ecc84; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; padding: 11px 24px; display: inline-block; box-shadow: inset 0 2px 0 0 #e8ffea, 0 2px 4px rgba(0, 0, 0, 0.06); -webkit-text-size-adjust: none;">
@@ -171,7 +171,7 @@ export function renderConfirmationEmailHtml(
 export function renderConfirmationEmailText(confirmUrl: string): string {
   return `Confirm your subscription to Inboxed:
 
-Click the link below to start receiving daily word puzzles every morning at 9:00 AM PST:
+Click the link below to start receiving daily word puzzles every weekday morning (Mon-Fri) at 9:00 AM PST:
 ${confirmUrl}
 
 If you did not request this, you can safely ignore this email.`
@@ -184,6 +184,149 @@ export interface InactivityEmailOptions {
   authSecret?: string
   playUrl?: string
   logoUrl?: string
+  inactiveDays?: number
+}
+
+export function renderInactivityWarningEmailHtml(
+  options?: InactivityEmailOptions
+): string {
+  const origin = (options?.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const playUrl = options?.playUrl || origin
+  const logoUrl = options?.logoUrl || `${origin}/logo-new.png`
+  const accountUrl = options?.accountUrl
+    || (options?.email ? getAccountUrl(options.email, origin, options.authSecret) : `${origin}/account`)
+  const separator = accountUrl.includes('?') ? '&' : '?'
+  const keepUrl = `${accountUrl}${separator}action=keep`
+  const pauseUrl = `${accountUrl}${separator}action=pause`
+  const inactiveDays = options?.inactiveDays ?? 14
+
+  const safePlayUrl = escapeHtml(playUrl)
+  const safeLogoUrl = escapeHtml(logoUrl)
+  const safeAccountUrl = escapeHtml(accountUrl)
+  const safeKeepUrl = escapeHtml(keepUrl)
+  const safePauseUrl = escapeHtml(pauseUrl)
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Still want Inboxed puzzles?</title>
+  <style>
+    .btn-confirm:hover {
+      background-color: #bbf4c3 !important;
+      border-color: #76c87c !important;
+      box-shadow: inset 0 2px 0 0 #ddf9df, 0 2px 5px rgba(0, 0, 0, 0.08) !important;
+    }
+    .btn-secondary:hover {
+      background-color: #f4f4f5 !important;
+      border-color: #a1a1aa !important;
+    }
+  </style>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 32px 16px; color: #18181b;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" style="max-width: 480px; background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 12px; padding: 32px 24px; text-align: center;" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="center">
+              <div style="text-align: center; margin: 0 0 20px;">
+                <a href="${safePlayUrl}" style="text-decoration: none; display: inline-block;">
+                  <img src="${safeLogoUrl}" alt="INBOXED" width="160" height="56" style="display: block; margin: 0 auto; width: 160px; height: 56px; border: 0; outline: none; text-decoration: none; font-size: 22px; font-weight: 900; color: #14532d; letter-spacing: 2px;">
+                </a>
+              </div>
+              <h1 style="font-size: 20px; font-weight: 800; color: #18181b; margin: 0 0 12px 0;">
+                Still want Inboxed puzzles?
+              </h1>
+              <p style="font-size: 14px; color: #52525b; line-height: 1.5; margin: 0 0 22px 0;">
+                We noticed you haven't played Inboxed for the last ${inactiveDays} puzzles. Let us know if you'd like to keep getting weekday puzzles or pause for a bit—or just play a puzzle in the next 7 puzzles to stay subscribed:
+              </p>
+              <div style="margin: 12px 0;">
+                <a href="${safeKeepUrl}" class="btn-confirm" style="background-color: #C4F7CA; color: #000000; border: 1.5px solid #7ecc84; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; padding: 11px 24px; display: inline-block; width: 240px; box-sizing: border-box; box-shadow: inset 0 2px 0 0 #e8ffea, 0 2px 4px rgba(0, 0, 0, 0.06); -webkit-text-size-adjust: none;">
+                  Keep Getting Puzzles
+                </a>
+              </div>
+              <div style="margin: 10px 0 20px 0;">
+                <a href="${safePauseUrl}" class="btn-secondary" style="background-color: #ffffff; color: #18181b; border: 1.5px solid #d4d4d8; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; padding: 10px 24px; display: inline-block; width: 240px; box-sizing: border-box; -webkit-text-size-adjust: none;">
+                  Pause for 2 Weeks
+                </a>
+              </div>
+              <p style="font-size: 12px; color: #71717a; line-height: 1.5; margin: 8px 0 0 0;">
+                If you don't play or check in within the next 7 puzzles, we'll automatically unsubscribe you so we don't clutter your inbox.
+              </p>
+              <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 22px 0 16px 0;">
+              <p style="font-size: 11px; color: #a1a1aa; margin: 0;">
+                You can also <a href="${safeAccountUrl}" style="color: #14532d; text-decoration: underline;">manage your account preferences</a> anytime.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+export function renderInactivityWarningEmailText(options?: InactivityEmailOptions): string {
+  const origin = (options?.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const accountUrl = options?.accountUrl
+    || (options?.email ? getAccountUrl(options.email, origin, options.authSecret) : `${origin}/account`)
+  const separator = accountUrl.includes('?') ? '&' : '?'
+  const inactiveDays = options?.inactiveDays ?? 14
+  return `Still want Inboxed puzzles?
+
+We noticed you haven't played Inboxed for the last ${inactiveDays} puzzles. Let us know what works best for your inbox—or play a puzzle in the next 7 puzzles to stay subscribed:
+
+- Keep getting puzzles: ${accountUrl}${separator}action=keep
+- Pause for 2 weeks: ${accountUrl}${separator}action=pause
+
+If you don't play or check in within the next 7 puzzles, we'll automatically unsubscribe you so we don't clutter your inbox.
+
+Manage your preferences anytime:
+${accountUrl}
+
+Best,
+The Inboxed Team`
+}
+
+export async function sendInactivityWarningEmail(options: {
+  apiKey?: string
+  domain?: string
+  from?: string
+  to: string
+  origin?: string
+  authSecret?: string
+  accountUrl?: string
+  inactiveDays?: number
+}): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const origin = (options.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
+  const accountUrl = options.accountUrl || getAccountUrl(options.to, origin, options.authSecret)
+  const html = renderInactivityWarningEmailHtml({
+    origin,
+    email: options.to,
+    accountUrl,
+    authSecret: options.authSecret,
+    inactiveDays: options.inactiveDays,
+  })
+  const text = renderInactivityWarningEmailText({
+    origin,
+    email: options.to,
+    accountUrl,
+    authSecret: options.authSecret,
+    inactiveDays: options.inactiveDays,
+  })
+
+  return sendMailgunEmail({
+    apiKey: options.apiKey,
+    domain: options.domain,
+    from: options.from || 'Inboxed <game@inboxed.fun>',
+    to: options.to,
+    subject: 'Still want Inboxed puzzles?',
+    text,
+    html,
+  })
 }
 
 export function renderInactivityUnsubscribeEmailHtml(
@@ -194,6 +337,7 @@ export function renderInactivityUnsubscribeEmailHtml(
   const logoUrl = options?.logoUrl || `${origin}/logo-new.png`
   const accountUrl = options?.accountUrl
     || (options?.email ? getAccountUrl(options.email, origin, options.authSecret) : `${origin}/account`)
+  const inactiveDays = options?.inactiveDays ?? 21
 
   const safePlayUrl = escapeHtml(playUrl)
   const safeLogoUrl = escapeHtml(logoUrl)
@@ -229,7 +373,7 @@ export function renderInactivityUnsubscribeEmailHtml(
                 You've been unsubscribed
               </h1>
               <p style="font-size: 14px; color: #52525b; line-height: 1.5; margin: 0 0 24px 0;">
-                We noticed you haven't played Inboxed for the last 7 days in a row, so we've automatically unsubscribed you from daily puzzle emails so we don't clutter your inbox. You can re-subscribe anytime in your user preferences.
+                We noticed you haven't played Inboxed for the last ${inactiveDays} puzzles in a row, so we've automatically unsubscribed you from puzzle emails so we don't clutter your inbox. You can re-subscribe anytime in your user preferences.
               </p>
               <div style="margin: 28px 0;">
                 <a href="${safeAccountUrl}" class="btn-confirm" style="background-color: #C4F7CA; color: #000000; border: 1.5px solid #7ecc84; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; padding: 11px 24px; display: inline-block; box-shadow: inset 0 2px 0 0 #e8ffea, 0 2px 4px rgba(0, 0, 0, 0.06); -webkit-text-size-adjust: none;">
@@ -258,9 +402,10 @@ export function renderInactivityUnsubscribeEmailText(options?: InactivityEmailOp
   const origin = (options?.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
   const accountUrl = options?.accountUrl
     || (options?.email ? getAccountUrl(options.email, origin, options.authSecret) : `${origin}/account`)
+  const inactiveDays = options?.inactiveDays ?? 21
   return `You've been unsubscribed from Inboxed
 
-We noticed you haven't played Inboxed for the last 7 days in a row, so we've automatically unsubscribed you from daily puzzle emails so we don't clutter your inbox.
+We noticed you haven't played Inboxed for the last ${inactiveDays} puzzles in a row, so we've automatically unsubscribed you from puzzle emails so we don't clutter your inbox.
 
 If you ever want to subscribe again, go to your user preferences here:
 ${accountUrl}
@@ -277,6 +422,7 @@ export async function sendInactivityUnsubscribeEmail(options: {
   origin?: string
   authSecret?: string
   accountUrl?: string
+  inactiveDays?: number
 }): Promise<{ ok: boolean; id?: string; error?: string }> {
   const origin = (options.origin || process.env.PUBLIC_HTTPS_URL || 'https://inboxed.fun').replace(/\/$/, '')
   const accountUrl = options.accountUrl || getAccountUrl(options.to, origin, options.authSecret)
@@ -285,12 +431,14 @@ export async function sendInactivityUnsubscribeEmail(options: {
     email: options.to,
     accountUrl,
     authSecret: options.authSecret,
+    inactiveDays: options.inactiveDays,
   })
   const text = renderInactivityUnsubscribeEmailText({
     origin,
     email: options.to,
     accountUrl,
     authSecret: options.authSecret,
+    inactiveDays: options.inactiveDays,
   })
 
   return sendMailgunEmail({

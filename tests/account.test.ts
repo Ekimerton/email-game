@@ -515,7 +515,7 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(dataPublic.isCustomDomain).toBe(false)
   })
 
-  it('should render the leaderboard switcher and custom leaderboard UI in the account page', async () => {
+  it('should render the leaderboard switcher (with Custom hidden) and weekday schedule in the account page', async () => {
     const res = await app.request('/account?token=' + encodeURIComponent(validToken))
     expect(res.status).toBe(200)
     const html = await res.text()
@@ -524,13 +524,12 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(html).toContain('leaderboard-switch-group')
     expect(html).toContain('leaderboard-tab-btn')
     expect(html).toContain('General')
-    expect(html).toContain('Custom')
-    expect(html).toContain('custom-lb-card')
-    expect(html).toContain('custom-lb-actions-grid')
-    expect(html).toContain('Create Leaderboard')
-    expect(html).toContain('CUSTOM-')
+    expect(html).toContain('{/* Custom Leaderboard tab hidden for now')
+    expect(html).toContain('{/* Custom Leaderboard Panel - hidden for now')
+    expect(html).toContain('Puzzles arrive every weekday (Monday–Friday) at 9:00 AM PST.')
+    expect(html).toContain('Pause for 2 Weeks')
     expect(html).toContain('Show my score on the leaderboard')
-    expect(html).not.toContain('Domain Leaderboard')
+    expect(html).not.toContain('Every day (Mon–Sun)')
   })
 
   it('should update custom leaderboard preference via POST /api/account/toggle-leaderboard', async () => {
@@ -662,7 +661,7 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(guessTodayRes.status).toBe(200)
     const guessTodayData = (await guessTodayRes.json()) as any
     expect(guessTodayData.hasWon).toBe(true)
-    expect(guessTodayData.shareText).toBe('I got inboxed in 1 guess! https://inboxed.fun')
+    expect(guessTodayData.shareText).toBe(`Inboxed #${todayPuzzle.id} 🟩 1000pts https://inboxed.fun`)
 
     // 4. Reloading today's email calls /api/leaderboard with the email's constant domain=corp.example.com
     const lbReloadRes = await app.request(
@@ -706,7 +705,7 @@ describe('Spoof-Proof Account & Preferences API', () => {
     expect(guessTomRes.status).toBe(200)
     const guessTomData = (await guessTomRes.json()) as any
     expect(guessTomData.hasWon).toBe(true)
-    expect(guessTomData.shareText).toBe('I got inboxed in 1 guess! https://inboxed.fun')
+    expect(guessTomData.shareText).toBe(`Inboxed #${tomorrowPuzzle.id} 🟩 1000pts 🔥2 https://inboxed.fun`)
 
     // Verify tomorrow's score is on the custom leaderboard!
     const customLbTom = await getDomainLeaderboard(undefined, `custom:${customCode.toLowerCase()}`, tomorrowPuzzle.id)

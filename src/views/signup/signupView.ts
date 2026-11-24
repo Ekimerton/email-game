@@ -56,7 +56,7 @@ export function getSignupHtml(c: any, dateOverride?: string, nowOverride?: Date)
           <div class="success-icon">🎉</div>
           <h2 class="success-title">You're Subscribed!</h2>
           <p class="success-desc">
-            You'll get emails at 9:00 AM every day.
+            You'll get emails at 9:00 AM on weekdays (Mon–Fri).
           </p>
         </div>
     `

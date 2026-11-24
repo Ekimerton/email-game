@@ -1137,6 +1137,35 @@ export const EMAIL_HTML = `<!doctype html>
             font-weight: 600;
         }
 
+        .streak-banner {
+            display: block;
+            width: 100%;
+            margin: 0 0 8px 0;
+            padding: 5px 10px;
+            background-color: #ffffff;
+            border: 1px solid #d4d4d8;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #18181b;
+            text-align: center;
+            line-height: 1.3;
+            box-sizing: border-box;
+        }
+
+        .solo-domain-nudge {
+            margin-top: 8px;
+            padding: 6px 10px;
+            background-color: #ffffff;
+            border: 1px dashed #d4d4d8;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #52525b;
+            text-align: center;
+            line-height: 1.35;
+        }
+
         .leaderboard-empty {
             text-align: center;
             color: #64748b;
@@ -1297,13 +1326,14 @@ export const EMAIL_HTML = `<!doctype html>
         <div class="news-ticker-container">
             <div class="news-ticker-box">
                 <span class="news-ticker-content">
-                    <span class="news-ticker-text">Have an idea for a new game? Tell me what to build next!</span>
+                    <span class="news-ticker-text">Now weekdays only (Mon–Fri) + streak &amp; share updates!</span>
                 </span>
-                <a href="https://inboxed.fun/updates" class="news-ticker-btn" target="_blank" aria-label="Updates: Have an idea for a new game? Tell me what to build next!">
+                <a href="https://inboxed.fun/updates" class="news-ticker-btn" target="_blank" aria-label="Updates: Now weekdays only (Mon–Fri) + streak &amp; share updates!">
                     Read more
                 </a>
             </div>
         </div>
+        <!-- __STREAK_BANNER__ -->
 
         <!--
         <h4 class="game-header" aria-label="Inboxed">
@@ -1635,6 +1665,9 @@ export const EMAIL_HTML = `<!doctype html>
                             <div class="leaderboard-empty">No scores recorded for
                                 this domain yet today!</div>
                             {{/players}}
+                            {{#isSoloDomainPlayer}}
+                            <div class="solo-domain-nudge">{{soloNudgeText}}</div>
+                            {{/isSoloDomainPlayer}}
                         </div>
                         {{/hasWon}}
                         {{^hasWon}}
@@ -1672,6 +1705,9 @@ export const EMAIL_HTML = `<!doctype html>
                             <div class="leaderboard-empty">No scores recorded for
                                 this domain yet today!</div>
                             {{/players}}
+                            {{#isSoloDomainPlayer}}
+                            <div class="solo-domain-nudge">{{soloNudgeText}}</div>
+                            {{/isSoloDomainPlayer}}
                         </div>
                         {{/hasWon}}
                     </div>

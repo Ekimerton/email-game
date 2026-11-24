@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { PUZZLES, getDailyPuzzle, formatPrettyDate, getTodayDateString, getPuzzleDateForSendCron } from '../src/game'
+import { PUZZLES, getDailyPuzzle, getDateForPuzzleId, formatPrettyDate, getTodayDateString, getPuzzleDateForSendCron } from '../src/game'
 import {
   definitionMentionsWordOrStem,
   areDefinitionsTooSimilar,
@@ -123,6 +123,38 @@ describe('Daily Puzzles Module', () => {
     expect(formatPrettyDate('2026-09-13')).toBe('Sept 13, 2026')
     expect(formatPrettyDate('2026-01-15')).toBe('Jan 15, 2026')
     expect(formatPrettyDate('2026-12-31')).toBe('Dec 31, 2026')
+  })
+
+  it('should switch to weekdays-only puzzle schedule starting Sat 2026-11-28 without shifting #1-#61', () => {
+    // Friday 2026-11-27 is Puzzle #61
+    const fri = getDailyPuzzle('2026-11-27')
+    expect(fri.id).toBe('61')
+    expect(fri.date).toBe('2026-11-27')
+    expect(getDateForPuzzleId(61)).toBe('2026-11-27')
+
+    // Sat 2026-11-28 & Sun 2026-11-29 roll back to Friday's Puzzle #61
+    const sat = getDailyPuzzle('2026-11-28')
+    expect(sat.id).toBe('61')
+    expect(sat.date).toBe('2026-11-27')
+    const sun = getDailyPuzzle('2026-11-29')
+    expect(sun.id).toBe('61')
+    expect(sun.date).toBe('2026-11-27')
+
+    // Cron date also rolls Sat/Sun back to Friday
+    expect(getPuzzleDateForSendCron(new Date('2026-11-28T15:00:00Z'))).toBe('2026-11-27')
+    expect(getPuzzleDateForSendCron(new Date('2026-11-29T15:00:00Z'))).toBe('2026-11-27')
+
+    // Monday 2026-11-30 advances sequentially to Puzzle #62
+    const mon = getDailyPuzzle('2026-11-30')
+    expect(mon.id).toBe('62')
+    expect(mon.date).toBe('2026-11-30')
+    expect(getDateForPuzzleId(62)).toBe('2026-11-30')
+
+    // Following Friday 2026-12-04 -> #66, Sat 2026-12-05 -> #66, Mon 2026-12-07 -> #67
+    expect(getDailyPuzzle('2026-12-04').id).toBe('66')
+    expect(getDailyPuzzle('2026-12-05').id).toBe('66')
+    expect(getDailyPuzzle('2026-12-07').id).toBe('67')
+    expect(getDateForPuzzleId(67)).toBe('2026-12-07')
   })
 })
 
